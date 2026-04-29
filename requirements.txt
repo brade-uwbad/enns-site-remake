@@ -1,0 +1,2 @@
+# Python virtualenv dependencies only.
+# This repository is a Node.js/Next.js project and does not require Python packages by default.
