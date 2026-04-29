@@ -41,7 +41,9 @@ export function getSupabaseReadClient() {
 export function getSupabaseAdminClient() {
   const { url, secretKey } = readSupabaseEnv();
   if (!url || !secretKey) {
-    throw new Error("Supabase admin config missing. Set STORAGE_SUPABASE_URL and STORAGE_SUPABASE_SECRET_KEY.");
+    throw new Error(
+      "Supabase admin config missing. Set STORAGE_SUPABASE_URL and STORAGE_SUPABASE_SECRET_KEY.",
+    );
   }
   return createClient(url, secretKey);
 }

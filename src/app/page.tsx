@@ -17,8 +17,8 @@ export default function HomePage() {
             Local guidance for buying and selling your next home
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Clear communication, steady support, and a practical plan from first conversation to keys.
-            Browse listings or reach out for a conversation.
+            Clear communication, steady support, and a practical plan from first conversation to
+            keys. Browse listings or reach out for a conversation.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
@@ -56,7 +56,9 @@ export default function HomePage() {
           ].map((item) => (
             <li key={item.title}>
               <h3 className="font-medium text-zinc-900 dark:text-zinc-50">{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{item.text}</p>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                {item.text}
+              </p>
             </li>
           ))}
         </ul>

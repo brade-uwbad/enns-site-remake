@@ -132,7 +132,10 @@ const aboutPayload = {
 let listings = [...seedListings];
 let reviews = [...seedReviews];
 const services = [...seedServices];
-const siteContent: Record<SiteContentKey, { payload: Record<string, unknown>; updated_at: string }> = {
+const siteContent: Record<
+  SiteContentKey,
+  { payload: Record<string, unknown>; updated_at: string }
+> = {
   homepage: { payload: homepagePayload, updated_at: nowIso() },
   about: { payload: aboutPayload, updated_at: nowIso() },
 };
@@ -143,8 +146,14 @@ let contactSubmissions: ContactSubmissionRow[] = [];
  * Case-insensitive match on listing title and city for the `q` search parameter.
  */
 function matchesSearch(row: ListingRow, q: string) {
-  const inner = q.replace(/[%_\\]/g, "").replace(/,/g, " ").trim().toLowerCase();
-  if (!inner) return true;
+  const inner = q
+    .replace(/[%_\\]/g, "")
+    .replace(/,/g, " ")
+    .trim()
+    .toLowerCase();
+  if (!inner) {
+    return true;
+  }
   const t = row.title.toLowerCase();
   const c = (row.city ?? "").toLowerCase();
   return t.includes(inner) || c.includes(inner);
@@ -173,8 +182,14 @@ export function queryListings(status: "active" | "sold", query: ListQuery) {
     rows = rows.filter((l) => l.beds === beds);
   }
   if (query.city?.trim()) {
-    const c = query.city.replace(/[%_\\]/g, "").replace(/,/g, " ").trim().toLowerCase();
-    if (c) rows = rows.filter((l) => (l.city ?? "").toLowerCase().includes(c));
+    const c = query.city
+      .replace(/[%_\\]/g, "")
+      .replace(/,/g, " ")
+      .trim()
+      .toLowerCase();
+    if (c) {
+      rows = rows.filter((l) => (l.city ?? "").toLowerCase().includes(c));
+    }
   }
   const search = query.q?.trim();
   if (search) {
@@ -203,7 +218,9 @@ export function getListingById(id: string): ListingRow | null {
  * @param row - Listing fields without server-generated `id`, `created_at`, or `updated_at`.
  * @returns The persisted listing including id and timestamps.
  */
-export function insertListing(row: Omit<ListingRow, "id" | "created_at" | "updated_at">): ListingRow {
+export function insertListing(
+  row: Omit<ListingRow, "id" | "created_at" | "updated_at">,
+): ListingRow {
   const id = randomUUID();
   const ts = nowIso();
   const full: ListingRow = {
@@ -225,7 +242,9 @@ export function insertListing(row: Omit<ListingRow, "id" | "created_at" | "updat
  */
 export function updateListingById(id: string, patch: Partial<ListingRow>): ListingRow | null {
   const idx = listings.findIndex((l) => l.id === id);
-  if (idx === -1) return null;
+  if (idx === -1) {
+    return null;
+  }
   const next = { ...listings[idx], ...patch, updated_at: nowIso() } as ListingRow;
   listings = [...listings.slice(0, idx), next, ...listings.slice(idx + 1)];
   return next;

@@ -31,7 +31,10 @@ export type ListQuery = z.infer<typeof listQuerySchema>;
  * @returns `items` for the requested page and `total` count after filters (before pagination).
  */
 function sanitizeSearchLike(value: string) {
-  return value.replace(/[%_\\]/g, "").replace(/,/g, " ").trim();
+  return value
+    .replace(/[%_\\]/g, "")
+    .replace(/,/g, " ")
+    .trim();
 }
 
 export async function fetchListings(status: "active" | "sold", query: ListQuery) {
@@ -78,7 +81,9 @@ export async function fetchListings(status: "active" | "sold", query: ListQuery)
 export async function fetchPublicListingById(id: string) {
   if (!hasSupabaseReadConfig()) {
     const active = queryListings("active", { page: 1, limit: 1000 }).items.find((l) => l.id === id);
-    if (active) return active;
+    if (active) {
+      return active;
+    }
     const sold = queryListings("sold", { page: 1, limit: 1000 }).items.find((l) => l.id === id);
     return sold ?? null;
   }

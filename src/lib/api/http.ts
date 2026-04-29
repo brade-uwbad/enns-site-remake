@@ -20,14 +20,11 @@ export function jsonOk<T>(data: T, init?: ResponseInit) {
  * @param details - Optional structured details (e.g. Zod `flatten()` output).
  * @returns A `NextResponse` with JSON body `{ error: { message, code?, details? } }`.
  */
-export function jsonError(
-  message: string,
-  status: number,
-  code?: string,
-  details?: unknown,
-) {
+export function jsonError(message: string, status: number, code?: string, details?: unknown) {
   return NextResponse.json(
-    { error: { message, ...(code ? { code } : {}), ...(details !== undefined ? { details } : {}) } },
+    {
+      error: { message, ...(code ? { code } : {}), ...(details !== undefined ? { details } : {}) },
+    },
     { status },
   );
 }

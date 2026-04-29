@@ -45,7 +45,10 @@ function toEditorState(listing: Listing): EditorState {
     subtitle: listing.subtitle ?? "",
     city: listing.city ?? "",
     addressLine1: listing.address_line1 ?? "",
-    priceCents: listing.price_cents != null ? String(listing.price_cents) : "",
+    priceCents:
+      listing.price_cents === null || listing.price_cents === undefined
+        ? ""
+        : String(listing.price_cents),
     description: listing.description ?? "",
     amenitiesText: (listing.amenities ?? []).join(", "),
     imagesText: (listing.images ?? []).join("\n"),
@@ -67,10 +70,13 @@ export function ListingsEditor() {
   const [form, setForm] = useState<EditorState>(blankState);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string>("");
+  const [uploadFiles, setUploadFiles] = useState<FileList | null>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("admin_access_token");
-    if (saved) setToken(saved);
+    if (saved) {
+      setToken(saved);
+    }
   }, []);
 
   async function loadListings() {
@@ -85,7 +91,10 @@ export function ListingsEditor() {
     });
   }, []);
 
-  const selected = useMemo(() => listings.find((l) => l.id === selectedId) ?? null, [listings, selectedId]);
+  const selected = useMemo(
+    () => listings.find((l) => l.id === selectedId) ?? null,
+    [listings, selectedId],
+  );
 
   function chooseListing(id: string) {
     setSelectedId(id);
@@ -131,12 +140,16 @@ export function ListingsEditor() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message ?? "Failed to create listing.");
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? "Failed to create listing.");
+      }
 
       setMessage("Listing created.");
       await loadListings();
       const id = data?.data?.listing?.id as string | undefined;
-      if (id) chooseListing(id);
+      if (id) {
+        chooseListing(id);
+      }
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to create listing.");
     } finally {
@@ -172,7 +185,9 @@ export function ListingsEditor() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message ?? "Failed to update listing.");
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? "Failed to update listing.");
+      }
       setMessage("Listing updated.");
       await loadListings();
     } catch (e) {
@@ -198,7 +213,9 @@ export function ListingsEditor() {
         headers: token.trim() ? { Authorization: `Bearer ${token.trim()}` } : undefined,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message ?? "Failed to delete listing.");
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? "Failed to delete listing.");
+      }
       setMessage("Listing deleted.");
       setSelectedId("");
       setForm(blankState);
@@ -210,9 +227,50 @@ export function ListingsEditor() {
     }
   }
 
+  async function uploadImages() {
+    if (!uploadFiles || uploadFiles.length === 0) {
+      setMessage("Pick one or more images first.");
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    try {
+      const uploadedUrls: string[] = [];
+      for (const file of Array.from(uploadFiles)) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const headers = token.trim() ? { Authorization: `Bearer ${token.trim()}` } : undefined;
+        const res = await fetch("/api/admin/listings/upload", {
+          method: "POST",
+          headers,
+          body: fd,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.error?.message ?? `Failed to upload ${file.name}`);
+        }
+        if (data?.data?.url) {
+          uploadedUrls.push(data.data.url as string);
+        }
+      }
+
+      const current = splitList(form.imagesText);
+      const merged = [...current, ...uploadedUrls];
+      setField("imagesText", merged.join("\n"));
+      setUploadFiles(null);
+      setMessage(`Uploaded ${uploadedUrls.length} image(s).`);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Failed to upload images.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-10 sm:px-6">
-      <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">Admin listings</h1>
+      <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        Admin listings
+      </h1>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         Create, update, and delete listings without terminal commands.
       </p>
@@ -367,14 +425,35 @@ export function ListingsEditor() {
             onChange={(e) => setField("amenitiesText", e.target.value)}
           />
         </label>
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium">Photo URLs (one per line)</span>
+        <div className="block text-sm">
+          <span className="mb-1 block font-medium">Photos</span>
+          <div className="space-y-2 rounded-md border border-zinc-300 p-3 dark:border-zinc-700">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setUploadFiles(e.target.files)}
+              className="block w-full text-sm"
+            />
+            <button
+              type="button"
+              onClick={uploadImages}
+              disabled={busy || !uploadFiles || uploadFiles.length === 0}
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700"
+            >
+              Upload selected images
+            </button>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Uploaded image URLs are added to the listing automatically.
+            </p>
+          </div>
           <textarea
-            className="h-32 w-full rounded-md border border-zinc-300 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-900"
+            className="mt-2 h-24 w-full rounded-md border border-zinc-300 bg-white p-2 text-xs dark:border-zinc-700 dark:bg-zinc-900"
             value={form.imagesText}
             onChange={(e) => setField("imagesText", e.target.value)}
+            placeholder="Stored image URLs"
           />
-        </label>
+        </div>
       </section>
     </div>
   );

@@ -1,6 +1,10 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
-import { deleteAdminListingById, getAdminListingById, updateAdminListingById } from "@/lib/listings/admin";
+import {
+  deleteAdminListingById,
+  getAdminListingById,
+  updateAdminListingById,
+} from "@/lib/listings/admin";
 import { toListingUpdate } from "@/lib/mappers/listing";
 import { listingUpdateSchema } from "@/lib/validations/listings";
 

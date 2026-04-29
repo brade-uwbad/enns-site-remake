@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 export default function ServicesPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">Services</h1>
+      <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        Services
+      </h1>
       <ul className="mt-8 space-y-6 text-zinc-600 dark:text-zinc-400">
         <li>
           <h2 className="font-medium text-zinc-900 dark:text-zinc-50">Buying a home</h2>

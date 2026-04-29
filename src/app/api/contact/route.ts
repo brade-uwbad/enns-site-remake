@@ -13,7 +13,9 @@ export async function POST(request: Request) {
   const ip = clientIp(request);
   const limited = rateLimitContact(ip);
   if (!limited.ok) {
-    return jsonError("Too many requests", 429, "RATE_LIMITED", { retryAfterSec: limited.retryAfterSec });
+    return jsonError("Too many requests", 429, "RATE_LIMITED", {
+      retryAfterSec: limited.retryAfterSec,
+    });
   }
 
   let body: unknown;

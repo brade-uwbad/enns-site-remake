@@ -21,7 +21,9 @@ export type AdminAuthResult =
  */
 function bearerToken(request: Request): string | null {
   const h = request.headers.get("authorization");
-  if (!h?.toLowerCase().startsWith("bearer ")) return null;
+  if (!h?.toLowerCase().startsWith("bearer ")) {
+    return null;
+  }
   return h.slice(7).trim() || null;
 }
 
@@ -30,13 +32,20 @@ function isAdminRole(user: {
   user_metadata?: Record<string, unknown>;
 }) {
   const appRole = user.app_metadata?.role;
-  if (typeof appRole === "string" && appRole.toLowerCase() === "admin") return true;
+  if (typeof appRole === "string" && appRole.toLowerCase() === "admin") {
+    return true;
+  }
 
   const userRole = user.user_metadata?.role;
-  if (typeof userRole === "string" && userRole.toLowerCase() === "admin") return true;
+  if (typeof userRole === "string" && userRole.toLowerCase() === "admin") {
+    return true;
+  }
 
   const appRoles = user.app_metadata?.roles;
-  if (Array.isArray(appRoles) && appRoles.some((r) => typeof r === "string" && r.toLowerCase() === "admin")) {
+  if (
+    Array.isArray(appRoles) &&
+    appRoles.some((r) => typeof r === "string" && r.toLowerCase() === "admin")
+  ) {
     return true;
   }
 

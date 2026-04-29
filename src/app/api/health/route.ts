@@ -7,13 +7,14 @@ import { hasSupabaseAdminConfig, hasSupabaseReadConfig } from "@/lib/supabase/se
  * @returns JSON `{ data: { status, dataStore, adminAuth } }` with HTTP 200.
  */
 export async function GET() {
-  const adminAuth = process.env.ADMIN_UI_BYPASS_AUTH === "true"
-    ? "bypass"
-    : process.env.ADMIN_API_TOKEN
-      ? "static-token"
-      : hasSupabaseAdminConfig()
-        ? "supabase-access-token+admin-role"
-        : "not-configured";
+  const adminAuth =
+    process.env.ADMIN_UI_BYPASS_AUTH === "true"
+      ? "bypass"
+      : process.env.ADMIN_API_TOKEN
+        ? "static-token"
+        : hasSupabaseAdminConfig()
+          ? "supabase-access-token+admin-role"
+          : "not-configured";
 
   return jsonOk({
     status: "ok",

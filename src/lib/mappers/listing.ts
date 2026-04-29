@@ -42,22 +42,56 @@ export function toListingInsert(
  */
 export function toListingUpdate(input: ListingUpdateInput): Partial<ListingRow> {
   const row: Partial<ListingRow> = {};
-  if (input.title !== undefined) row.title = input.title;
-  if (input.subtitle !== undefined) row.subtitle = input.subtitle;
-  if (input.slug !== undefined) row.slug = input.slug;
-  if (input.description !== undefined) row.description = input.description;
-  if (input.priceCents !== undefined) row.price_cents = input.priceCents;
-  if (input.addressLine1 !== undefined) row.address_line1 = input.addressLine1;
-  if (input.city !== undefined) row.city = input.city;
-  if (input.province !== undefined) row.province = input.province;
-  if (input.postalCode !== undefined) row.postal_code = input.postalCode;
-  if (input.beds !== undefined) row.beds = input.beds;
-  if (input.baths !== undefined) row.baths = input.baths;
-  if (input.sqft !== undefined) row.sqft = input.sqft;
-  if (input.status !== undefined) row.status = input.status;
-  if (input.amenities !== undefined) row.amenities = input.amenities;
-  if (input.featuredImageUrl !== undefined) row.featured_image_url = input.featuredImageUrl;
-  if (input.images !== undefined) row.images = input.images;
-  if (input.soldAt !== undefined) row.sold_at = input.soldAt;
+  if (input.title !== undefined) {
+    row.title = input.title;
+  }
+  if (input.subtitle !== undefined) {
+    row.subtitle = input.subtitle;
+  }
+  if (input.slug !== undefined) {
+    row.slug = input.slug;
+  }
+  if (input.description !== undefined) {
+    row.description = input.description;
+  }
+  if (input.priceCents !== undefined) {
+    row.price_cents = input.priceCents;
+  }
+  if (input.addressLine1 !== undefined) {
+    row.address_line1 = input.addressLine1;
+  }
+  if (input.city !== undefined) {
+    row.city = input.city;
+  }
+  if (input.province !== undefined) {
+    row.province = input.province;
+  }
+  if (input.postalCode !== undefined) {
+    row.postal_code = input.postalCode;
+  }
+  if (input.beds !== undefined) {
+    row.beds = input.beds;
+  }
+  if (input.baths !== undefined) {
+    row.baths = input.baths;
+  }
+  if (input.sqft !== undefined) {
+    row.sqft = input.sqft;
+  }
+  if (input.status !== undefined) {
+    row.status = input.status;
+  }
+  if (input.amenities !== undefined) {
+    row.amenities = input.amenities;
+  }
+  if (input.featuredImageUrl !== undefined) {
+    row.featured_image_url = input.featuredImageUrl;
+  }
+  if (input.images !== undefined) {
+    row.images = input.images;
+  }
+  if (input.soldAt !== undefined) {
+    row.sold_at = input.soldAt;
+  }
   return row;
 }

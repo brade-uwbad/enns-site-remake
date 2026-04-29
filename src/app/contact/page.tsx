@@ -13,10 +13,14 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">Contact</h1>
+      <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        Contact
+      </h1>
       <p className="mt-6 leading-relaxed text-zinc-600 dark:text-zinc-400">
         A contact form will post to{" "}
-        <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-sm dark:bg-zinc-800">/api/contact</code>{" "}
+        <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-sm dark:bg-zinc-800">
+          /api/contact
+        </code>{" "}
         once wired. For now this page is a placeholder for layout and copy.
       </p>
       <dl className="mt-10 space-y-4 text-sm">

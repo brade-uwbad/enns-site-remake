@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Enns Site Remake
 
-## Getting Started
+Next.js 16 app for a real-estate marketing site with Supabase-backed listings and admin CRUD routes.
 
-First, run the development server:
+## Tech stack
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript
+- Supabase (Postgres + Storage)
+- ESLint + Prettier
+- Husky + lint-staged (pre-commit checks)
+
+## Local setup
+
+1. Install dependencies:
+
+```bash
+npm ci
+```
+
+1. Create local env file:
+
+```bash
+cp .env.example .env.local
+```
+
+1. Fill required env vars in `.env.local`:
+
+- `STORAGE_SUPABASE_URL`
+- `STORAGE_SUPABASE_PUBLISHABLE_KEY` (or `STORAGE_SUPABASE_ANON_KEY`)
+- `STORAGE_SUPABASE_SECRET_KEY` (or `STORAGE_SUPABASE_SERVICE_ROLE_KEY`)
+
+Optional:
+
+- `STORAGE_SUPABASE_LISTINGS_BUCKET` (default: `listing-images`)
+- `ADMIN_UI_BYPASS_AUTH=true` for local/testing-only admin bypass
+- `ADMIN_API_TOKEN` for static token mode
+
+1. Run dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Listings features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Public listing APIs:
+  - `GET /api/listings`
+  - `GET /api/listings/sold`
+  - `GET /api/listings/[id]`
+- Admin listing APIs:
+  - `POST /api/admin/listings`
+  - `PUT /api/admin/listings/[id]`
+  - `PATCH /api/admin/listings/[id]`
+  - `DELETE /api/admin/listings/[id]`
+  - `POST /api/admin/listings/upload` (image upload to Supabase Storage)
+- Admin UI:
+  - `/admin/listings`
+- Public listings page:
+  - `/listings`
 
-## Learn More
+## Supabase setup
 
-To learn more about Next.js, take a look at the following resources:
+- Run schema SQL:
+  - `supabase/listings-schema.sql`
+- Ensure Storage bucket exists (default `listing-images`).
+- Add RLS policy to allow public read for active/sold listings.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Quality checks
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run format:check
+npm run lint
+npm run build
+```
 
-## Deploy on Vercel
+Auto-fix helpers:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run format
+npm run lint:fix
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploying to Vercel
+
+- `.env.local` is not deployed automatically.
+- Add the same env vars in Vercel Project Settings -> Environment Variables.
+- Redeploy after changing env values.

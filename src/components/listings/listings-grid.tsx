@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 type Listing = {
@@ -17,10 +18,14 @@ type Listing = {
 };
 
 function formatPrice(priceCents: number | null) {
-  if (priceCents == null) return "Price on request";
-  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(
-    priceCents / 100,
-  );
+  if (priceCents === null) {
+    return "Price on request";
+  }
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: 0,
+  }).format(priceCents / 100);
 }
 
 export function ListingsGrid() {
@@ -51,21 +56,34 @@ export function ListingsGrid() {
           key={listing.id}
           className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
         >
-          <img
-            src={listing.featured_image_url || listing.images?.[0] || "https://placehold.co/1200x700/png?text=Listing"}
+          <Image
+            src={
+              listing.featured_image_url ||
+              listing.images?.[0] ||
+              "https://placehold.co/1200x700/png?text=Listing"
+            }
             alt={listing.title}
+            width={1200}
+            height={700}
+            unoptimized
             className="h-48 w-full object-cover"
           />
           <div className="space-y-3 p-4">
             <div className="flex items-start justify-between gap-3">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">{listing.title}</h2>
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+                {listing.title}
+              </h2>
               <p className="text-sm font-medium">{formatPrice(listing.price_cents)}</p>
             </div>
-            {listing.subtitle && <p className="text-sm text-zinc-600 dark:text-zinc-300">{listing.subtitle}</p>}
+            {listing.subtitle && (
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">{listing.subtitle}</p>
+            )}
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               {[listing.address_line1, listing.city].filter(Boolean).join(", ")}
             </p>
-            {listing.description && <p className="text-sm text-zinc-700 dark:text-zinc-300">{listing.description}</p>}
+            {listing.description && (
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">{listing.description}</p>
+            )}
             {listing.amenities?.length > 0 && (
               <ul className="flex flex-wrap gap-2 pt-1">
                 {listing.amenities.map((item) => (
