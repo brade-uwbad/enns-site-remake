@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { items, total } = fetchListings("sold", parsed.data);
+    const { items, total } = await fetchListings("sold", parsed.data);
     return jsonOk({
       listings: items,
       pagination: {

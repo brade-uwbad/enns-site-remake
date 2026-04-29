@@ -7,6 +7,7 @@ const imageUrl = z.string().url().max(2000);
  */
 export const listingCreateSchema = z.object({
   title: z.string().min(1).max(500),
+  subtitle: z.string().max(500).optional().nullable(),
   slug: z.string().min(1).max(200).optional().nullable(),
   description: z.string().max(50000).optional().nullable(),
   priceCents: z.number().int().min(0).optional().nullable(),
@@ -18,6 +19,7 @@ export const listingCreateSchema = z.object({
   baths: z.number().min(0).optional().nullable(),
   sqft: z.number().int().min(0).optional().nullable(),
   status: z.enum(["active", "sold", "draft"]).default("draft"),
+  amenities: z.array(z.string().min(1).max(120)).max(100).optional(),
   featuredImageUrl: imageUrl.optional().nullable(),
   images: z.array(imageUrl).max(50).optional(),
 });

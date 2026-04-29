@@ -1,4 +1,6 @@
-/** Synthetic admin identity returned when admin API auth succeeds (in-memory / token-based MVP). */
+import { getSupabaseAdminClient, hasSupabaseAdminConfig } from "@/lib/supabase/server";
+
+/** Admin identity returned when Supabase-backed admin auth succeeds. */
 export type AdminUser = { id: string; email: string };
 
 /**
@@ -23,28 +25,62 @@ function bearerToken(request: Request): string | null {
   return h.slice(7).trim() || null;
 }
 
-const DEFAULT_DEV_ID = "00000000-0000-0000-0000-000000000001";
+function isAdminRole(user: {
+  app_metadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
+}) {
+  const appRole = user.app_metadata?.role;
+  if (typeof appRole === "string" && appRole.toLowerCase() === "admin") return true;
+
+  const userRole = user.user_metadata?.role;
+  if (typeof userRole === "string" && userRole.toLowerCase() === "admin") return true;
+
+  const appRoles = user.app_metadata?.roles;
+  if (Array.isArray(appRoles) && appRoles.some((r) => typeof r === "string" && r.toLowerCase() === "admin")) {
+    return true;
+  }
+
+  return false;
+}
 
 /**
  * Verifies that the request is allowed to call admin-only Route Handlers.
  *
- * @param request - Must include `Authorization: Bearer <token>`. If `ADMIN_API_TOKEN` is set,
- *   the token must match; otherwise any non-empty bearer token is accepted (local MVP).
+ * @param request - Must include `Authorization: Bearer <supabase_access_token>`.
+ *   The token is validated with Supabase Auth, then `admin` role is required in metadata.
  * @returns A discriminated result: authenticated admin user, or HTTP status and message to return.
  *
  * @remarks
- * This is a placeholder until Supabase Auth (or similar) issues real sessions and roles.
+ * Admin role is recognized from one of:
+ * - `app_metadata.role = "admin"`
+ * - `user_metadata.role = "admin"`
+ * - `app_metadata.roles` containing `"admin"`
  */
 export async function requireAdmin(request: Request): Promise<AdminAuthResult> {
+  if (!hasSupabaseAdminConfig()) {
+    return { ok: false, status: 500, message: "Supabase admin config is missing on the server" };
+  }
+
   const token = bearerToken(request);
   if (!token) {
     return { ok: false, status: 401, message: "Missing Bearer token" };
   }
 
-  const expected = process.env.ADMIN_API_TOKEN;
-  if (expected && token !== expected) {
-    return { ok: false, status: 401, message: "Invalid admin token" };
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data.user) {
+    return { ok: false, status: 401, message: "Invalid Supabase access token" };
   }
 
-  return { ok: true, user: { id: DEFAULT_DEV_ID, email: "admin@local" } };
+  if (!isAdminRole(data.user)) {
+    return { ok: false, status: 403, message: "Admin role required" };
+  }
+
+  return {
+    ok: true,
+    user: {
+      id: data.user.id,
+      email: data.user.email ?? "unknown@supabase.local",
+    },
+  };
 }

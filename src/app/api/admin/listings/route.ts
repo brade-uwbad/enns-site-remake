@@ -1,7 +1,7 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
+import { createAdminListing } from "@/lib/listings/admin";
 import { toListingInsert } from "@/lib/mappers/listing";
-import { insertListing } from "@/lib/store/memory";
 import { listingCreateSchema } from "@/lib/validations/listings";
 
 /**
@@ -29,6 +29,11 @@ export async function POST(request: Request) {
   }
 
   const row = toListingInsert(auth.user.id, parsed.data);
-  const data = insertListing(row);
-  return jsonOk({ listing: data }, { status: 201 });
+  try {
+    const data = await createAdminListing(row);
+    return jsonOk({ listing: data }, { status: 201 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to create listing";
+    return jsonError(message, 500, "LISTINGS_ERROR");
+  }
 }

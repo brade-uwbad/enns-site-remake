@@ -1,5 +1,5 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
-import { getListingById } from "@/lib/store/memory";
+import { fetchPublicListingById } from "@/lib/listings/query";
 
 /** Next.js 15+ dynamic route context: `params` is async. */
 type Params = { params: Promise<{ id: string }> };
@@ -17,8 +17,8 @@ export async function GET(_request: Request, ctx: Params) {
     return jsonError("Listing id is required", 400, "BAD_REQUEST");
   }
 
-  const data = getListingById(id);
-  if (!data || data.status === "draft") {
+  const data = await fetchPublicListingById(id);
+  if (!data) {
     return jsonError("Listing not found", 404, "NOT_FOUND");
   }
 

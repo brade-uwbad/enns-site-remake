@@ -13,6 +13,7 @@ export type ListingRow = {
   id: string;
   slug: string | null;
   title: string;
+  subtitle: string | null;
   description: string | null;
   price_cents: number | null;
   address_line1: string | null;
@@ -26,6 +27,7 @@ export type ListingRow = {
   sold_at: string | null;
   featured_image_url: string | null;
   images: string[];
+  amenities: string[];
   created_at: string;
   updated_at: string;
   created_by: string | null;

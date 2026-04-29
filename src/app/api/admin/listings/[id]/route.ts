@@ -1,7 +1,7 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
+import { deleteAdminListingById, getAdminListingById, updateAdminListingById } from "@/lib/listings/admin";
 import { toListingUpdate } from "@/lib/mappers/listing";
-import { deleteListingById, getListingById, updateListingById } from "@/lib/store/memory";
 import { listingUpdateSchema } from "@/lib/validations/listings";
 
 type Params = { params: Promise<{ id: string }> };
@@ -36,18 +36,29 @@ export async function PUT(request: Request, ctx: Params) {
     return jsonError("Validation failed", 400, "VALIDATION_ERROR", parsed.error.flatten());
   }
 
-  const existing = getListingById(id);
+  const existing = await getAdminListingById(id);
   if (!existing) {
     return jsonError("Listing not found", 404, "NOT_FOUND");
   }
 
   const patch = toListingUpdate(parsed.data);
-  const data = updateListingById(id, patch);
-  if (!data) {
-    return jsonError("Listing not found", 404, "NOT_FOUND");
+  try {
+    const data = await updateAdminListingById(id, patch);
+    if (!data) {
+      return jsonError("Listing not found", 404, "NOT_FOUND");
+    }
+    return jsonOk({ listing: data });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to update listing";
+    return jsonError(message, 500, "LISTINGS_ERROR");
   }
+}
 
-  return jsonOk({ listing: data });
+/**
+ * `PATCH /api/admin/listings/[id]` — Alias for partial update behavior used by some clients.
+ */
+export async function PATCH(request: Request, ctx: Params) {
+  return PUT(request, ctx);
 }
 
 /**
@@ -68,10 +79,14 @@ export async function DELETE(request: Request, ctx: Params) {
     return jsonError("Listing id is required", 400, "BAD_REQUEST");
   }
 
-  const ok = deleteListingById(id);
-  if (!ok) {
-    return jsonError("Listing not found", 404, "NOT_FOUND");
+  try {
+    const ok = await deleteAdminListingById(id);
+    if (!ok) {
+      return jsonError("Listing not found", 404, "NOT_FOUND");
+    }
+    return jsonOk({ deleted: true, id });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to delete listing";
+    return jsonError(message, 500, "LISTINGS_ERROR");
   }
-
-  return jsonOk({ deleted: true, id });
 }

@@ -14,6 +14,7 @@ export function toListingInsert(
 ): Omit<ListingRow, "id" | "created_at" | "updated_at"> {
   return {
     title: input.title,
+    subtitle: input.subtitle ?? null,
     slug: input.slug ?? null,
     description: input.description ?? null,
     price_cents: input.priceCents ?? null,
@@ -26,6 +27,7 @@ export function toListingInsert(
     sqft: input.sqft ?? null,
     status: input.status,
     sold_at: null,
+    amenities: input.amenities ?? [],
     featured_image_url: input.featuredImageUrl ?? null,
     images: input.images ?? [],
     created_by: userId,
@@ -41,6 +43,7 @@ export function toListingInsert(
 export function toListingUpdate(input: ListingUpdateInput): Partial<ListingRow> {
   const row: Partial<ListingRow> = {};
   if (input.title !== undefined) row.title = input.title;
+  if (input.subtitle !== undefined) row.subtitle = input.subtitle;
   if (input.slug !== undefined) row.slug = input.slug;
   if (input.description !== undefined) row.description = input.description;
   if (input.priceCents !== undefined) row.price_cents = input.priceCents;
@@ -52,6 +55,7 @@ export function toListingUpdate(input: ListingUpdateInput): Partial<ListingRow> 
   if (input.baths !== undefined) row.baths = input.baths;
   if (input.sqft !== undefined) row.sqft = input.sqft;
   if (input.status !== undefined) row.status = input.status;
+  if (input.amenities !== undefined) row.amenities = input.amenities;
   if (input.featuredImageUrl !== undefined) row.featured_image_url = input.featuredImageUrl;
   if (input.images !== undefined) row.images = input.images;
   if (input.soldAt !== undefined) row.sold_at = input.soldAt;
