@@ -98,20 +98,22 @@ export function ListingsEditor() {
   }
 
   function authHeaders() {
-    return {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     };
+    if (token.trim()) {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    }
+    return headers;
   }
 
   async function createListing() {
     setBusy(true);
     setMessage("");
     try {
-      if (!token.trim()) {
-        throw new Error("Access token is required.");
+      if (token.trim()) {
+        window.localStorage.setItem("admin_access_token", token.trim());
       }
-      window.localStorage.setItem("admin_access_token", token.trim());
       const payload = {
         title: form.title,
         subtitle: form.subtitle || null,
@@ -150,10 +152,9 @@ export function ListingsEditor() {
     setBusy(true);
     setMessage("");
     try {
-      if (!token.trim()) {
-        throw new Error("Access token is required.");
+      if (token.trim()) {
+        window.localStorage.setItem("admin_access_token", token.trim());
       }
-      window.localStorage.setItem("admin_access_token", token.trim());
       const payload = {
         title: form.title,
         subtitle: form.subtitle || null,
@@ -189,13 +190,12 @@ export function ListingsEditor() {
     setBusy(true);
     setMessage("");
     try {
-      if (!token.trim()) {
-        throw new Error("Access token is required.");
+      if (token.trim()) {
+        window.localStorage.setItem("admin_access_token", token.trim());
       }
-      window.localStorage.setItem("admin_access_token", token.trim());
       const res = await fetch(`/api/admin/listings/${selectedId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token.trim() ? { Authorization: `Bearer ${token.trim()}` } : undefined,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.message ?? "Failed to delete listing.");
@@ -218,13 +218,16 @@ export function ListingsEditor() {
       </p>
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-        <label className="mb-2 block text-sm font-medium">Supabase user access token</label>
+        <label className="mb-2 block text-sm font-medium">Access token (optional)</label>
         <textarea
           className="h-20 w-full rounded-md border border-zinc-300 bg-white p-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
           value={token}
           onChange={(e) => setToken(e.target.value)}
-          placeholder="Paste access token (JWT)"
+          placeholder="Leave blank when ADMIN_UI_BYPASS_AUTH=true"
         />
+        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+          If server bypass mode is enabled, you can leave this empty.
+        </p>
       </section>
 
       <section className="grid gap-6 md:grid-cols-2">

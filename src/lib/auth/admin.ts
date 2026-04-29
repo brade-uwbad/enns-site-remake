@@ -57,6 +57,24 @@ function isAdminRole(user: {
  * - `app_metadata.roles` containing `"admin"`
  */
 export async function requireAdmin(request: Request): Promise<AdminAuthResult> {
+  // Local/staging bypass for admin UI. Do not enable in production unless intentionally public.
+  if (process.env.ADMIN_UI_BYPASS_AUTH === "true") {
+    return { ok: true, user: { id: "local-admin", email: "admin@local" } };
+  }
+
+  // Simpler non-JWT mode if a static admin token is configured.
+  const staticAdminToken = process.env.ADMIN_API_TOKEN;
+  if (staticAdminToken) {
+    const token = bearerToken(request);
+    if (!token) {
+      return { ok: false, status: 401, message: "Missing Bearer token" };
+    }
+    if (token !== staticAdminToken) {
+      return { ok: false, status: 401, message: "Invalid admin token" };
+    }
+    return { ok: true, user: { id: "static-admin", email: "admin@local" } };
+  }
+
   if (!hasSupabaseAdminConfig()) {
     return { ok: false, status: 500, message: "Supabase admin config is missing on the server" };
   }
