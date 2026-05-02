@@ -45,9 +45,10 @@ create table public.listings (
   id uuid primary key default gen_random_uuid(),
   slug text unique,
   title text not null,
+  subtitle text,
   description text,
-  price_cents bigint,
-  address_line1 text,
+  price_dollars numeric(12, 2),
+  address_line text,
   city text,
   province text,
   postal_code text,
@@ -58,6 +59,7 @@ create table public.listings (
   sold_at timestamptz,
   featured_image_url text,
   images jsonb not null default '[]'::jsonb,
+  amenities text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   created_by uuid references auth.users (id)
@@ -65,7 +67,7 @@ create table public.listings (
 
 create index listings_status_idx on public.listings (status);
 create index listings_city_idx on public.listings (lower(city));
-create index listings_price_idx on public.listings (price_cents);
+create index listings_price_idx on public.listings (price_dollars);
 
 alter table public.listings enable row level security;
 

@@ -8,8 +8,8 @@ type Listing = {
   title: string;
   subtitle: string | null;
   city: string | null;
-  address_line1: string | null;
-  price_cents: number | null;
+  address_line: string | null;
+  price_dollars: number | null;
   description: string | null;
   amenities: string[];
   images: string[];
@@ -17,15 +17,16 @@ type Listing = {
   status: "active" | "sold" | "draft";
 };
 
-function formatPrice(priceCents: number | null) {
-  if (priceCents === null) {
+function formatPrice(priceDollars: number | null) {
+  if (priceDollars === null) {
     return "Price on request";
   }
   return new Intl.NumberFormat("en-CA", {
     style: "currency",
     currency: "CAD",
-    maximumFractionDigits: 0,
-  }).format(priceCents / 100);
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(priceDollars);
 }
 
 export function ListingsGrid() {
@@ -73,13 +74,13 @@ export function ListingsGrid() {
               <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
                 {listing.title}
               </h2>
-              <p className="text-sm font-medium">{formatPrice(listing.price_cents)}</p>
+              <p className="text-sm font-medium">{formatPrice(listing.price_dollars)}</p>
             </div>
             {listing.subtitle && (
               <p className="text-sm text-zinc-600 dark:text-zinc-300">{listing.subtitle}</p>
             )}
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              {[listing.address_line1, listing.city].filter(Boolean).join(", ")}
+              {[listing.address_line, listing.city].filter(Boolean).join(", ")}
             </p>
             {listing.description && (
               <p className="text-sm text-zinc-700 dark:text-zinc-300">{listing.description}</p>

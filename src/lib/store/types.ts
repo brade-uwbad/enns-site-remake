@@ -7,7 +7,7 @@ export type ListingStatus = "active" | "sold" | "draft";
  * Property listing record: pricing, address, media, and lifecycle fields.
  *
  * @remarks
- * `price_cents` avoids floating-point money; timestamps are ISO 8601 strings.
+ * `price_dollars` is stored as Postgres `numeric(12,2)`; timestamps are ISO 8601 strings.
  */
 export type ListingRow = {
   id: string;
@@ -15,8 +15,8 @@ export type ListingRow = {
   title: string;
   subtitle: string | null;
   description: string | null;
-  price_cents: number | null;
-  address_line1: string | null;
+  price_dollars: number | null;
+  address_line: string | null;
   city: string | null;
   province: string | null;
   postal_code: string | null;

@@ -23,8 +23,8 @@ const seedListings: ListingRow[] = [
     title: "Sample active listing (Kitchener)",
     subtitle: "2 bed, 2 bath condo",
     description: "Placeholder description for MVP testing.",
-    price_cents: 750_000 * 100,
-    address_line1: "100 Example St",
+    price_dollars: 750_000,
+    address_line: "100 Example St",
     city: "Kitchener",
     province: "ON",
     postal_code: "N2H 0A1",
@@ -46,8 +46,8 @@ const seedListings: ListingRow[] = [
     title: "Sample sold listing (Waterloo)",
     subtitle: "Townhome in Waterloo",
     description: "Placeholder sold property.",
-    price_cents: 620_000 * 100,
-    address_line1: "200 Sample Ave",
+    price_dollars: 620_000,
+    address_line: "200 Sample Ave",
     city: "Waterloo",
     province: "ON",
     postal_code: "N2L 3G1",
@@ -173,10 +173,10 @@ export function queryListings(status: "active" | "sold", query: ListQuery) {
   const maxPrice = query.maxPrice;
   const beds = query.beds;
   if (minPrice !== undefined) {
-    rows = rows.filter((l) => (l.price_cents ?? 0) >= minPrice * 100);
+    rows = rows.filter((l) => (l.price_dollars ?? 0) >= minPrice);
   }
   if (maxPrice !== undefined) {
-    rows = rows.filter((l) => (l.price_cents ?? 0) <= maxPrice * 100);
+    rows = rows.filter((l) => (l.price_dollars ?? 0) <= maxPrice);
   }
   if (beds !== undefined) {
     rows = rows.filter((l) => l.beds === beds);

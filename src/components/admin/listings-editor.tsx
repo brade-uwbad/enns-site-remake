@@ -7,8 +7,8 @@ type Listing = {
   title: string;
   subtitle: string | null;
   city: string | null;
-  address_line1: string | null;
-  price_cents: number | null;
+  address_line: string | null;
+  price_dollars: number | null;
   description: string | null;
   amenities: string[];
   images: string[];
@@ -19,8 +19,8 @@ type EditorState = {
   title: string;
   subtitle: string;
   city: string;
-  addressLine1: string;
-  priceCents: string;
+  addressLine: string;
+  priceDollars: string;
   description: string;
   amenitiesText: string;
   imagesText: string;
@@ -31,8 +31,8 @@ const blankState: EditorState = {
   title: "",
   subtitle: "",
   city: "",
-  addressLine1: "",
-  priceCents: "",
+  addressLine: "",
+  priceDollars: "",
   description: "",
   amenitiesText: "",
   imagesText: "",
@@ -44,11 +44,11 @@ function toEditorState(listing: Listing): EditorState {
     title: listing.title ?? "",
     subtitle: listing.subtitle ?? "",
     city: listing.city ?? "",
-    addressLine1: listing.address_line1 ?? "",
-    priceCents:
-      listing.price_cents === null || listing.price_cents === undefined
+    addressLine: listing.address_line ?? "",
+    priceDollars:
+      listing.price_dollars === null || listing.price_dollars === undefined
         ? ""
-        : String(listing.price_cents),
+        : String(listing.price_dollars),
     description: listing.description ?? "",
     amenitiesText: (listing.amenities ?? []).join(", "),
     imagesText: (listing.images ?? []).join("\n"),
@@ -127,8 +127,8 @@ export function ListingsEditor() {
         title: form.title,
         subtitle: form.subtitle || null,
         city: form.city || null,
-        addressLine1: form.addressLine1 || null,
-        priceCents: form.priceCents ? Number(form.priceCents) : null,
+        addressLine: form.addressLine || null,
+        priceDollars: form.priceDollars ? Number(form.priceDollars) : null,
         description: form.description || null,
         amenities: splitList(form.amenitiesText),
         images: splitList(form.imagesText),
@@ -172,8 +172,8 @@ export function ListingsEditor() {
         title: form.title,
         subtitle: form.subtitle || null,
         city: form.city || null,
-        addressLine1: form.addressLine1 || null,
-        priceCents: form.priceCents ? Number(form.priceCents) : null,
+        addressLine: form.addressLine || null,
+        priceDollars: form.priceDollars ? Number(form.priceDollars) : null,
         description: form.description || null,
         amenities: splitList(form.amenitiesText),
         images: splitList(form.imagesText),
@@ -380,17 +380,19 @@ export function ListingsEditor() {
             <span className="mb-1 block">Address</span>
             <input
               className="w-full rounded-md border border-zinc-300 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-900"
-              value={form.addressLine1}
-              onChange={(e) => setField("addressLine1", e.target.value)}
+              value={form.addressLine}
+              onChange={(e) => setField("addressLine", e.target.value)}
             />
           </label>
           <label className="text-sm">
-            <span className="mb-1 block">Selling price (cents)</span>
+            <span className="mb-1 block">Selling price (dollars)</span>
             <input
               type="number"
+              step="0.01"
+              min="0"
               className="w-full rounded-md border border-zinc-300 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-900"
-              value={form.priceCents}
-              onChange={(e) => setField("priceCents", e.target.value)}
+              value={form.priceDollars}
+              onChange={(e) => setField("priceDollars", e.target.value)}
             />
           </label>
           <label className="text-sm">

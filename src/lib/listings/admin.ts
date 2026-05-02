@@ -5,6 +5,7 @@ import {
   insertListing as insertListingMemory,
   updateListingById as updateListingMemory,
 } from "@/lib/store/memory";
+import { normalizeListingRow } from "@/lib/listings/normalize-listing";
 import type { ListingRow } from "@/lib/store/types";
 
 export async function createAdminListing(
@@ -18,7 +19,7 @@ export async function createAdminListing(
   if (error) {
     throw new Error(error.message);
   }
-  return data as ListingRow;
+  return normalizeListingRow(data as Record<string, unknown>);
 }
 
 export async function getAdminListingById(id: string) {
@@ -30,7 +31,7 @@ export async function getAdminListingById(id: string) {
   if (error) {
     throw new Error(error.message);
   }
-  return (data as ListingRow | null) ?? null;
+  return data ? normalizeListingRow(data as Record<string, unknown>) : null;
 }
 
 export async function updateAdminListingById(id: string, patch: Partial<ListingRow>) {
@@ -47,7 +48,7 @@ export async function updateAdminListingById(id: string, patch: Partial<ListingR
   if (error) {
     throw new Error(error.message);
   }
-  return (data as ListingRow | null) ?? null;
+  return data ? normalizeListingRow(data as Record<string, unknown>) : null;
 }
 
 export async function deleteAdminListingById(id: string) {

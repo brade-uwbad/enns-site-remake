@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeListingRow } from "@/lib/listings/normalize-listing";
 import { getSupabaseReadClient, hasSupabaseReadConfig } from "@/lib/supabase/server";
 import { queryListings } from "@/lib/store/memory";
 import type { ListingRow } from "@/lib/store/types";
@@ -7,14 +8,13 @@ import type { ListingRow } from "@/lib/store/types";
  * Zod schema for listing collection query parameters (`page`, `limit`, filters, search).
  *
  * @remarks
- * Price filters use whole dollars in the query string; the store compares against `price_cents`.
+ * `minPrice` / `maxPrice` use dollars, matching `price_dollars` in the database.
  */
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
-  /** Whole dollars (integer); converted to cents for filtering. */
-  minPrice: z.coerce.number().int().min(0).optional(),
-  maxPrice: z.coerce.number().int().min(0).optional(),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
   beds: z.coerce.number().int().min(0).optional(),
   city: z.string().max(120).optional(),
   q: z.string().max(200).optional(),
@@ -54,10 +54,10 @@ export async function fetchListings(status: "active" | "sold", query: ListQuery)
     .range(from, to);
 
   if (query.minPrice !== undefined) {
-    db = db.gte("price_cents", query.minPrice * 100);
+    db = db.gte("price_dollars", query.minPrice);
   }
   if (query.maxPrice !== undefined) {
-    db = db.lte("price_cents", query.maxPrice * 100);
+    db = db.lte("price_dollars", query.maxPrice);
   }
   if (query.beds !== undefined) {
     db = db.eq("beds", query.beds);
@@ -75,7 +75,10 @@ export async function fetchListings(status: "active" | "sold", query: ListQuery)
     throw new Error(error.message);
   }
 
-  return { items: (data ?? []) as ListingRow[], total: count ?? 0 };
+  const items = (data ?? []).map((row) =>
+    normalizeListingRow(row as Record<string, unknown>),
+  );
+  return { items, total: count ?? 0 };
 }
 
 export async function fetchPublicListingById(id: string) {
@@ -100,5 +103,5 @@ export async function fetchPublicListingById(id: string) {
     throw new Error(error.message);
   }
 
-  return (data as ListingRow | null) ?? null;
+  return data ? normalizeListingRow(data as Record<string, unknown>) : null;
 }
