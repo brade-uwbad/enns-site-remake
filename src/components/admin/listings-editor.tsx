@@ -116,13 +116,54 @@ export function ListingsEditor() {
     return headers;
   }
 
+  function uploadHeadersForMultipart() {
+    return token.trim() ? { Authorization: `Bearer ${token.trim()}` } : undefined;
+  }
+
+  /**
+   * Uploads selected files from the file input into Storage and appends URLs to imagesText.
+   * No-op if no files chosen. Returns the merged image URL list for the save payload (state may lag otherwise).
+   */
+  async function uploadSelectedFilesIntoFormImages(
+    existingImagesText: string,
+  ): Promise<string[]> {
+    if (!uploadFiles || uploadFiles.length === 0) {
+      return splitList(existingImagesText);
+    }
+    const uploadedUrls: string[] = [];
+    for (const file of Array.from(uploadFiles)) {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/listings/upload", {
+        method: "POST",
+        headers: uploadHeadersForMultipart(),
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? `Failed to upload ${file.name}`);
+      }
+      if (data?.data?.url) {
+        uploadedUrls.push(data.data.url as string);
+      }
+    }
+    const merged = [...splitList(existingImagesText), ...uploadedUrls];
+    if (uploadedUrls.length > 0) {
+      setField("imagesText", merged.join("\n"));
+      setUploadFiles(null);
+    }
+    return merged;
+  }
+
   async function createListing() {
     setBusy(true);
     setMessage("");
     try {
+      const hadPendingUpload = Boolean(uploadFiles?.length);
       if (token.trim()) {
         window.localStorage.setItem("admin_access_token", token.trim());
       }
+      const images = await uploadSelectedFilesIntoFormImages(form.imagesText);
       const payload = {
         title: form.title,
         subtitle: form.subtitle || null,
@@ -131,7 +172,7 @@ export function ListingsEditor() {
         priceDollars: form.priceDollars ? Number(form.priceDollars) : null,
         description: form.description || null,
         amenities: splitList(form.amenitiesText),
-        images: splitList(form.imagesText),
+        images,
         status: form.status,
       };
       const res = await fetch("/api/admin/listings", {
@@ -144,7 +185,7 @@ export function ListingsEditor() {
         throw new Error(data?.error?.message ?? "Failed to create listing.");
       }
 
-      setMessage("Listing created.");
+      setMessage(hadPendingUpload ? "Uploaded image(s); listing created." : "Listing created.");
       await loadListings();
       const id = data?.data?.listing?.id as string | undefined;
       if (id) {
@@ -165,9 +206,11 @@ export function ListingsEditor() {
     setBusy(true);
     setMessage("");
     try {
+      const hadPendingUpload = Boolean(uploadFiles?.length);
       if (token.trim()) {
         window.localStorage.setItem("admin_access_token", token.trim());
       }
+      const images = await uploadSelectedFilesIntoFormImages(form.imagesText);
       const payload = {
         title: form.title,
         subtitle: form.subtitle || null,
@@ -176,7 +219,7 @@ export function ListingsEditor() {
         priceDollars: form.priceDollars ? Number(form.priceDollars) : null,
         description: form.description || null,
         amenities: splitList(form.amenitiesText),
-        images: splitList(form.imagesText),
+        images,
         status: form.status,
       };
       const res = await fetch(`/api/admin/listings/${selectedId}`, {
@@ -188,7 +231,7 @@ export function ListingsEditor() {
       if (!res.ok) {
         throw new Error(data?.error?.message ?? "Failed to update listing.");
       }
-      setMessage("Listing updated.");
+      setMessage(hadPendingUpload ? "Uploaded image(s); listing updated." : "Listing updated.");
       await loadListings();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to update listing.");
@@ -222,45 +265,6 @@ export function ListingsEditor() {
       await loadListings();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to delete listing.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function uploadImages() {
-    if (!uploadFiles || uploadFiles.length === 0) {
-      setMessage("Pick one or more images first.");
-      return;
-    }
-    setBusy(true);
-    setMessage("");
-    try {
-      const uploadedUrls: string[] = [];
-      for (const file of Array.from(uploadFiles)) {
-        const fd = new FormData();
-        fd.append("file", file);
-        const headers = token.trim() ? { Authorization: `Bearer ${token.trim()}` } : undefined;
-        const res = await fetch("/api/admin/listings/upload", {
-          method: "POST",
-          headers,
-          body: fd,
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data?.error?.message ?? `Failed to upload ${file.name}`);
-        }
-        if (data?.data?.url) {
-          uploadedUrls.push(data.data.url as string);
-        }
-      }
-
-      const current = splitList(form.imagesText);
-      const merged = [...current, ...uploadedUrls];
-      setField("imagesText", merged.join("\n"));
-      setUploadFiles(null);
-      setMessage(`Uploaded ${uploadedUrls.length} image(s).`);
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Failed to upload images.");
     } finally {
       setBusy(false);
     }
@@ -437,24 +441,13 @@ export function ListingsEditor() {
               onChange={(e) => setUploadFiles(e.target.files)}
               className="block w-full text-sm"
             />
-            <button
-              type="button"
-              onClick={uploadImages}
-              disabled={busy || !uploadFiles || uploadFiles.length === 0}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700"
-            >
-              Upload selected images
-            </button>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Uploaded image URLs are added to the listing automatically.
+              Selected photos upload automatically when you click Create or Update.
+            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Stored images: {splitList(form.imagesText).length}
             </p>
           </div>
-          <textarea
-            className="mt-2 h-24 w-full rounded-md border border-zinc-300 bg-white p-2 text-xs dark:border-zinc-700 dark:bg-zinc-900"
-            value={form.imagesText}
-            onChange={(e) => setField("imagesText", e.target.value)}
-            placeholder="Stored image URLs"
-          />
         </div>
       </section>
     </div>
