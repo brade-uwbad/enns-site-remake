@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 
 type Listing = {
   id: string;
@@ -63,21 +63,23 @@ function splitList(text: string) {
     .filter(Boolean);
 }
 
-export function ListingsEditor() {
-  const [token, setToken] = useState("");
-  const [listings, setListings] = useState<Listing[]>([]);
+type ListingsEditorProps = {
+  initialListings: Listing[];
+};
+
+export function ListingsEditor({ initialListings }: ListingsEditorProps) {
+  const [token, setToken] = useState(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return window.localStorage.getItem("admin_access_token") ?? "";
+  });
+  const [listings, setListings] = useState<Listing[]>(initialListings);
   const [selectedId, setSelectedId] = useState<string>("");
   const [form, setForm] = useState<EditorState>(blankState);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string>("");
   const [uploadFiles, setUploadFiles] = useState<FileList | null>(null);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem("admin_access_token");
-    if (saved) {
-      setToken(saved);
-    }
-  }, []);
 
   async function loadListings() {
     const res = await fetch("/api/listings?limit=100");
@@ -85,16 +87,7 @@ export function ListingsEditor() {
     setListings(data?.data?.listings ?? []);
   }
 
-  useEffect(() => {
-    loadListings().catch(() => {
-      setMessage("Failed to load listings.");
-    });
-  }, []);
-
-  const selected = useMemo(
-    () => listings.find((l) => l.id === selectedId) ?? null,
-    [listings, selectedId],
-  );
+  const selected = listings.find((l) => l.id === selectedId) ?? null;
 
   function chooseListing(id: string) {
     setSelectedId(id);
