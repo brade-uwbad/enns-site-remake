@@ -1,6 +1,13 @@
 import type { ListingRow } from "@/lib/store/types";
 import type { ListingCreateInput, ListingUpdateInput } from "@/lib/validations/listings";
 
+function roundDollars(n: number | null | undefined): number | null {
+  if (n === null || n === undefined) {
+    return null;
+  }
+  return Math.round(n * 100) / 100;
+}
+
 /**
  * Maps a validated API create body (camelCase) to a row shape for the listings store (snake_case DB-style fields).
  *
@@ -17,8 +24,8 @@ export function toListingInsert(
     subtitle: input.subtitle ?? null,
     slug: input.slug ?? null,
     description: input.description ?? null,
-    price_cents: input.priceCents ?? null,
-    address_line1: input.addressLine1 ?? null,
+    price_dollars: roundDollars(input.priceDollars ?? null),
+    address_line: input.addressLine ?? null,
     city: input.city ?? null,
     province: input.province ?? null,
     postal_code: input.postalCode ?? null,
@@ -54,11 +61,11 @@ export function toListingUpdate(input: ListingUpdateInput): Partial<ListingRow> 
   if (input.description !== undefined) {
     row.description = input.description;
   }
-  if (input.priceCents !== undefined) {
-    row.price_cents = input.priceCents;
+  if (input.priceDollars !== undefined) {
+    row.price_dollars = roundDollars(input.priceDollars);
   }
-  if (input.addressLine1 !== undefined) {
-    row.address_line1 = input.addressLine1;
+  if (input.addressLine !== undefined) {
+    row.address_line = input.addressLine;
   }
   if (input.city !== undefined) {
     row.city = input.city;
