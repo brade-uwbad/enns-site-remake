@@ -22,7 +22,7 @@ const poppins = Poppins({
  */
 export function SiteHeader() {
   return (
-    <header className="border-b border-zinc-200/80 bg-white/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
         <Link href="/" className="flex items-center" aria-label="Brad Enns Real Estate home">
           <Image
