@@ -117,9 +117,7 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
    * Uploads selected files from the file input into Storage and appends URLs to imagesText.
    * No-op if no files chosen. Returns the merged image URL list for the save payload (state may lag otherwise).
    */
-  async function uploadSelectedFilesIntoFormImages(
-    existingImagesText: string,
-  ): Promise<string[]> {
+  async function uploadSelectedFilesIntoFormImages(existingImagesText: string): Promise<string[]> {
     if (!uploadFiles || uploadFiles.length === 0) {
       return splitList(existingImagesText);
     }
