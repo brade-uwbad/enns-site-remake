@@ -75,9 +75,7 @@ export async function fetchListings(status: "active" | "sold", query: ListQuery)
     throw new Error(error.message);
   }
 
-  const items = (data ?? []).map((row) =>
-    normalizeListingRow(row as Record<string, unknown>),
-  );
+  const items = (data ?? []).map((row) => normalizeListingRow(row as Record<string, unknown>));
   return { items, total: count ?? 0 };
 }
 
