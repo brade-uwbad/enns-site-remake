@@ -145,9 +145,12 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
   const [editorPanel, setEditorPanel] = useState<EditorPanel>("menu");
 
   async function loadListings() {
-    const res = await fetch("/api/listings?limit=100");
-    const data = await res.json();
-    setListings(data?.data?.listings ?? []);
+    const [activeRes, soldRes] = await Promise.all([
+      fetch("/api/listings?limit=100"),
+      fetch("/api/listings/sold?limit=100"),
+    ]);
+    const [activeData, soldData] = await Promise.all([activeRes.json(), soldRes.json()]);
+    setListings([...(activeData?.data?.listings ?? []), ...(soldData?.data?.listings ?? [])]);
   }
 
   const selected = listings.find((l) => l.id === selectedId) ?? null;
@@ -367,6 +370,36 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
     }
   }
 
+  async function markAsSold() {
+    if (!selectedId) {
+      setMessage("Pick a listing first.");
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    try {
+      const res = await fetch(`/api/admin/listings/${selectedId}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          status: "sold",
+          soldAt: new Date().toISOString(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? "Failed to mark listing as sold.");
+      }
+      setMessage("Listing marked as sold.");
+      await loadListings();
+      setForm((prev) => ({ ...prev, status: "sold" }));
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Failed to mark listing as sold.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function resetToNew() {
     setSelectedId("");
     setForm(blankState);
@@ -442,6 +475,14 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
               className="rounded-md border border-red-300 px-3 py-2 text-sm text-red-700 disabled:opacity-60"
             >
               Delete
+            </button>
+            <button
+              type="button"
+              onClick={markAsSold}
+              disabled={busy || !selectedId || form.status === "sold"}
+              className="rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-zinc-800 disabled:opacity-60"
+            >
+              Mark as sold
             </button>
           </div>
           {message && <p className="mt-3 text-sm text-zinc-700">{message}</p>}
