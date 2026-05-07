@@ -17,6 +17,7 @@ export const listQuerySchema = z.object({
   maxPrice: z.coerce.number().min(0).optional(),
   beds: z.coerce.number().int().min(0).optional(),
   city: z.string().max(120).optional(),
+  propertyType: z.enum(["apartment", "detached", "townhouse", "condo"]).optional(),
   q: z.string().max(200).optional(),
 });
 
@@ -61,6 +62,9 @@ export async function fetchListings(status: "active" | "sold", query: ListQuery)
   }
   if (query.beds !== undefined) {
     db = db.eq("beds", query.beds);
+  }
+  if (query.propertyType) {
+    db = db.eq("property_type", query.propertyType);
   }
   if (query.city?.trim()) {
     db = db.ilike("city", `%${sanitizeSearchLike(query.city)}%`);

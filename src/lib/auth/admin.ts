@@ -68,7 +68,10 @@ function isAdminRole(user: {
 export async function requireAdmin(request: Request): Promise<AdminAuthResult> {
   // Local/staging bypass for admin UI. Do not enable in production unless intentionally public.
   if (process.env.ADMIN_UI_BYPASS_AUTH === "true") {
-    return { ok: true, user: { id: "local-admin", email: "admin@local" } };
+    return {
+      ok: true,
+      user: { id: "00000000-0000-0000-0000-000000000001", email: "admin@local" },
+    };
   }
 
   // Simpler non-JWT mode if a static admin token is configured.

@@ -1,6 +1,7 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
 import { createAdminListing } from "@/lib/listings/admin";
+import { buildGeocodeAddress, geocodeAddress } from "@/lib/listings/geocode";
 import { toListingInsert } from "@/lib/mappers/listing";
 import { listingCreateSchema } from "@/lib/validations/listings";
 
@@ -28,7 +29,26 @@ export async function POST(request: Request) {
     return jsonError("Validation failed", 400, "VALIDATION_ERROR", parsed.error.flatten());
   }
 
-  const row = toListingInsert(auth.user.id, parsed.data);
+  let input = parsed.data;
+  const needsGeocode = input.latitude == null || input.longitude == null;
+  if (needsGeocode) {
+    try {
+      const query = buildGeocodeAddress({
+        addressLine: input.addressLine,
+        city: input.city,
+        province: input.province,
+        postalCode: input.postalCode,
+      });
+      const point = await geocodeAddress(query);
+      if (point) {
+        input = { ...input, latitude: point.latitude, longitude: point.longitude };
+      }
+    } catch {
+      // Keep create flow non-blocking if geocoding fails.
+    }
+  }
+
+  const row = toListingInsert(auth.user.id, input);
   try {
     const data = await createAdminListing(row);
     return jsonOk({ listing: data }, { status: 201 });

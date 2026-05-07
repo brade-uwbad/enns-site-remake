@@ -3,6 +3,17 @@
 /** Publication state for a listing in the store or database. */
 export type ListingStatus = "active" | "sold" | "draft";
 
+/** Categorization of a listing by built form. */
+export type PropertyType = "apartment" | "detached" | "townhouse" | "condo";
+
+/** Allowed values for {@link PropertyType}, suitable for `<select>` options. */
+export const PROPERTY_TYPES: PropertyType[] = [
+  "apartment",
+  "detached",
+  "townhouse",
+  "condo",
+];
+
 /**
  * Property listing record: pricing, address, media, and lifecycle fields.
  *
@@ -20,9 +31,12 @@ export type ListingRow = {
   city: string | null;
   province: string | null;
   postal_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
   beds: number | null;
   baths: number | null;
   sqft: number | null;
+  property_type: PropertyType | null;
   status: ListingStatus;
   sold_at: string | null;
   featured_image_url: string | null;

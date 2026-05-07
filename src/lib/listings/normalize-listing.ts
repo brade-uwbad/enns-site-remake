@@ -15,5 +15,15 @@ export function normalizeListingRow(row: Record<string, unknown>): ListingRow {
     const b = Number(rawBaths);
     next.baths = Number.isFinite(b) ? b : null;
   }
+  const rawLatitude = row.latitude;
+  if (rawLatitude !== null && rawLatitude !== undefined) {
+    const lat = typeof rawLatitude === "string" ? Number(rawLatitude) : (rawLatitude as number);
+    next.latitude = Number.isFinite(lat) ? lat : null;
+  }
+  const rawLongitude = row.longitude;
+  if (rawLongitude !== null && rawLongitude !== undefined) {
+    const lng = typeof rawLongitude === "string" ? Number(rawLongitude) : (rawLongitude as number);
+    next.longitude = Number.isFinite(lng) ? lng : null;
+  }
   return next;
 }

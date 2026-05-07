@@ -34,6 +34,8 @@ cp .env.example .env.local
 Optional:
 
 - `STORAGE_SUPABASE_LISTINGS_BUCKET` (default: `listing-images`)
+- `NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY` for Google Maps embed on `/listings/[id]` (optional fallback available)
+- `GOOGLE_MAPS_SERVER_API_KEY` for server-side geocoding on admin create/update (auto-fill latitude/longitude)
 - `ADMIN_UI_BYPASS_AUTH=true` for local/testing-only admin bypass
 - `ADMIN_API_TOKEN` for static token mode
 

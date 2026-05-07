@@ -5,6 +5,7 @@ import {
   getAdminListingById,
   updateAdminListingById,
 } from "@/lib/listings/admin";
+import { buildGeocodeAddress, geocodeAddress } from "@/lib/listings/geocode";
 import { toListingUpdate } from "@/lib/mappers/listing";
 import { listingUpdateSchema } from "@/lib/validations/listings";
 
@@ -45,7 +46,36 @@ export async function PUT(request: Request, ctx: Params) {
     return jsonError("Listing not found", 404, "NOT_FOUND");
   }
 
-  const patch = toListingUpdate(parsed.data);
+  let input = parsed.data;
+  const latProvided = input.latitude !== undefined;
+  const lngProvided = input.longitude !== undefined;
+  const shouldAutogeocode = !latProvided && !lngProvided;
+  if (shouldAutogeocode) {
+    const mergedAddress = buildGeocodeAddress({
+      addressLine: input.addressLine ?? existing.address_line,
+      city: input.city ?? existing.city,
+      province: input.province ?? existing.province,
+      postalCode: input.postalCode ?? existing.postal_code,
+    });
+    const addressChanged =
+      input.addressLine !== undefined ||
+      input.city !== undefined ||
+      input.province !== undefined ||
+      input.postalCode !== undefined;
+    const missingExistingCoords = existing.latitude == null || existing.longitude == null;
+    if (addressChanged || missingExistingCoords) {
+      try {
+        const point = await geocodeAddress(mergedAddress);
+        if (point) {
+          input = { ...input, latitude: point.latitude, longitude: point.longitude };
+        }
+      } catch {
+        // Keep update flow non-blocking if geocoding fails.
+      }
+    }
+  }
+
+  const patch = toListingUpdate(input);
   try {
     const data = await updateAdminListingById(id, patch);
     if (!data) {
