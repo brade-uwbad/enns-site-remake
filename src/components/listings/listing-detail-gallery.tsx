@@ -27,7 +27,9 @@ export function ListingDetailGallery({ title, featuredImageUrl, images }: Props)
           return url;
         }
       })();
-      if (seen.has(key)) continue;
+      if (seen.has(key)) {
+        continue;
+      }
       seen.add(key);
       unique.push(url);
     }

@@ -52,9 +52,13 @@ const LEGACY_ALIAS_TO_CANONICAL: Record<string, ListingAmenityLabel> = {
 
 export function normalizeStoredAmenityToCanonical(raw: string): ListingAmenityLabel | null {
   const trimmed = raw.trim();
-  if (!trimmed) return null;
+  if (!trimmed) {
+    return null;
+  }
   const direct = CANONICAL_BY_NORMALIZED.get(trimmed.toLowerCase());
-  if (direct) return direct;
+  if (direct) {
+    return direct;
+  }
   const key = trimmed.toLowerCase().replace(/\s+/g, " ");
   return LEGACY_ALIAS_TO_CANONICAL[key] ?? null;
 }
@@ -63,7 +67,9 @@ export function canonicalAmenitiesFromStored(stored: string[]): ListingAmenityLa
   const seen = new Set<ListingAmenityLabel>();
   for (const raw of stored) {
     const c = normalizeStoredAmenityToCanonical(raw);
-    if (c) seen.add(c);
+    if (c) {
+      seen.add(c);
+    }
   }
   return LISTING_AMENITY_ORDER.filter((id) => seen.has(id));
 }

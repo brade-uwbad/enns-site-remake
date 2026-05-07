@@ -103,13 +103,17 @@ function toEditorState(listing: Listing): EditorState {
 }
 
 function parseIntOrNull(s: string): number | null {
-  if (!s.trim()) return null;
+  if (!s.trim()) {
+    return null;
+  }
   const n = parseInt(s, 10);
   return Number.isFinite(n) ? n : null;
 }
 
 function parseFloatOrNull(s: string): number | null {
-  if (!s.trim()) return null;
+  if (!s.trim()) {
+    return null;
+  }
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
 }
@@ -409,12 +413,16 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
   }
 
   function nextStep() {
-    if (wizardStep >= WIZARD_STEP_TITLES.length - 1) return;
+    if (wizardStep >= WIZARD_STEP_TITLES.length - 1) {
+      return;
+    }
     setWizardStep((prev) => prev + 1);
   }
 
   function prevStep() {
-    if (wizardStep <= 0) return;
+    if (wizardStep <= 0) {
+      return;
+    }
     setWizardStep((prev) => prev - 1);
   }
 

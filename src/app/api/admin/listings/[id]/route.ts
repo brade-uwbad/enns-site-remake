@@ -62,7 +62,11 @@ export async function PUT(request: Request, ctx: Params) {
       input.city !== undefined ||
       input.province !== undefined ||
       input.postalCode !== undefined;
-    const missingExistingCoords = existing.latitude == null || existing.longitude == null;
+    const missingExistingCoords =
+      existing.latitude === null ||
+      existing.latitude === undefined ||
+      existing.longitude === null ||
+      existing.longitude === undefined;
     if (addressChanged || missingExistingCoords) {
       try {
         const point = await geocodeAddress(mergedAddress);

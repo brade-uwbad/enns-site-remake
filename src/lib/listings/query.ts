@@ -2,7 +2,6 @@ import { z } from "zod";
 import { normalizeListingRow } from "@/lib/listings/normalize-listing";
 import { getSupabaseReadClient, hasSupabaseReadConfig } from "@/lib/supabase/server";
 import { queryListings } from "@/lib/store/memory";
-import type { ListingRow } from "@/lib/store/types";
 
 /**
  * Zod schema for listing collection query parameters (`page`, `limit`, filters, search).

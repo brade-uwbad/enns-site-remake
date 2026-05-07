@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   }
 
   let input = parsed.data;
-  const needsGeocode = input.latitude == null || input.longitude == null;
+  const needsGeocode = input.latitude === null || input.latitude === undefined || input.longitude === null || input.longitude === undefined;
   if (needsGeocode) {
     try {
       const query = buildGeocodeAddress({

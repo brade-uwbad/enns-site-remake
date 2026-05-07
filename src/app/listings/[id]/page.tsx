@@ -40,7 +40,9 @@ export async function generateMetadata(ctx: Params): Promise<Metadata> {
 }
 
 function postalPrefix(value: string | null) {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
   const normalized = value.replace(/\s+/g, "").toUpperCase();
   return normalized.length >= 3 ? normalized.slice(0, 3) : null;
 }
@@ -112,7 +114,9 @@ export default async function ListingDetailPage(ctx: Params) {
         .filter((item) => item.id !== listing.id)
         .map((item) => {
           const hasCoords = typeof item.latitude === "number" && typeof item.longitude === "number";
-          if (!hasCoords) return { item, distanceKm: Number.POSITIVE_INFINITY };
+          if (!hasCoords) {
+            return { item, distanceKm: Number.POSITIVE_INFINITY };
+          }
           const distanceKm = haversineKm(
             { latitude: listing.latitude as number, longitude: listing.longitude as number },
             { latitude: item.latitude as number, longitude: item.longitude as number },

@@ -116,19 +116,24 @@ export function ListingsGrid() {
   const queryString = useMemo(() => buildQuery(filters), [filters]);
 
   useEffect(() => {
-    setLoading(true);
-    setError("");
     const endpoint = filters.status === "sold" ? "/api/listings/sold" : "/api/listings";
-    fetch(`${endpoint}?${queryString}`)
-      .then((r) => r.json())
-      .then((data) => {
+    const loadListings = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const r = await fetch(`${endpoint}?${queryString}`);
+        const data = await r.json();
         if (data?.error?.message) {
           throw new Error(data.error.message as string);
         }
         setListings(data?.data?.listings ?? []);
-      })
-      .catch(() => setError("Could not load listings."))
-      .finally(() => setLoading(false));
+      } catch {
+        setError("Could not load listings.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    void loadListings();
   }, [filters.status, queryString]);
 
   if (error) {
