@@ -11,9 +11,9 @@ export const metadata: Metadata = {
  *
  * @returns JSX for `/about`.
  */
+
 export default function AboutPage() {
   return (
-
 
     <div className="min-h-screen bg-white">
 
@@ -34,12 +34,8 @@ export default function AboutPage() {
           {/* LEFT COLUMN */}
           <div className="w-full md:w-2/5 flex-shrink-0">
 
-
-
             {/* PHOTO + MOBILE STAT CARDS side by side */}
             <div className="flex gap-4 items-start">
-
-
 
               {/* PHOTO */}
               <div className="relative w-1/2 md:w-full aspect-[4/5] rounded-xl overflow-hidden flex-shrink-0">
@@ -51,8 +47,6 @@ export default function AboutPage() {
                   priority
                 />
               </div>
-
-
 
               {/* MOBILE ONLY: stat cards */}
               <div className="md:hidden flex flex-col gap-4 flex-1">
@@ -68,10 +62,6 @@ export default function AboutPage() {
 
             </div>
 
-
-
-
-
             {/* CONTACT INFO */}
             <div className="flex items-center gap-6 text-sm text-slate-600 mt-5">
               <a href="tel:5195001641" className="flex items-center gap-2 hover:text-brand-gold transition-colors duration-200">
@@ -84,7 +74,6 @@ export default function AboutPage() {
               </a>
             </div>
 
-
             {/* DESKTOP ONLY: Contact Brad Today button */}
             <a
               href="/contact"
@@ -94,15 +83,8 @@ export default function AboutPage() {
             </a>
           </div>
 
-
-
-
-
-
           {/* RIGHT COLUMN */}
           <div className="w-full md:w-3/5">
-
-
 
             {/* DESKTOP ONLY: eyebrow + heading */}
             <div className="hidden md:block">
@@ -114,14 +96,10 @@ export default function AboutPage() {
               </h1>
             </div>
 
-
-
             {/* BIO PARAGRAPH */}
             <p className="text-slate-600 leading-relaxed mb-6">
               Description descriptions Description descriptions descriptions descriptions descriptions descriptions descriptions descriptions descriptions descriptionsdescriptionsdescriptionsdescriptions.
             </p>
-
-
 
             {/* SUBHEADING + SECOND PARAGRAPH */}
             <h2 className="text-lg font-bold text-slate-900 mb-3">
@@ -130,7 +108,6 @@ export default function AboutPage() {
             <p className="text-slate-600 leading-relaxed mb-8">
               appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details 
             </p>
-
 
             {/* DESKTOP ONLY: stat cards */}
             <div className="hidden md:grid grid-cols-2 gap-4">
@@ -144,10 +121,6 @@ export default function AboutPage() {
               </div>
             </div>
 
-
-
-
-
             {/* MOBILE ONLY: Contact Brad Today button */}
             <a
               href="/contact"
@@ -155,6 +128,7 @@ export default function AboutPage() {
             >
               Contact Brad Today
             </a>
+
           </div>
         </div>
       </div>
