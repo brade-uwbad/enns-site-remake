@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ListingDetailView } from "@/components/listings/listing-detail-view";
-import { fetchListings, fetchPublicListingById } from "@/lib/listings/query";
+import {
+  fetchListings,
+  fetchPostalCentroids,
+  fetchPublicListingById,
+} from "@/lib/listings/query";
 
 type Params = { params: Promise<{ id: string }> };
-
-type PublicListing = Awaited<ReturnType<typeof fetchPublicListingById>>;
 
 function buildDescription(listing: {
   subtitle: string | null;
@@ -67,33 +69,6 @@ function haversineKm(
   return R * c;
 }
 
-/**
- * Best-effort proximity ranking without geo coordinates.
- * Postal prefix (FSA) is usually the tightest local bucket, then city, then province.
- */
-function nearbyRank(source: NonNullable<PublicListing>, candidate: NonNullable<PublicListing>) {
-  let score = 0;
-  if (
-    postalPrefix(source.postal_code) &&
-    postalPrefix(source.postal_code) === postalPrefix(candidate.postal_code)
-  ) {
-    score += 100;
-  }
-  if (
-    source.city?.trim().toLowerCase() &&
-    source.city?.trim().toLowerCase() === candidate.city?.trim().toLowerCase()
-  ) {
-    score += 20;
-  }
-  if (
-    source.province?.trim().toLowerCase() &&
-    source.province?.trim().toLowerCase() === candidate.province?.trim().toLowerCase()
-  ) {
-    score += 5;
-  }
-  return score;
-}
-
 export default async function ListingDetailPage(ctx: Params) {
   const { id } = await ctx.params;
   const listing = await fetchPublicListingById(id);
@@ -106,30 +81,29 @@ export default async function ListingDetailPage(ctx: Params) {
     limit: 100,
   });
 
-  const originHasCoords =
-    typeof listing.latitude === "number" && typeof listing.longitude === "number";
+  const candidates = items.filter((item) => item.id !== listing.id);
+  const sourcePrefix = postalPrefix(listing.postal_code);
+  const candidatePrefixes = candidates
+    .map((item) => postalPrefix(item.postal_code))
+    .filter((p): p is string => Boolean(p));
+  const centroidMap = await fetchPostalCentroids(
+    sourcePrefix ? [sourcePrefix, ...candidatePrefixes] : candidatePrefixes,
+  );
 
-  const nearby = originHasCoords
-    ? items
-        .filter((item) => item.id !== listing.id)
-        .map((item) => {
-          const hasCoords = typeof item.latitude === "number" && typeof item.longitude === "number";
-          if (!hasCoords) {
-            return { item, distanceKm: Number.POSITIVE_INFINITY };
-          }
-          const distanceKm = haversineKm(
-            { latitude: listing.latitude as number, longitude: listing.longitude as number },
-            { latitude: item.latitude as number, longitude: item.longitude as number },
-          );
-          return { item, distanceKm };
-        })
-        .sort((a, b) => a.distanceKm - b.distanceKm)
-        .slice(0, 5)
-        .map((entry) => entry.item)
-    : items
-        .filter((item) => item.id !== listing.id)
-        .sort((a, b) => nearbyRank(listing, b) - nearbyRank(listing, a))
-        .slice(0, 5);
+  const sourceCentroid = sourcePrefix ? centroidMap[sourcePrefix] : undefined;
+
+  const nearby = candidates
+    .map((item) => {
+      const p = postalPrefix(item.postal_code);
+      const c = p ? centroidMap[p] : undefined;
+      if (!sourceCentroid || !c) {
+        return { item, distanceKm: Number.POSITIVE_INFINITY };
+      }
+      return { item, distanceKm: haversineKm(sourceCentroid, c) };
+    })
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, 5)
+    .map((entry) => entry.item);
 
   return <ListingDetailView listing={listing} nearby={nearby} />;
 }
