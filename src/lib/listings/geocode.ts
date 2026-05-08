@@ -1,3 +1,10 @@
+import {
+  getSupabaseAdminClient,
+  getSupabaseReadClient,
+  hasSupabaseAdminConfig,
+  hasSupabaseReadConfig,
+} from "@/lib/supabase/server";
+
 type GeocodePoint = { latitude: number; longitude: number };
 
 function safeNumber(value: unknown): number | null {
@@ -5,51 +12,59 @@ function safeNumber(value: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function buildGeocodeAddress(parts: {
-  addressLine?: string | null;
-  city?: string | null;
-  province?: string | null;
-  postalCode?: string | null;
-}) {
-  return [parts.addressLine, parts.city, parts.province, parts.postalCode]
-    .map((v) => (typeof v === "string" ? v.trim() : ""))
-    .filter(Boolean)
-    .join(", ");
+function postalPrefix(postalCode: string) {
+  const normalized = postalCode.replace(/\s+/g, "").toUpperCase();
+  return normalized.length >= 3 ? normalized.slice(0, 3) : "";
+}
+
+async function lookupCentroid(
+  supabase: ReturnType<typeof getSupabaseReadClient> | ReturnType<typeof getSupabaseAdminClient>,
+  prefix: string,
+): Promise<{ point: GeocodePoint | null; hadError: boolean }> {
+  const { data, error } = await supabase
+    .from("postal_code_centroids")
+    .select("latitude,longitude")
+    .eq("postal_prefix", prefix)
+    .maybeSingle();
+
+  if (error) {
+    return { point: null, hadError: true };
+  }
+  if (!data) {
+    return { point: null, hadError: false };
+  }
+
+  const latitude = safeNumber((data as { latitude?: unknown }).latitude);
+  const longitude = safeNumber((data as { longitude?: unknown }).longitude);
+  if (latitude === null || longitude === null) {
+    return { point: null, hadError: false };
+  }
+  return { point: { latitude, longitude }, hadError: false };
 }
 
 /**
- * Geocode a listing address using Google Geocoding API.
- * Returns null when key is missing, response is empty, or data is invalid.
+ * Resolve an approximate point from a postal-code centroid table.
+ * Returns null when lookup is unavailable or there is no match.
  */
-export async function geocodeAddress(address: string): Promise<GeocodePoint | null> {
-  const apiKey = process.env.GOOGLE_MAPS_SERVER_API_KEY;
-  if (!apiKey || !address.trim()) {
+export async function getPostalCentroid(postalCode: string): Promise<GeocodePoint | null> {
+  const prefix = postalPrefix(postalCode);
+  if (!prefix) {
     return null;
   }
 
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-    address,
-  )}&key=${encodeURIComponent(apiKey)}`;
-
-  const res = await fetch(url, { method: "GET", cache: "no-store" });
-  if (!res.ok) {
-    return null;
+  // Prefer service-role lookup first to avoid RLS policy issues on this helper table.
+  if (hasSupabaseAdminConfig()) {
+    const adminResult = await lookupCentroid(getSupabaseAdminClient(), prefix);
+    if (adminResult.point) {
+      return adminResult.point;
+    }
   }
 
-  const body = (await res.json()) as {
-    status?: string;
-    results?: Array<{ geometry?: { location?: { lat?: number | string; lng?: number | string } } }>;
-  };
-
-  if (body.status !== "OK" || !Array.isArray(body.results) || body.results.length === 0) {
-    return null;
+  if (hasSupabaseReadConfig()) {
+    const readResult = await lookupCentroid(getSupabaseReadClient(), prefix);
+    return readResult.point;
   }
 
-  const loc = body.results[0]?.geometry?.location;
-  const latitude = safeNumber(loc?.lat);
-  const longitude = safeNumber(loc?.lng);
-  if (latitude === null || longitude === null) {
-    return null;
-  }
-  return { latitude, longitude };
+  return null;
 }
+
