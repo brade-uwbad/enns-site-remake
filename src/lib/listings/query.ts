@@ -108,3 +108,48 @@ export async function fetchPublicListingById(id: string) {
 
   return data ? normalizeListingRow(data as Record<string, unknown>) : null;
 }
+
+type PostalCentroid = { latitude: number; longitude: number };
+
+/**
+ * Returns centroid points for known postal prefixes (e.g. Canadian FSAs like M5V).
+ * Missing prefixes are omitted from the returned map.
+ */
+export async function fetchPostalCentroids(
+  postalPrefixes: string[],
+): Promise<Record<string, PostalCentroid>> {
+  const uniq = Array.from(
+    new Set(postalPrefixes.map((p) => p.trim().toUpperCase()).filter(Boolean)),
+  );
+  if (uniq.length === 0 || !hasSupabaseReadConfig()) {
+    return {};
+  }
+
+  const supabase = getSupabaseReadClient();
+  const { data, error } = await supabase
+    .from("postal_code_centroids")
+    .select("postal_prefix, latitude, longitude")
+    .in("postal_prefix", uniq);
+
+  // If table/query is unavailable, caller can gracefully fall back to non-distance ranking.
+  if (error || !data) {
+    return {};
+  }
+
+  const out: Record<string, PostalCentroid> = {};
+  for (const row of data as Array<Record<string, unknown>>) {
+    const prefixRaw = row.postal_prefix;
+    const latRaw = row.latitude;
+    const lngRaw = row.longitude;
+    if (typeof prefixRaw !== "string") {
+      continue;
+    }
+    const latitude = typeof latRaw === "string" ? Number(latRaw) : (latRaw as number);
+    const longitude = typeof lngRaw === "string" ? Number(lngRaw) : (lngRaw as number);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      continue;
+    }
+    out[prefixRaw.trim().toUpperCase()] = { latitude, longitude };
+  }
+  return out;
+}
