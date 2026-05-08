@@ -69,6 +69,12 @@ function haversineKm(
   return R * c;
 }
 
+type Coords = { latitude: number; longitude: number };
+
+function hasCoords(value: { latitude: number | null; longitude: number | null }): value is Coords {
+  return typeof value.latitude === "number" && typeof value.longitude === "number";
+}
+
 export default async function ListingDetailPage(ctx: Params) {
   const { id } = await ctx.params;
   const listing = await fetchPublicListingById(id);
@@ -91,15 +97,22 @@ export default async function ListingDetailPage(ctx: Params) {
   );
 
   const sourceCentroid = sourcePrefix ? centroidMap[sourcePrefix] : undefined;
+  const sourceCoords = hasCoords(listing)
+    ? { latitude: listing.latitude, longitude: listing.longitude }
+    : sourceCentroid;
 
   const nearby = candidates
     .map((item) => {
+      const itemCoords = hasCoords(item)
+        ? { latitude: item.latitude, longitude: item.longitude }
+        : undefined;
       const p = postalPrefix(item.postal_code);
       const c = p ? centroidMap[p] : undefined;
-      if (!sourceCentroid || !c) {
+      const destinationCoords = itemCoords ?? c;
+      if (!sourceCoords || !destinationCoords) {
         return { item, distanceKm: Number.POSITIVE_INFINITY };
       }
-      return { item, distanceKm: haversineKm(sourceCentroid, c) };
+      return { item, distanceKm: haversineKm(sourceCoords, destinationCoords) };
     })
     .sort((a, b) => a.distanceKm - b.distanceKm)
     .slice(0, 5)
