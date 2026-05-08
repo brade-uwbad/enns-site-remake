@@ -5,11 +5,18 @@ import {
   getAdminListingById,
   updateAdminListingById,
 } from "@/lib/listings/admin";
-import { buildGeocodeAddress, geocodeAddress } from "@/lib/listings/geocode";
+import { getPostalCentroid } from "@/lib/listings/geocode";
 import { toListingUpdate } from "@/lib/mappers/listing";
 import { listingUpdateSchema } from "@/lib/validations/listings";
 
 type Params = { params: Promise<{ id: string }> };
+
+function normalizePostalCode(value: string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+  return value.replace(/\s+/g, "").toUpperCase();
+}
 
 /**
  * `PUT /api/admin/listings/[id]` — Partial update of a listing (admin bearer token).
@@ -47,35 +54,27 @@ export async function PUT(request: Request, ctx: Params) {
   }
 
   let input = parsed.data;
-  const latProvided = input.latitude !== undefined;
-  const lngProvided = input.longitude !== undefined;
-  const shouldAutogeocode = !latProvided && !lngProvided;
-  if (shouldAutogeocode) {
-    const mergedAddress = buildGeocodeAddress({
-      addressLine: input.addressLine ?? existing.address_line,
-      city: input.city ?? existing.city,
-      province: input.province ?? existing.province,
-      postalCode: input.postalCode ?? existing.postal_code,
-    });
-    const addressChanged =
-      input.addressLine !== undefined ||
-      input.city !== undefined ||
-      input.province !== undefined ||
-      input.postalCode !== undefined;
-    const missingExistingCoords =
-      existing.latitude === null ||
-      existing.latitude === undefined ||
-      existing.longitude === null ||
-      existing.longitude === undefined;
-    if (addressChanged || missingExistingCoords) {
-      try {
-        const point = await geocodeAddress(mergedAddress);
-        if (point) {
-          input = { ...input, latitude: point.latitude, longitude: point.longitude };
-        }
-      } catch {
-        // Keep update flow non-blocking if geocoding fails.
+  const previousPostal = normalizePostalCode(existing.postal_code);
+  const nextPostal = normalizePostalCode(input.postalCode ?? existing.postal_code);
+  const postalChanged = nextPostal !== previousPostal;
+  const missingExistingCoords =
+    existing.latitude === null ||
+    existing.latitude === undefined ||
+    existing.longitude === null ||
+    existing.longitude === undefined;
+  const shouldRefreshFromPostal = postalChanged || missingExistingCoords;
+  if (shouldRefreshFromPostal) {
+    try {
+      const centroid = nextPostal ? await getPostalCentroid(nextPostal) : null;
+      if (centroid) {
+        // When postal code changes (or coords are missing), refresh coords from centroid.
+        input = { ...input, latitude: centroid.latitude, longitude: centroid.longitude };
+      } else if (postalChanged) {
+        // Prevent stale coordinates when the postal code changes and no centroid exists.
+        input = { ...input, latitude: null, longitude: null };
       }
+    } catch {
+      // Keep update flow non-blocking if centroid lookup fails.
     }
   }
 

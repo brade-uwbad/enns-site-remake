@@ -1,7 +1,7 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
 import { createAdminListing } from "@/lib/listings/admin";
-import { buildGeocodeAddress, geocodeAddress } from "@/lib/listings/geocode";
+import { getPostalCentroid } from "@/lib/listings/geocode";
 import { toListingInsert } from "@/lib/mappers/listing";
 import { listingCreateSchema } from "@/lib/validations/listings";
 
@@ -30,22 +30,14 @@ export async function POST(request: Request) {
   }
 
   let input = parsed.data;
-  const needsGeocode = input.latitude === null || input.latitude === undefined || input.longitude === null || input.longitude === undefined;
-  if (needsGeocode) {
-    try {
-      const query = buildGeocodeAddress({
-        addressLine: input.addressLine,
-        city: input.city,
-        province: input.province,
-        postalCode: input.postalCode,
-      });
-      const point = await geocodeAddress(query);
-      if (point) {
-        input = { ...input, latitude: point.latitude, longitude: point.longitude };
-      }
-    } catch {
-      // Keep create flow non-blocking if geocoding fails.
+  try {
+    const centroid = await getPostalCentroid(input.postalCode);
+    if (centroid) {
+      // Postal centroid is the source of truth for listing coordinates.
+      input = { ...input, latitude: centroid.latitude, longitude: centroid.longitude };
     }
+  } catch {
+    // Keep create flow non-blocking if centroid lookup fails.
   }
 
   const row = toListingInsert(auth.user.id, input);
