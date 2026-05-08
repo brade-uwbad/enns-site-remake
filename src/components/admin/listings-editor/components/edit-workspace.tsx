@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useState } from "react";
 import { LISTING_AMENITIES } from "@/lib/listings/listing-amenities";
 import {
   type EditorPanel,
@@ -14,7 +15,9 @@ type Props = {
   onSetPanel: (panel: EditorPanel) => void;
   onSetField: <K extends keyof EditorState>(key: K, value: EditorState[K]) => void;
   onToggleAmenity: (id: (typeof LISTING_AMENITIES)[number]["id"]) => void;
-  onSetUploadFiles: (files: FileList | null) => void;
+  onAddUploadFiles: (files: FileList | null) => void;
+  onRemoveQueuedPhoto: (index: number) => void;
+  onRemoveExistingPhoto: (url: string) => void;
   onBackToCreate: () => void;
   onSavePanel: () => Promise<void>;
 };
@@ -29,10 +32,13 @@ export function EditWorkspace(props: Props) {
     onSetPanel,
     onSetField,
     onToggleAmenity,
-    onSetUploadFiles,
+    onAddUploadFiles,
+    onRemoveQueuedPhoto,
+    onRemoveExistingPhoto,
     onBackToCreate,
     onSavePanel,
   } = props;
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
 
   return (
     <section className="space-y-6 rounded-lg border border-slate-300 bg-white p-5">
@@ -80,20 +86,52 @@ export function EditWorkspace(props: Props) {
               type="file"
               accept="image/*"
               multiple
-              onChange={(e) => onSetUploadFiles(e.target.files)}
+              onChange={(e) => onAddUploadFiles(e.target.files)}
               className="block w-full text-sm"
             />
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {selectedPhotos.map((item) => (
-              <div key={item.previewUrl} className="relative aspect-[4/3] overflow-hidden rounded-md border border-zinc-200">
+            {selectedPhotos.map((item, index) => (
+              <div key={item.previewUrl} className="group relative aspect-[4/3] overflow-hidden rounded-md border border-zinc-200">
                 <Image src={item.previewUrl} alt={item.file.name} fill className="object-cover" />
+                <div className="absolute inset-0 hidden items-center justify-center gap-2 bg-black/45 group-hover:flex">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewSrc(item.previewUrl)}
+                    className="rounded bg-white/90 px-2 py-1 text-xs font-medium text-zinc-900"
+                  >
+                    View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveQueuedPhoto(index)}
+                    className="rounded bg-red-600 px-2 py-1 text-xs font-medium text-white"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
             {selectedPhotos.length === 0
               ? existingPhotos.slice(0, 6).map((src) => (
-                  <div key={src} className="relative aspect-[4/3] overflow-hidden rounded-md border border-zinc-200">
+                  <div key={src} className="group relative aspect-[4/3] overflow-hidden rounded-md border border-zinc-200">
                     <Image src={src} alt="Existing listing photo" fill className="object-cover" unoptimized />
+                    <div className="absolute inset-0 hidden items-center justify-center gap-2 bg-black/45 group-hover:flex">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewSrc(src)}
+                        className="rounded bg-white/90 px-2 py-1 text-xs font-medium text-zinc-900"
+                      >
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveExistingPhoto(src)}
+                        className="rounded bg-red-600 px-2 py-1 text-xs font-medium text-white"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))
               : null}
@@ -183,6 +221,20 @@ export function EditWorkspace(props: Props) {
           {busy ? "Saving..." : "Done"}
         </button>
       </div>
+      {previewSrc ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
+          <button
+            type="button"
+            className="absolute right-4 top-4 rounded bg-white px-3 py-1 text-sm font-medium text-zinc-900"
+            onClick={() => setPreviewSrc(null)}
+          >
+            Close
+          </button>
+          <div className="relative h-[80vh] w-[90vw] max-w-5xl">
+            <Image src={previewSrc} alt="Preview selected photo" fill className="object-contain" unoptimized />
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

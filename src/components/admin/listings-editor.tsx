@@ -34,7 +34,7 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
   const [form, setForm] = useState<EditorState>(BLANK_EDITOR_STATE);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string>("");
-  const [uploadFiles, setUploadFiles] = useState<FileList | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [wizardStep, setWizardStep] = useState(0);
   const [editorPanel, setEditorPanel] = useState<EditorPanel>("menu");
 
@@ -49,7 +49,7 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
 
   const isEditing = Boolean(selectedId);
   const selectedPhotos = useMemo(
-    () => Array.from(uploadFiles ?? []).map((f) => ({ file: f, previewUrl: URL.createObjectURL(f) })),
+    () => uploadFiles.map((f) => ({ file: f, previewUrl: URL.createObjectURL(f) })),
     [uploadFiles],
   );
   const existingPhotos = splitList(form.imagesText);
@@ -66,8 +66,25 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
     setForm(listing ? toEditorState(listing) : BLANK_EDITOR_STATE);
     setWizardStep(0);
     setEditorPanel("menu");
-    setUploadFiles(null);
+    setUploadFiles([]);
   }
+  function addUploadFiles(files: FileList | null) {
+    if (!files || files.length === 0) {
+      return;
+    }
+    const incoming = Array.from(files);
+    setUploadFiles((prev) => [...prev, ...incoming]);
+  }
+
+  function removeQueuedUploadFile(index: number) {
+    setUploadFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function removeExistingImage(url: string) {
+    const next = splitList(form.imagesText).filter((u) => u !== url);
+    setField("imagesText", next.join("\n"));
+  }
+
 
   function setField<K extends keyof EditorState>(key: K, value: EditorState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -97,11 +114,11 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
   async function uploadSelectedFilesIntoFormImages(
     existingImagesText: string,
   ): Promise<string[]> {
-    if (!uploadFiles || uploadFiles.length === 0) {
+    if (uploadFiles.length === 0) {
       return splitList(existingImagesText);
     }
     const uploadedUrls: string[] = [];
-    for (const file of Array.from(uploadFiles)) {
+    for (const file of uploadFiles) {
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/admin/listings/upload", {
@@ -120,7 +137,7 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
     const merged = [...splitList(existingImagesText), ...uploadedUrls];
     if (uploadedUrls.length > 0) {
       setField("imagesText", merged.join("\n"));
-      setUploadFiles(null);
+      setUploadFiles([]);
     }
     return merged;
   }
@@ -129,7 +146,7 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
     setBusy(true);
     setMessage("");
     try {
-      const hadPendingUpload = Boolean(uploadFiles?.length);
+      const hadPendingUpload = uploadFiles.length > 0;
       const images = await uploadSelectedFilesIntoFormImages(form.imagesText);
       const address = form.addressLine.trim();
       if (!address) {
@@ -187,7 +204,7 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
     setBusy(true);
     setMessage("");
     try {
-      const hadPendingUpload = Boolean(uploadFiles?.length);
+      const hadPendingUpload = uploadFiles.length > 0;
       const images = await uploadSelectedFilesIntoFormImages(form.imagesText);
       const address = form.addressLine.trim();
       if (!address) {
@@ -293,7 +310,7 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
   function resetToNew() {
     setSelectedId("");
     setForm(BLANK_EDITOR_STATE);
-    setUploadFiles(null);
+    setUploadFiles([]);
     setWizardStep(0);
     setEditorPanel("menu");
   }
@@ -352,7 +369,9 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
             selectedPhotos={selectedPhotos}
             onSetField={setField}
             onToggleAmenity={toggleAmenity}
-            onSetUploadFiles={setUploadFiles}
+            onAddUploadFiles={addUploadFiles}
+            onRemoveQueuedPhoto={removeQueuedUploadFile}
+            onRemoveExistingPhoto={removeExistingImage}
             onPrevStep={prevStep}
             onNextStep={nextStep}
             onPublish={saveFromWizard}
@@ -367,7 +386,9 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
             onSetPanel={setEditorPanel}
             onSetField={setField}
             onToggleAmenity={toggleAmenity}
-            onSetUploadFiles={setUploadFiles}
+            onAddUploadFiles={addUploadFiles}
+            onRemoveQueuedPhoto={removeQueuedUploadFile}
+            onRemoveExistingPhoto={removeExistingImage}
             onBackToCreate={resetToNew}
             onSavePanel={saveEditorPanel}
           />
