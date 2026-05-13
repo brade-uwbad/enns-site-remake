@@ -12,3 +12,28 @@ export const contactFormSchema = z.object({
 export const valuationFormSchema = contactFormSchema.extend({
   address: z.string().max(300).optional().nullable(),
 });
+
+/**
+ * Schema for the `/contact` page form. Adds `subject` and a `honeypot` field
+ * for spam protection. The honeypot must be empty — bots fill it in, humans
+ * never see it.
+ */
+export const contactPageFormSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(200),
+  email: z.string().trim().min(1, "Email is required").email("Please enter a valid email").max(320),
+  phone: z.string().max(40).optional().nullable(),
+  subject: z
+    .string()
+    .trim()
+    .min(1, "Subject is required")
+    .max(150, "Subject must be 150 characters or fewer"),
+  message: z
+    .string()
+    .trim()
+    .min(10, "Please write at least 10 characters")
+    .max(10000, "Message must be 10,000 characters or fewer"),
+  honeypot: z.string().max(0).optional(),
+});
+
+/** Inferred TypeScript type for the contact page form values. */
+export type ContactPageFormValues = z.infer<typeof contactPageFormSchema>;

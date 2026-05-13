@@ -14,29 +14,21 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-
     <div className="min-h-screen bg-white">
-
       <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
-
         {/* MOBILE ONLY: eyebrow + heading */}
         <div className="md:hidden">
           <p className="text-brand-gold text-base font-medium mb-2">
             Kitchener, Waterloo Real Estate Agent
           </p>
-          <h1 className="text-4xl font-bold text-slate-900 mb-5">
-            Meet Brad Enns
-          </h1>
+          <h1 className="text-4xl font-bold text-slate-900 mb-5">Meet Brad Enns</h1>
         </div>
 
         <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-start">
-
           {/* LEFT COLUMN */}
           <div className="w-full md:w-2/5 flex-shrink-0">
-
             {/* PHOTO + MOBILE STAT CARDS side by side */}
             <div className="flex gap-4 items-start">
-
               {/* PHOTO */}
               <div className="relative w-1/2 md:w-full aspect-[4/5] rounded-xl overflow-hidden flex-shrink-0">
                 <Image
@@ -59,18 +51,21 @@ export default function AboutPage() {
                   <p className="text-sm text-slate-500 mt-1">years of experience</p>
                 </div>
               </div>
-
             </div>
 
             {/* CONTACT INFO */}
             <div className="flex items-center gap-6 text-sm text-slate-600 mt-5">
-              <a href="tel:5195001641" className="flex items-center gap-2 hover:text-brand-gold transition-colors duration-200">
-                <img src="/icons/Phone.svg" alt="" width={16} height={16} />
-                519 - 500 - 1641
+              <a
+                href="tel:5195001641"
+                className="flex items-center gap-2 hover:text-brand-gold transition-colors duration-200"
+              >
+                <Image src="/icons/Phone.svg" alt="" width={16} height={16} /> 519 - 500 - 1641
               </a>
-              <a href="mailto:brad@mres.ca" className="flex items-center gap-2 hover:text-brand-gold transition-colors duration-200">
-                <img src="/icons/Mail.svg" alt="" width={16} height={16} />
-                brad@mres.ca
+              <a
+                href="mailto:brad@mres.ca"
+                className="flex items-center gap-2 hover:text-brand-gold transition-colors duration-200"
+              >
+                <Image src="/icons/Mail.svg" alt="" width={16} height={16} /> brad@mres.ca
               </a>
             </div>
 
@@ -85,28 +80,27 @@ export default function AboutPage() {
 
           {/* RIGHT COLUMN */}
           <div className="w-full md:w-3/5">
-
             {/* DESKTOP ONLY: eyebrow + heading */}
             <div className="hidden md:block">
               <p className="text-brand-gold text-base font-medium mb-2">
                 Kitchener, Waterloo Real Estate Agent
               </p>
-              <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5">
-                Meet Brad Enns
-              </h1>
+              <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5">Meet Brad Enns</h1>
             </div>
 
             {/* BIO PARAGRAPH */}
             <p className="text-slate-600 leading-relaxed mb-6">
-              Description descriptions Description descriptions descriptions descriptions descriptions descriptions descriptions descriptions descriptions descriptionsdescriptionsdescriptionsdescriptions.
+              Description descriptions Description descriptions descriptions descriptions
+              descriptions descriptions descriptions descriptions descriptions
+              descriptionsdescriptionsdescriptionsdescriptions.
             </p>
 
             {/* SUBHEADING + SECOND PARAGRAPH */}
-            <h2 className="text-lg font-bold text-slate-900 mb-3">
-              Another heading / What I do
-            </h2>
+            <h2 className="text-lg font-bold text-slate-900 mb-3">Another heading / What I do</h2>
             <p className="text-slate-600 leading-relaxed mb-8">
-              appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details 
+              appraisal details appraisal details appraisal details appraisal details appraisal
+              details appraisal details appraisal details appraisal details appraisal details
+              appraisal details
             </p>
 
             {/* DESKTOP ONLY: stat cards */}
@@ -128,10 +122,9 @@ export default function AboutPage() {
             >
               Contact Brad Today
             </a>
-
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 }
