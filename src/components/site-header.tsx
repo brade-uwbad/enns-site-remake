@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { Poppins } from "next/font/google";
 
 /** Primary navigation targets for the marketing site. */
 const nav = [
@@ -6,9 +8,12 @@ const nav = [
   { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
   { href: "/listings", label: "Listings" },
-  { href: "/admin/listings", label: "Admin" },
-  { href: "/contact", label: "Contact" },
 ] as const;
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
 
 /**
  * Top navigation: brand, primary links (desktop), and a contact call-to-action.
@@ -17,23 +22,30 @@ const nav = [
  */
 export function SiteHeader() {
   return (
-    <header className="border-b border-zinc-200/80 bg-white/90 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90">
+    <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
-        <Link
-          href="/"
-          className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
-        >
-          Brad Enns
-          <span className="ml-1.5 text-sm font-normal text-zinc-500 dark:text-zinc-400">
-            Real Estate
-          </span>
+        <Link href="/" className="flex items-center" aria-label="Brad Enns Real Estate home">
+          <Image
+            src="/logo.svg"
+            alt="Brad Enns Real Estate logo"
+            width={104}
+            height={24}
+            priority
+            className="h-6 w-auto"
+          />
         </Link>
-        <nav className="hidden items-center gap-1 sm:flex" aria-label="Main">
-          {nav.map((item) => (
+        <nav
+          className={`hidden items-center sm:flex ${poppins.className}`}
+          style={{ columnGap: "2.5rem" }}
+          aria-label="Main"
+        >
+          {nav.map((item, index) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
+              className={`px-2 py-2 text-base font-normal text-[#140000] transition-all hover:font-medium ${
+                index > 0 ? "ml-8" : ""
+              }`}
             >
               {item.label}
             </Link>
@@ -41,7 +53,7 @@ export function SiteHeader() {
         </nav>
         <Link
           href="/contact"
-          className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+          className={`rounded-full bg-[#070101] px-4 py-2 text-base font-normal text-white transition-colors hover:bg-[#070101ef] ${poppins.className}`}
         >
           Get in touch
         </Link>
