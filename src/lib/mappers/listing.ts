@@ -8,6 +8,20 @@ function roundDollars(n: number | null | undefined): number | null {
   return Math.round(n * 100) / 100;
 }
 
+function normalizePostalCode(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+  const compact = value.replace(/\s+/g, "").toUpperCase();
+  if (!compact) {
+    return null;
+  }
+  if (compact.length === 6) {
+    return `${compact.slice(0, 3)} ${compact.slice(3)}`;
+  }
+  return compact;
+}
+
 /**
  * Maps a validated API create body (camelCase) to a row shape for the listings store (snake_case DB-style fields).
  *
@@ -28,10 +42,13 @@ export function toListingInsert(
     address_line: input.addressLine ?? null,
     city: input.city ?? null,
     province: input.province ?? null,
-    postal_code: input.postalCode ?? null,
+    postal_code: normalizePostalCode(input.postalCode),
+    latitude: input.latitude ?? null,
+    longitude: input.longitude ?? null,
     beds: input.beds ?? null,
     baths: input.baths ?? null,
     sqft: input.sqft ?? null,
+    property_type: input.propertyType ?? null,
     status: input.status,
     sold_at: null,
     amenities: input.amenities ?? [],
@@ -74,7 +91,13 @@ export function toListingUpdate(input: ListingUpdateInput): Partial<ListingRow> 
     row.province = input.province;
   }
   if (input.postalCode !== undefined) {
-    row.postal_code = input.postalCode;
+    row.postal_code = normalizePostalCode(input.postalCode);
+  }
+  if (input.latitude !== undefined) {
+    row.latitude = input.latitude;
+  }
+  if (input.longitude !== undefined) {
+    row.longitude = input.longitude;
   }
   if (input.beds !== undefined) {
     row.beds = input.beds;
@@ -84,6 +107,9 @@ export function toListingUpdate(input: ListingUpdateInput): Partial<ListingRow> 
   }
   if (input.sqft !== undefined) {
     row.sqft = input.sqft;
+  }
+  if (input.propertyType !== undefined) {
+    row.property_type = input.propertyType;
   }
   if (input.status !== undefined) {
     row.status = input.status;

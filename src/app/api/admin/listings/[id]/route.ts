@@ -5,10 +5,18 @@ import {
   getAdminListingById,
   updateAdminListingById,
 } from "@/lib/listings/admin";
+import { getPostalCentroid } from "@/lib/listings/geocode";
 import { toListingUpdate } from "@/lib/mappers/listing";
 import { listingUpdateSchema } from "@/lib/validations/listings";
 
 type Params = { params: Promise<{ id: string }> };
+
+function normalizePostalCode(value: string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+  return value.replace(/\s+/g, "").toUpperCase();
+}
 
 /**
  * `PUT /api/admin/listings/[id]` — Partial update of a listing (admin bearer token).
@@ -45,7 +53,32 @@ export async function PUT(request: Request, ctx: Params) {
     return jsonError("Listing not found", 404, "NOT_FOUND");
   }
 
-  const patch = toListingUpdate(parsed.data);
+  let input = parsed.data;
+  const previousPostal = normalizePostalCode(existing.postal_code);
+  const nextPostal = normalizePostalCode(input.postalCode ?? existing.postal_code);
+  const postalChanged = nextPostal !== previousPostal;
+  const missingExistingCoords =
+    existing.latitude === null ||
+    existing.latitude === undefined ||
+    existing.longitude === null ||
+    existing.longitude === undefined;
+  const shouldRefreshFromPostal = postalChanged || missingExistingCoords;
+  if (shouldRefreshFromPostal) {
+    try {
+      const centroid = nextPostal ? await getPostalCentroid(nextPostal) : null;
+      if (centroid) {
+        // When postal code changes (or coords are missing), refresh coords from centroid.
+        input = { ...input, latitude: centroid.latitude, longitude: centroid.longitude };
+      } else if (postalChanged) {
+        // Prevent stale coordinates when the postal code changes and no centroid exists.
+        input = { ...input, latitude: null, longitude: null };
+      }
+    } catch {
+      // Keep update flow non-blocking if centroid lookup fails.
+    }
+  }
+
+  const patch = toListingUpdate(input);
   try {
     const data = await updateAdminListingById(id, patch);
     if (!data) {

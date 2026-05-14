@@ -8,6 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminListingsPage() {
-  const { items } = await fetchListings("active", { page: 1, limit: 100 });
-  return <ListingsEditor initialListings={items} />;
+  const [active, sold] = await Promise.all([
+    fetchListings("active", { page: 1, limit: 100 }),
+    fetchListings("sold", { page: 1, limit: 100 }),
+  ]);
+  return <ListingsEditor initialListings={[...active.items, ...sold.items]} />;
 }

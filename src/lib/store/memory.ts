@@ -28,9 +28,12 @@ const seedListings: ListingRow[] = [
     city: "Kitchener",
     province: "ON",
     postal_code: "N2H 0A1",
+    latitude: null,
+    longitude: null,
     beds: 3,
     baths: 2,
     sqft: 1800,
+    property_type: "detached",
     status: "active",
     sold_at: null,
     featured_image_url: "https://placehold.co/1200x800/png?text=Listing",
@@ -51,9 +54,12 @@ const seedListings: ListingRow[] = [
     city: "Waterloo",
     province: "ON",
     postal_code: "N2L 3G1",
+    latitude: null,
+    longitude: null,
     beds: 2,
     baths: 2,
     sqft: 1400,
+    property_type: "townhouse",
     status: "sold",
     sold_at: nowIso(),
     featured_image_url: null,
@@ -180,6 +186,9 @@ export function queryListings(status: "active" | "sold", query: ListQuery) {
   }
   if (beds !== undefined) {
     rows = rows.filter((l) => l.beds === beds);
+  }
+  if (query.propertyType) {
+    rows = rows.filter((l) => l.property_type === query.propertyType);
   }
   if (query.city?.trim()) {
     const c = query.city
