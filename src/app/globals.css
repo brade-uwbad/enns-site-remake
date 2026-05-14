@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scrollbar-gutter: stable;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #140000;
@@ -10,7 +14,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --color-brand-gold: #AC9434; /* color scheme extracted from Figma */
+  --color-brand-gold: #ac9434; /* color scheme extracted from Figma */
 }
 
 @media (prefers-color-scheme: dark) {
