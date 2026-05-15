@@ -1,22 +1,26 @@
 import { z } from "zod";
 
-/** Public contact form payload for `POST /api/contact`. */
-export const contactFormSchema = z.object({
-  name: z.string().min(1).max(200),
-  email: z.string().email().max(320),
-  phone: z.string().max(40).optional().nullable(),
-  message: z.string().min(1).max(10000),
-});
 
-/** Valuation request payload for `POST /api/contact/valuation`; adds optional property `address`. */
-export const valuationFormSchema = contactFormSchema.extend({
-  address: z.string().max(300).optional().nullable(),
-});
+// Old schema
+
+// /** Public contact form payload for `POST /api/contact`. */
+// export const contactFormSchema = z.object({
+//   name: z.string().min(1).max(200),
+//   email: z.string().email().max(320),
+//   phone: z.string().max(40).optional().nullable(),
+//   message: z.string().min(1).max(10000),
+// });
+
+// /** Valuation request payload for `POST /api/contact/valuation`; adds optional property `address`. */
+// export const valuationFormSchema = contactFormSchema.extend({
+//   address: z.string().max(300).optional().nullable(),
+// });
+
 
 /**
- * Schema for the `/contact` page form. Adds `subject` and a `honeypot` field
- * for spam protection. The honeypot must be empty — bots fill it in, humans
- * never see it.
+ * Schema for the `/contact` page form. Added a `honeypot` field
+ * for spam protection. Logic is honeypot field should be invisible to humans 
+ * and be left empty. However, bots parsing html will fill it out unintentionally.
  */
 export const contactPageFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
