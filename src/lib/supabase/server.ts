@@ -12,6 +12,7 @@ function readSupabaseEnv() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const secretKey =
     process.env.STORAGE_SUPABASE_SECRET_KEY ??
+    process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY ??
     process.env.SUPABASE_SECRET_KEY ??
     process.env.SUPABASE_SERVICE_ROLE_KEY;
 

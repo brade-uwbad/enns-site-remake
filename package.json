@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "backfill:listing-coordinates": "node scripts/backfill-listing-coordinates.mjs",
+    "test:listing-centroid": "node scripts/test-listing-centroid.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -21,7 +21,7 @@ export default function AboutPage() {
           <p className="text-brand-gold text-base font-medium mb-2">
             Kitchener, Waterloo Real Estate Agent
           </p>
-          <h1 className="text-4xl font-bold text-slate-900 mb-5">Meet Brad Enns</h1>
+          <h1 className="text-4xl font-medium text-slate-900 mb-5">Meet Brad Enns</h1>
         </div>
 
         <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-start">
@@ -85,7 +85,9 @@ export default function AboutPage() {
               <p className="text-brand-gold text-base font-medium mb-2">
                 Kitchener, Waterloo Real Estate Agent
               </p>
-              <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-5">Meet Brad Enns</h1>
+              <h1 className="text-4xl md:text-5xl font-medium text-slate-900 mb-5">
+                Meet Brad Enns
+              </h1>
             </div>
 
             {/* BIO PARAGRAPH */}
