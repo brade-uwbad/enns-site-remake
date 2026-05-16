@@ -59,15 +59,13 @@ export default function AboutPage() {
                 href="tel:5195001641"
                 className="flex items-center gap-2 hover:text-brand-gold transition-colors duration-200"
               >
-                <img src="/icons/Phone.svg" alt="" width={16} height={16} />
-                519 - 500 - 1641
+                <Image src="/icons/Phone.svg" alt="" width={16} height={16} /> 519 - 500 - 1641
               </a>
               <a
                 href="mailto:brad@mres.ca"
                 className="flex items-center gap-2 hover:text-brand-gold transition-colors duration-200"
               >
-                <img src="/icons/Mail.svg" alt="" width={16} height={16} />
-                brad@mres.ca
+                <Image src="/icons/Mail.svg" alt="" width={16} height={16} /> brad@mres.ca
               </a>
             </div>
 

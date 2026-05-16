@@ -1,12 +1,12 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { clientIp, rateLimitContact } from "@/lib/rate-limit";
 import { addContactSubmission } from "@/lib/store/memory";
-import { contactFormSchema } from "@/lib/validations/contact";
+import { contactPageFormSchema } from "@/lib/validations/contact";
 
 /**
  * `POST /api/contact` — Accepts a general contact form; rate-limited per IP; stored in memory.
  *
- * @param request - JSON body validated by {@link contactFormSchema}.
+ * @param request - JSON body validated by {@link contactPageFormSchema}.
  * @returns JSON `{ data: { submission: { id, created_at } } }` with HTTP 201, or 429 / validation errors.
  */
 export async function POST(request: Request) {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     return jsonError("Invalid JSON body", 400, "BAD_REQUEST");
   }
 
-  const parsed = contactFormSchema.safeParse(body);
+  const parsed = contactPageFormSchema.safeParse(body);
   if (!parsed.success) {
     return jsonError("Validation failed", 400, "VALIDATION_ERROR", parsed.error.flatten());
   }
