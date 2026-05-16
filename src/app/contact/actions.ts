@@ -44,7 +44,7 @@ export async function sendContactEmail(values: ContactPageFormValues): Promise<{
             from: "Contact Form <onboarding@resend.dev>",
             to: "bradenns.uwbad@gmail.com",
             subject: `New Inquiry: ${subject}`,
-            reply_to: email,
+            replyTo: email,
             text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone || "Not provided"}\nSubject: ${subject}\n\nMessage:\n${message}`.trim(),
         });
 

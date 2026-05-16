@@ -11,6 +11,11 @@ import { z } from "zod";
 //   message: z.string().min(1).max(10000),
 // });
 
+// /** Valuation request payload for `POST /api/contact/valuation`; adds optional property `address`. */
+// export const valuationFormSchema = contactPageFormSchema.extend({
+//   address: z.string().max(300).optional().nullable(),
+// });
+
 
 /**
  * Schema for the `/contact` page form. Added a `honeypot` field
@@ -32,11 +37,6 @@ export const contactPageFormSchema = z.object({
     .min(10, "Please write at least 10 characters")
     .max(10000, "Message must be 10,000 characters or fewer"),
   honeypot: z.string().max(0).optional(),
-});
-
-/** Valuation request payload for `POST /api/contact/valuation`; adds optional property `address`. */
-export const valuationFormSchema = contactPageFormSchema.extend({
-  address: z.string().max(300).optional().nullable(),
 });
 
 /** Inferred TypeScript type for the contact page form values. */
