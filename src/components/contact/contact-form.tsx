@@ -9,6 +9,8 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { contactPageFormSchema, type ContactPageFormValues } from "@/lib/validations/contact";
+import { sendContactEmail } from "@/app/contact/actions";
+
 
 /**
  * Contact form for the public `/contact` page. Handles user input,
@@ -38,24 +40,20 @@ export function ContactForm() {
     console.log("Form submitted with values:", values);
 
     try {
-      // Simulate a 1-second network call.
-      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // DEV-ONLY: simulate a failure if the email contains "fail".
-      // Remove this when wiring up the real API in Step 2.
-      if (values.email === "fail@test.com") {
-        throw new Error("Simulated submission failure");
+      const result = await sendContactEmail(values);
+
+      if (result.success) {
+        setStatus("success");
+        form.reset();
+      } else {
+        setStatus("error");
+        setErrorMessage(result.error ?? "Something went wrong.");
       }
-
-      console.log("Fake submission complete.");
-      setStatus("success");
-      form.reset();
     } catch (error) {
       console.error("Submission error:", error);
       setStatus("error");
-      setErrorMessage(
-        "Something went wrong sending your message. Please try again, or call directly if it's urgent.",
-      );
+      setErrorMessage("Something went wrong sending your message. Please try again, or call directly if it's urgent.");
     }
   };
 
