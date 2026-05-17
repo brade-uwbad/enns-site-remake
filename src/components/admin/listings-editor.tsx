@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   amenitiesArrayFromSelections,
@@ -23,15 +24,45 @@ import {
   toEditorState,
   toggleAmenitySelection,
 } from "@/components/admin/listings-editor/utils";
+import { useAdminAccessToken } from "@/hooks/use-admin-access-token";
+import { isSupabaseBrowserConfigured } from "@/lib/auth/supabase-configured";
 
 type ListingsEditorProps = {
   initialListings: Listing[];
+  startCreate?: boolean;
+  startEditId?: string;
 };
 
-export function ListingsEditor({ initialListings }: ListingsEditorProps) {
+function resolveInitialEditorState(
+  initialListings: Listing[],
+  startCreate: boolean,
+  startEditId?: string,
+) {
+  if (startEditId) {
+    const listing = initialListings.find((l) => l.id === startEditId);
+    if (listing) {
+      return {
+        selectedId: startEditId,
+        form: toEditorState(listing),
+      };
+    }
+  }
+  if (startCreate) {
+    return { selectedId: "", form: BLANK_EDITOR_STATE };
+  }
+  return { selectedId: "", form: BLANK_EDITOR_STATE };
+}
+
+export function ListingsEditor({
+  initialListings,
+  startCreate = false,
+  startEditId,
+}: ListingsEditorProps) {
+  const initial = resolveInitialEditorState(initialListings, startCreate, startEditId);
+  const accessToken = useAdminAccessToken();
   const [listings, setListings] = useState<Listing[]>(initialListings);
-  const [selectedId, setSelectedId] = useState<string>("");
-  const [form, setForm] = useState<EditorState>(BLANK_EDITOR_STATE);
+  const [selectedId, setSelectedId] = useState<string>(initial.selectedId);
+  const [form, setForm] = useState<EditorState>(initial.form);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string>("");
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
@@ -47,6 +78,7 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
     setListings([...(activeData?.data?.listings ?? []), ...(soldData?.data?.listings ?? [])]);
   }
 
+  const deepLinkMode = startCreate || Boolean(startEditId);
   const isEditing = Boolean(selectedId);
   const selectedPhotos = useMemo(
     () => uploadFiles.map((f) => ({ file: f, previewUrl: URL.createObjectURL(f) })),
@@ -59,6 +91,27 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
       selectedPhotos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
     };
   }, [selectedPhotos]);
+
+  useEffect(() => {
+    if (startEditId) {
+      const listing = initialListings.find((l) => l.id === startEditId);
+      if (listing) {
+        setSelectedId(startEditId);
+        setForm(toEditorState(listing));
+        setWizardStep(0);
+        setEditorPanel("menu");
+        setUploadFiles([]);
+      }
+      return;
+    }
+    if (startCreate) {
+      setSelectedId("");
+      setForm(BLANK_EDITOR_STATE);
+      setUploadFiles([]);
+      setWizardStep(0);
+      setEditorPanel("menu");
+    }
+  }, [startCreate, startEditId, initialListings]);
 
   function chooseListing(id: string) {
     setSelectedId(id);
@@ -97,14 +150,27 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
     }));
   }
 
-  function authHeaders() {
-    return {
-      "Content-Type": "application/json",
-    };
+  function requireAccessTokenForWrite(): boolean {
+    if (isSupabaseBrowserConfigured() && !accessToken) {
+      setMessage("You must sign in as an admin before saving changes.");
+      return false;
+    }
+    return true;
   }
 
-  function uploadHeadersForMultipart() {
-    return undefined;
+  function authHeaders(): HeadersInit {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return headers;
+  }
+
+  function uploadHeadersForMultipart(): HeadersInit | undefined {
+    if (!accessToken) {
+      return undefined;
+    }
+    return { Authorization: `Bearer ${accessToken}` };
   }
 
   /**
@@ -143,6 +209,9 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
   }
 
   async function createListing() {
+    if (!requireAccessTokenForWrite()) {
+      return;
+    }
     setBusy(true);
     setMessage("");
     try {
@@ -201,6 +270,9 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
       setMessage("Pick a listing first.");
       return;
     }
+    if (!requireAccessTokenForWrite()) {
+      return false;
+    }
     setBusy(true);
     setMessage("");
     try {
@@ -256,11 +328,15 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
       setMessage("Pick a listing first.");
       return;
     }
+    if (!requireAccessTokenForWrite()) {
+      return;
+    }
     setBusy(true);
     setMessage("");
     try {
       const res = await fetch(`/api/admin/listings/${selectedId}`, {
         method: "DELETE",
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
       });
       const data = await res.json();
       if (!res.ok) {
@@ -280,6 +356,9 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
   async function markAsSold() {
     if (!selectedId) {
       setMessage("Pick a listing first.");
+      return;
+    }
+    if (!requireAccessTokenForWrite()) {
       return;
     }
     setBusy(true);
@@ -340,25 +419,49 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
     }
   }
 
+  const pageTitle = startCreate
+    ? "New listing"
+    : startEditId
+      ? "Edit listing"
+      : "Admin listings";
+
+  const listingBackId = startEditId ?? (isEditing ? selectedId : "");
+  const backHref = listingBackId ? `/listings/${listingBackId}` : "/listings";
+  const backLabel = listingBackId ? "← Back to listing" : "← Back to listings";
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50 py-10">
       <div className="mx-auto max-w-5xl space-y-6 px-4 text-[#140000] sm:px-6">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Admin listings</h1>
-        <p className="text-sm text-zinc-600">
-          Create, update, and delete listings without terminal commands.
-        </p>
+        <div className="space-y-3">
+          <Link
+            href={backHref}
+            className="inline-flex text-sm font-medium text-[#4a6d95] hover:underline"
+          >
+            {backLabel}
+          </Link>
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">{pageTitle}</h1>
+            {!deepLinkMode ? (
+              <p className="mt-2 text-sm text-zinc-600">
+                Create, update, and delete listings without terminal commands.
+              </p>
+            ) : null}
+          </div>
+        </div>
 
-        <TopControls
-          listings={listings}
-          selectedId={selectedId}
-          busy={busy}
-          formStatus={form.status}
-          message={message}
-          onChooseListing={chooseListing}
-          onCreateNewListing={resetToNew}
-          onDeleteListing={deleteListing}
-          onMarkAsSold={markAsSold}
-        />
+        {!deepLinkMode ? (
+          <TopControls
+            listings={listings}
+            selectedId={selectedId}
+            busy={busy}
+            formStatus={form.status}
+            message={message}
+            onChooseListing={chooseListing}
+            onCreateNewListing={resetToNew}
+            onDeleteListing={deleteListing}
+            onMarkAsSold={markAsSold}
+          />
+        ) : null}
 
         {!isEditing ? (
           <CreateWizard
@@ -389,7 +492,6 @@ export function ListingsEditor({ initialListings }: ListingsEditorProps) {
             onAddUploadFiles={addUploadFiles}
             onRemoveQueuedPhoto={removeQueuedUploadFile}
             onRemoveExistingPhoto={removeExistingImage}
-            onBackToCreate={resetToNew}
             onSavePanel={saveEditorPanel}
           />
         )}
