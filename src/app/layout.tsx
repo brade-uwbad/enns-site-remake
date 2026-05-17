@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
@@ -30,7 +29,7 @@ export const metadata: Metadata = {
  * Root layout for all marketing pages: global fonts, site chrome, and main content region.
  *
  * @param children - Page segment content (e.g. home, about).
- * @returns HTML document shell with header, `<main>`, and footer.
+ * @returns HTML document shell with header and `<main>`.
  */
 export default function RootLayout({
   children,
@@ -42,7 +41,6 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col">
         <SiteHeader />
         <main className="flex-1">{children}</main>
-        <SiteFooter />
       </body>
     </html>
   );
