@@ -9,7 +9,7 @@ import { useRecoveryEmail } from "@/hooks/use-recovery-email";
 import { formatAuthError } from "@/lib/auth/format-auth-error";
 import { getPasswordRecoveryRedirectUrl } from "@/lib/auth/recovery-redirect";
 import { maskEmail } from "@/lib/auth/mask-email";
-import { isSupabaseBrowserConfigured } from "@/lib/auth/supabase-configured";
+import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function ForgotPasswordSentPage() {

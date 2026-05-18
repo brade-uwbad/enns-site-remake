@@ -17,12 +17,3 @@ export function useLocalStorageValue(key: string, fallback = ""): string {
     () => fallback,
   );
 }
-
-/** Reads sessionStorage on the client without hydration mismatches (empty on server). */
-export function useSessionStorageValue(key: string, fallback = ""): string {
-  return useSyncExternalStore(
-    subscribeStorage,
-    () => sessionStorage.getItem(key) ?? fallback,
-    () => fallback,
-  );
-}

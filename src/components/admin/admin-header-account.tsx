@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useAdminUser } from "@/hooks/use-admin-user";
-import { isSupabaseBrowserConfigured } from "@/lib/auth/supabase-configured";
+import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 function displayName(firstName: string, lastName: string, email: string) {

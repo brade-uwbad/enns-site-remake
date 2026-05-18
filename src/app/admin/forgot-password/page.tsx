@@ -14,7 +14,7 @@ import {
 import { formatAuthError } from "@/lib/auth/format-auth-error";
 import { getPasswordRecoveryRedirectUrl } from "@/lib/auth/recovery-redirect";
 import { setRecoveryEmail } from "@/lib/auth/recovery-storage";
-import { isSupabaseBrowserConfigured } from "@/lib/auth/supabase-configured";
+import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function ForgotPasswordPage() {

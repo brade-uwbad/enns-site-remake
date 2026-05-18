@@ -24,8 +24,8 @@ import {
   toEditorState,
   toggleAmenitySelection,
 } from "@/components/admin/listings-editor/utils";
-import { useAdminAccessToken } from "@/hooks/use-admin-access-token";
-import { isSupabaseBrowserConfigured } from "@/lib/auth/supabase-configured";
+import { useAdminUser } from "@/hooks/use-admin-user";
+import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 
 type ListingsEditorProps = {
   initialListings: Listing[];
@@ -59,7 +59,7 @@ export function ListingsEditor({
   startEditId,
 }: ListingsEditorProps) {
   const initial = resolveInitialEditorState(initialListings, startCreate, startEditId);
-  const accessToken = useAdminAccessToken();
+  const { accessToken } = useAdminUser();
   const [listings, setListings] = useState<Listing[]>(initialListings);
   const [selectedId, setSelectedId] = useState<string>(initial.selectedId);
   const [form, setForm] = useState<EditorState>(initial.form);

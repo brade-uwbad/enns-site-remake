@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ListingDetailGallery } from "@/components/listings/listing-detail-gallery";
-import { ListingDetailAdminBar } from "@/components/listings/listing-detail-admin-bar";
+import { ListingAdminActions } from "@/components/listings/listing-admin-actions";
 import {
   amenityIconPath,
   canonicalAmenitiesFromStored,
@@ -130,7 +130,7 @@ export function ListingDetailView({ listing, nearby }: Props) {
         </div>
 
         <aside className="space-y-4">
-          <ListingDetailAdminBar listingId={listing.id} status={listing.status} />
+          <ListingAdminActions listingId={listing.id} status={listing.status} />
           <h2 className="text-base font-semibold text-slate-900">Where you&apos;ll be</h2>
           <iframe
             title={`Map for ${listing.title}`}

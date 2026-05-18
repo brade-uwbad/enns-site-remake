@@ -17,7 +17,7 @@ import {
 import { useLocalStorageValue } from "@/hooks/use-client-storage";
 import { formatAuthError } from "@/lib/auth/format-auth-error";
 import { isAdminJwtUser } from "@/lib/auth/roles";
-import { isSupabaseBrowserConfigured } from "@/lib/auth/supabase-configured";
+import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const REMEMBER_EMAIL_KEY = "admin-remember-email";

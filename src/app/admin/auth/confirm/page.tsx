@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthHeading, AuthLogo } from "@/components/auth/auth-ui";
-import { isSupabaseBrowserConfigured } from "@/lib/auth/supabase-configured";
+import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 /**

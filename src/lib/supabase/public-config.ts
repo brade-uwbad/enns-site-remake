@@ -22,3 +22,8 @@ export function getSupabaseAnonKey(): string | undefined {
 export function hasSupabaseSessionConfig(): boolean {
   return Boolean(getSupabaseUrl() && getSupabaseAnonKey());
 }
+
+/** Alias for client components checking public Supabase env vars. */
+export function isSupabaseBrowserConfigured(): boolean {
+  return hasSupabaseSessionConfig();
+}

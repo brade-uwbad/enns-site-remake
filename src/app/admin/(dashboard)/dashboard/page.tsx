@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { AdminDashboardOverview } from "@/components/admin/admin-dashboard-overview";
 import { fetchListingStatusCounts, fetchRecentLeads } from "@/lib/admin/dashboard-data";
-import { requireAdminSession } from "@/lib/auth/require-admin-session";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -12,8 +11,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  await requireAdminSession("/admin/dashboard");
-
   const [counts, leads] = await Promise.all([
     fetchListingStatusCounts(),
     Promise.resolve(fetchRecentLeads(8)),
@@ -30,4 +27,3 @@ export default async function AdminDashboardPage() {
     </div>
   );
 }
-

@@ -3,23 +3,34 @@
 import { useEffect, useState } from "react";
 
 import { isAdminJwtUser } from "@/lib/auth/roles";
-import { isSupabaseBrowserConfigured } from "@/lib/auth/supabase-configured";
+import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-export type AdminUserProfile = {
+type AdminUserProfile = {
   email: string;
   firstName: string;
   lastName: string;
 };
 
-export function useAdminUser(): { loading: boolean; admin: AdminUserProfile | null } {
+/**
+ * Admin session profile and access token for client-side admin API calls.
+ */
+export function useAdminUser(): {
+  loading: boolean;
+  admin: AdminUserProfile | null;
+  accessToken: string | null;
+} {
   const [loading, setLoading] = useState(true);
   const [admin, setAdmin] = useState<AdminUserProfile | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSupabaseBrowserConfigured()) {
-      setLoading(false);
-      setAdmin(null);
+      queueMicrotask(() => {
+        setLoading(false);
+        setAdmin(null);
+        setAccessToken(null);
+      });
       return;
     }
 
@@ -27,22 +38,17 @@ export function useAdminUser(): { loading: boolean; admin: AdminUserProfile | nu
 
     async function load() {
       const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setAccessToken(session?.access_token ?? null);
+
+      const {
         data: { user },
       } = await supabase.auth.getUser();
       if (user && isAdminJwtUser(user)) {
         const meta = user.user_metadata as Record<string, unknown> | undefined;
-        const firstName =
-          typeof meta?.first_name === "string"
-            ? meta.first_name
-            : typeof meta?.firstName === "string"
-              ? meta.firstName
-              : "";
-        const lastName =
-          typeof meta?.last_name === "string"
-            ? meta.last_name
-            : typeof meta?.lastName === "string"
-              ? meta.lastName
-              : "";
+        const firstName = typeof meta?.first_name === "string" ? meta.first_name : "";
+        const lastName = typeof meta?.last_name === "string" ? meta.last_name : "";
         setAdmin({
           email: user.email ?? "",
           firstName,
@@ -58,7 +64,8 @@ export function useAdminUser(): { loading: boolean; admin: AdminUserProfile | nu
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAccessToken(session?.access_token ?? null);
       void load();
     });
 
@@ -67,5 +74,5 @@ export function useAdminUser(): { loading: boolean; admin: AdminUserProfile | nu
     };
   }, []);
 
-  return { loading, admin };
+  return { loading, admin, accessToken };
 }

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { ListingsEditor } from "@/components/admin/listings-editor";
-import { requireAdminSession } from "@/lib/auth/require-admin-session";
 import { fetchListings } from "@/lib/listings/query";
 
 export const metadata: Metadata = {
@@ -16,8 +15,6 @@ type AdminListingsPageProps = {
 };
 
 export default async function AdminListingsPage({ searchParams }: AdminListingsPageProps) {
-  await requireAdminSession("/admin/listings");
-
   const params = await searchParams;
   const startCreate = params.create === "1";
   const startEditId = typeof params.edit === "string" ? params.edit : undefined;
