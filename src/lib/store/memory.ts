@@ -330,4 +330,18 @@ export function addContactSubmission(
   return row;
 }
 
+/**
+ * Latest contact or valuation submissions for the admin dashboard.
+ */
+export function listRecentContactSubmissions(limit = 10): ContactSubmissionRow[] {
+  return contactSubmissions.slice(0, Math.max(1, limit));
+}
+
+/** Counts listings in the in-memory store by status (for admin dashboard). */
+export function countListingsByStatus() {
+  const active = listings.filter((l) => l.status === "active").length;
+  const sold = listings.filter((l) => l.status === "sold").length;
+  return { active, sold, total: active + sold };
+}
+
 export { ADMIN_USER_ID };

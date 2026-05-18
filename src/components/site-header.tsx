@@ -1,14 +1,9 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { Poppins } from "next/font/google";
 
-/** Primary navigation targets for the marketing site. */
-const nav = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/services", label: "Services" },
-  { href: "/listings", label: "Listings" },
-] as const;
+import { SiteHeaderCta } from "@/components/site-header-cta";
+import { SiteHeaderNav } from "@/components/site-header-nav";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -34,29 +29,13 @@ export function SiteHeader() {
             className="h-6 w-auto"
           />
         </Link>
-        <nav
+        <SiteHeaderNav
           className={`hidden items-center sm:flex ${poppins.className}`}
-          style={{ columnGap: "2.5rem" }}
-          aria-label="Main"
-        >
-          {nav.map((item, index) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`px-2 py-2 text-base font-normal text-[#140000] transition-all hover:font-medium ${
-                index > 0 ? "ml-8" : ""
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <Link
-          href="/contact"
+          linkClassName="px-2 py-2 text-base font-normal text-[#140000] transition-all hover:font-medium"
+        />
+        <SiteHeaderCta
           className={`rounded-full bg-[#070101] px-4 py-2 text-base font-normal text-white transition-colors hover:bg-[#070101ef] ${poppins.className}`}
-        >
-          Get in touch
-        </Link>
+        />
       </div>
     </header>
   );

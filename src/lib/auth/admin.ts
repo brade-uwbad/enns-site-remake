@@ -1,3 +1,5 @@
+import { isAdminAuthBypassEnabled } from "@/lib/auth/admin-bypass";
+import { isAdminJwtUser } from "@/lib/auth/roles";
 import { getSupabaseAdminClient, hasSupabaseAdminConfig } from "@/lib/supabase/server";
 
 /** Admin identity returned when Supabase-backed admin auth succeeds. */
@@ -27,31 +29,6 @@ function bearerToken(request: Request): string | null {
   return h.slice(7).trim() || null;
 }
 
-function isAdminRole(user: {
-  app_metadata?: Record<string, unknown>;
-  user_metadata?: Record<string, unknown>;
-}) {
-  const appRole = user.app_metadata?.role;
-  if (typeof appRole === "string" && appRole.toLowerCase() === "admin") {
-    return true;
-  }
-
-  const userRole = user.user_metadata?.role;
-  if (typeof userRole === "string" && userRole.toLowerCase() === "admin") {
-    return true;
-  }
-
-  const appRoles = user.app_metadata?.roles;
-  if (
-    Array.isArray(appRoles) &&
-    appRoles.some((r) => typeof r === "string" && r.toLowerCase() === "admin")
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
 /**
  * Verifies that the request is allowed to call admin-only Route Handlers.
  *
@@ -67,7 +44,7 @@ function isAdminRole(user: {
  */
 export async function requireAdmin(request: Request): Promise<AdminAuthResult> {
   // Local/staging bypass for admin UI. Do not enable in production unless intentionally public.
-  if (process.env.ADMIN_UI_BYPASS_AUTH === "true") {
+  if (isAdminAuthBypassEnabled()) {
     return {
       ok: true,
       user: { id: "00000000-0000-0000-0000-000000000001", email: "admin@local" },
@@ -102,7 +79,7 @@ export async function requireAdmin(request: Request): Promise<AdminAuthResult> {
     return { ok: false, status: 401, message: "Invalid Supabase access token" };
   }
 
-  if (!isAdminRole(data.user)) {
+  if (!isAdminJwtUser(data.user)) {
     return { ok: false, status: 403, message: "Admin role required" };
   }
 
