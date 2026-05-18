@@ -6,7 +6,7 @@ import { createSupabaseServerAuthClient } from "@/lib/supabase/server-auth";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/listings";
+  const next = searchParams.get("next") ?? "/admin/dashboard";
 
   if (code) {
     const supabase = await createSupabaseServerAuthClient();
@@ -22,7 +22,8 @@ export async function GET(request: Request) {
     } = await supabase.auth.getUser();
 
     if (user && isAdminJwtUser(user)) {
-      const destination = next.startsWith("/admin") || next.startsWith("/listings") ? next : "/listings";
+      const destination =
+        next.startsWith("/admin") || next.startsWith("/listings") ? next : "/admin/dashboard";
       return NextResponse.redirect(new URL(destination, origin));
     }
 

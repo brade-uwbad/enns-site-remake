@@ -35,7 +35,7 @@ function LoginForm() {
   const [message, setMessage] = useState("");
 
   const configured = isSupabaseBrowserConfigured();
-  const redirectTo = searchParams.get("redirect") ?? "/listings";
+  const redirectTo = searchParams.get("redirect") ?? "/admin/dashboard";
   const searchError = searchParams.get("error");
   const registered = searchParams.get("registered");
   const linkErrorMessage = searchError ? formatAuthError(searchError) : "";
@@ -74,7 +74,7 @@ function LoginForm() {
       const safeRedirect =
         redirectTo.startsWith("/admin") || redirectTo.startsWith("/listings")
           ? redirectTo
-          : "/listings";
+          : "/admin/dashboard";
       router.replace(safeRedirect);
       router.refresh();
     } finally {

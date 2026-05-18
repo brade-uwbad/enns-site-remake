@@ -26,7 +26,7 @@ export function AuthLandingRedirect() {
     const code = search.get("code");
 
     if (code) {
-      router.replace(`/admin/auth/callback?code=${encodeURIComponent(code)}&next=/listings`);
+      router.replace(`/admin/auth/callback?code=${encodeURIComponent(code)}&next=/admin/dashboard`);
       return;
     }
 
