@@ -3,7 +3,7 @@ type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
 const WINDOW_MS = 60 * 60 * 1000;
-const MAX_REQUESTS = 30;
+const MAX_REQUESTS = 5;
 
 /**
  * Applies a fixed-window rate limit for contact-related POST endpoints, keyed by client IP.
