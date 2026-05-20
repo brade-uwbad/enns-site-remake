@@ -1,36 +1,34 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 
+import { fetchSiteContent } from "@/lib/content/query";
+
 export const metadata: Metadata = {
   title: "About",
   description: "About Brad Enns and real estate services in Kitchener–Waterloo.",
 };
 
-/**
- * Placeholder About page until final biography and media are added.
- *
- * @returns JSX for `/about`.
- */
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, "");
+}
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { payload: c } = await fetchSiteContent("about");
+  const phoneHref = `tel:${digitsOnly(c.phone)}`;
+  const emailHref = `mailto:${c.email}`;
+
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
-        {/* MOBILE ONLY: eyebrow + heading */}
+      <div className="mx-auto max-w-5xl px-6 py-16 md:py-24">
         <div className="md:hidden">
-          <p className="text-brand-gold text-base font-medium mb-2">
-            Kitchener, Waterloo Real Estate Agent
-          </p>
-          <h1 className="text-4xl font-medium text-slate-900 mb-5">Meet Brad Enns</h1>
+          <p className="mb-2 text-base font-medium text-brand-gold">{c.eyebrow}</p>
+          <h1 className="mb-5 text-4xl font-medium text-slate-900">{c.headline}</h1>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-12 md:gap-16 items-start">
-          {/* LEFT COLUMN */}
-          <div className="w-full md:w-2/5 flex-shrink-0">
-            {/* PHOTO + MOBILE STAT CARDS side by side */}
-            <div className="flex gap-4 items-start">
-              {/* PHOTO */}
-              <div className="relative w-1/2 md:w-full aspect-[4/5] rounded-xl overflow-hidden flex-shrink-0">
+        <div className="flex flex-col items-start gap-12 md:flex-row md:gap-16">
+          <div className="w-full shrink-0 md:w-2/5">
+            <div className="flex items-start gap-4">
+              <div className="relative aspect-[4/5] w-1/2 shrink-0 overflow-hidden rounded-xl md:w-full">
                 <Image
                   src="/images/brad-enns.jpg"
                   alt="Brad Enns, Enns Real Estate"
@@ -40,89 +38,68 @@ export default function AboutPage() {
                 />
               </div>
 
-              {/* MOBILE ONLY: stat cards */}
-              <div className="md:hidden flex flex-col gap-4 flex-1">
-                <div className="bg-slate-100 rounded-xl p-4 text-center">
-                  <p className="text-3xl font-bold text-brand-gold">20+</p>
-                  <p className="text-sm text-slate-500 mt-1">homes sold</p>
+              <div className="flex flex-1 flex-col gap-4 md:hidden">
+                <div className="rounded-xl bg-slate-100 p-4 text-center">
+                  <p className="text-3xl font-bold text-brand-gold">{c.stat1Value}</p>
+                  <p className="mt-1 text-sm text-slate-500">{c.stat1Label}</p>
                 </div>
-                <div className="bg-slate-100 rounded-xl p-4 text-center">
-                  <p className="text-3xl font-bold text-brand-gold">5+</p>
-                  <p className="text-sm text-slate-500 mt-1">years of experience</p>
+                <div className="rounded-xl bg-slate-100 p-4 text-center">
+                  <p className="text-3xl font-bold text-brand-gold">{c.stat2Value}</p>
+                  <p className="mt-1 text-sm text-slate-500">{c.stat2Label}</p>
                 </div>
               </div>
             </div>
 
-            {/* CONTACT INFO */}
-            <div className="flex items-center gap-6 text-sm text-slate-600 mt-5">
+            <div className="mt-5 flex items-center gap-6 text-sm text-slate-600">
               <a
-                href="tel:5195001641"
-                className="flex items-center gap-2 hover:text-brand-gold transition-colors duration-200"
+                href={phoneHref}
+                className="flex items-center gap-2 transition-colors duration-200 hover:text-brand-gold"
               >
-                <Image src="/icons/Phone.svg" alt="" width={16} height={16} /> 519 - 500 - 1641
+                <Image src="/icons/Phone.svg" alt="" width={16} height={16} /> {c.phone}
               </a>
               <a
-                href="mailto:brad@mres.ca"
-                className="flex items-center gap-2 hover:text-brand-gold transition-colors duration-200"
+                href={emailHref}
+                className="flex items-center gap-2 transition-colors duration-200 hover:text-brand-gold"
               >
-                <Image src="/icons/Mail.svg" alt="" width={16} height={16} /> brad@mres.ca
+                <Image src="/icons/Mail.svg" alt="" width={16} height={16} /> {c.email}
               </a>
             </div>
 
-            {/* DESKTOP ONLY: Contact Brad Today button */}
             <a
               href="/contact"
-              className="hidden md:block mt-4 text-center border border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white font-semibold text-xs uppercase tracking-widest py-3.5 px-6 rounded transition-colors duration-200"
+              className="mt-4 hidden rounded border border-brand-gold px-6 py-3.5 text-center text-xs font-semibold uppercase tracking-widest text-brand-gold transition-colors duration-200 hover:bg-brand-gold hover:text-white md:block"
             >
-              Contact Brad Today
+              {c.ctaLabel}
             </a>
           </div>
 
-          {/* RIGHT COLUMN */}
           <div className="w-full md:w-3/5">
-            {/* DESKTOP ONLY: eyebrow + heading */}
             <div className="hidden md:block">
-              <p className="text-brand-gold text-base font-medium mb-2">
-                Kitchener, Waterloo Real Estate Agent
-              </p>
-              <h1 className="text-4xl md:text-5xl font-medium text-slate-900 mb-5">
-                Meet Brad Enns
-              </h1>
+              <p className="mb-2 text-base font-medium text-brand-gold">{c.eyebrow}</p>
+              <h1 className="mb-5 text-4xl font-medium text-slate-900 md:text-5xl">{c.headline}</h1>
             </div>
 
-            {/* BIO PARAGRAPH */}
-            <p className="text-slate-600 leading-relaxed mb-6">
-              Description descriptions Description descriptions descriptions descriptions
-              descriptions descriptions descriptions descriptions descriptions
-              descriptionsdescriptionsdescriptionsdescriptions.
-            </p>
+            <p className="mb-6 leading-relaxed text-slate-600">{c.bio}</p>
 
-            {/* SUBHEADING + SECOND PARAGRAPH */}
-            <h2 className="text-lg font-bold text-slate-900 mb-3">Another heading / What I do</h2>
-            <p className="text-slate-600 leading-relaxed mb-8">
-              appraisal details appraisal details appraisal details appraisal details appraisal
-              details appraisal details appraisal details appraisal details appraisal details
-              appraisal details
-            </p>
+            <h2 className="mb-3 text-lg font-bold text-slate-900">{c.subheading}</h2>
+            <p className="mb-8 leading-relaxed text-slate-600">{c.subBio}</p>
 
-            {/* DESKTOP ONLY: stat cards */}
-            <div className="hidden md:grid grid-cols-2 gap-4">
-              <div className="bg-slate-100 rounded-xl p-6 text-center">
-                <p className="text-4xl font-bold text-brand-gold">20+</p>
-                <p className="text-sm text-slate-500 mt-1">homes sold</p>
+            <div className="hidden grid-cols-2 gap-4 md:grid">
+              <div className="rounded-xl bg-slate-100 p-6 text-center">
+                <p className="text-4xl font-bold text-brand-gold">{c.stat1Value}</p>
+                <p className="mt-1 text-sm text-slate-500">{c.stat1Label}</p>
               </div>
-              <div className="bg-slate-100 rounded-xl p-6 text-center">
-                <p className="text-4xl font-bold text-brand-gold">5+</p>
-                <p className="text-sm text-slate-500 mt-1">years of experience</p>
+              <div className="rounded-xl bg-slate-100 p-6 text-center">
+                <p className="text-4xl font-bold text-brand-gold">{c.stat2Value}</p>
+                <p className="mt-1 text-sm text-slate-500">{c.stat2Label}</p>
               </div>
             </div>
 
-            {/* MOBILE ONLY: Contact Brad Today button */}
             <a
               href="/contact"
-              className="md:hidden mt-6 block text-center border border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white font-semibold text-xs uppercase tracking-widest py-3.5 px-6 rounded transition-colors duration-200"
+              className="mt-6 block rounded border border-brand-gold px-6 py-3.5 text-center text-xs font-semibold uppercase tracking-widest text-brand-gold transition-colors duration-200 hover:bg-brand-gold hover:text-white md:hidden"
             >
-              Contact Brad Today
+              {c.ctaLabel}
             </a>
           </div>
         </div>
@@ -130,3 +107,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

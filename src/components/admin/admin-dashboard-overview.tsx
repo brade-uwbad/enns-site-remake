@@ -53,6 +53,10 @@ export function AdminDashboardOverview({ counts, leads }: AdminDashboardOverview
           <Link href="/admin/listings" className="font-medium text-[#4a6d95] hover:underline">
             Manage listings
           </Link>
+          {" · "}
+          <Link href="/admin/content" className="font-medium text-[#4a6d95] hover:underline">
+            Edit site content
+          </Link>
         </p>
       </section>
 

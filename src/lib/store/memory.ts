@@ -1,12 +1,9 @@
 import { randomUUID } from "crypto";
+import { getDefaultSiteContent } from "@/lib/content/defaults";
+import { SITE_CONTENT_KEYS, type SiteContentKey } from "@/lib/content/keys";
+import type { SiteContentPayload } from "@/lib/content/types";
 import type { ListQuery } from "@/lib/listings/query";
-import type {
-  ContactSubmissionRow,
-  ListingRow,
-  ReviewRow,
-  ServiceRow,
-  SiteContentKey,
-} from "@/lib/store/types";
+import type { ContactSubmissionRow, ListingRow, ReviewRow, ServiceRow } from "@/lib/store/types";
 
 /** Seed `created_by` id for demo listings in the in-memory store. */
 const ADMIN_USER_ID = "00000000-0000-0000-0000-000000000001";
@@ -117,34 +114,18 @@ const seedServices: ServiceRow[] = [
   },
 ];
 
-const homepagePayload = {
-  aboutSummary:
-    "Local Kitchener-Waterloo real estate focused on clear guidance and steady communication.",
-  featuredListingIds: [] as string[],
-  servicesLinks: [
-    { label: "Buying", href: "/services#buying" },
-    { label: "Selling", href: "/services#selling" },
-    { label: "Home appraisal", href: "/services#appraisal" },
-  ],
-};
-
-const aboutPayload = {
-  headline: "About Brad",
-  bio: "Placeholder bio. Replace with Brad's story, credentials, and neighbourhoods served.",
-  contactEmail: "brad@example.com",
-  contactPhone: "(519) 555-0100",
-};
-
 let listings = [...seedListings];
 let reviews = [...seedReviews];
 const services = [...seedServices];
 const siteContent: Record<
   SiteContentKey,
-  { payload: Record<string, unknown>; updated_at: string }
-> = {
-  homepage: { payload: homepagePayload, updated_at: nowIso() },
-  about: { payload: aboutPayload, updated_at: nowIso() },
-};
+  { payload: SiteContentPayload<SiteContentKey>; updated_at: string }
+> = Object.fromEntries(
+  SITE_CONTENT_KEYS.map((key) => [
+    key,
+    { payload: getDefaultSiteContent(key), updated_at: nowIso() },
+  ]),
+) as Record<SiteContentKey, { payload: SiteContentPayload<SiteContentKey>; updated_at: string }>;
 let contactSubmissions: ContactSubmissionRow[] = [];
 
 /**
@@ -305,11 +286,22 @@ export function listServices(): ServiceRow[] {
 }
 
 /**
- * @param key - `"homepage"` or `"about"`.
  * @returns Payload and `updated_at` for CMS-style content, or `undefined` if missing.
  */
-export function getSiteContent(key: SiteContentKey) {
-  return siteContent[key];
+export function getSiteContent<K extends SiteContentKey>(key: K) {
+  return siteContent[key] as { payload: SiteContentPayload<K>; updated_at: string } | undefined;
+}
+
+export function upsertSiteContent<K extends SiteContentKey>(
+  key: K,
+  payload: SiteContentPayload<K>,
+) {
+  const row = {
+    payload,
+    updated_at: nowIso(),
+  };
+  siteContent[key] = row as (typeof siteContent)[K];
+  return siteContent[key] as { payload: SiteContentPayload<K>; updated_at: string };
 }
 
 /**
