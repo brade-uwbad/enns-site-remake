@@ -29,7 +29,7 @@ export const metadata: Metadata = {
  * Root layout for all marketing pages: global fonts, site chrome, and main content region.
  *
  * @param children - Page segment content (e.g. home, about).
- * @returns HTML document shell with header, `<main>`, and footer.
+ * @returns HTML document shell with header and `<main>`.
  */
 export default function RootLayout({
   children,
