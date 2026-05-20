@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { useAdminUser } from "@/hooks/use-admin-user";
+
 type PropertyType = "apartment" | "detached" | "townhouse" | "condo";
 
 type Listing = {
@@ -93,6 +95,7 @@ function buildQuery(filters: Filters) {
 }
 
 export function ListingsGrid() {
+  const { admin } = useAdminUser();
   const [filters, setFilters] = useState<Filters>({
     status: "active",
     minPrice: "",
@@ -177,28 +180,38 @@ export function ListingsGrid() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setFilters((prev) => ({ ...prev, status: "active" }))}
-            className={`rounded-full border px-4 py-2 text-sm font-medium ${
-              filters.status === "active"
-                ? "border-sky-600 bg-sky-600 text-white"
-                : "border-slate-300 bg-white text-slate-700"
-            }`}
-          >
-            Active
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilters((prev) => ({ ...prev, status: "sold" }))}
-            className={`rounded-full border px-4 py-2 text-sm font-medium ${
-              filters.status === "sold"
-                ? "border-sky-600 bg-sky-600 text-white"
-                : "border-slate-300 bg-white text-slate-700"
-            }`}
-          >
-            Sold
-          </button>
+          <div className="inline-flex overflow-hidden rounded-md border border-slate-300 bg-white">
+            <button
+              type="button"
+              onClick={() => setFilters((prev) => ({ ...prev, status: "active" }))}
+              className={`border-r px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
+                filters.status === "active"
+                  ? "border-sky-600 bg-white text-sky-600"
+                  : "border-slate-300 bg-white text-slate-400"
+              }`}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilters((prev) => ({ ...prev, status: "sold" }))}
+              className={`px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
+                filters.status === "sold"
+                  ? "bg-white text-sky-600 ring-1 ring-inset ring-sky-600"
+                  : "bg-white text-slate-400"
+              }`}
+            >
+              Sold
+            </button>
+          </div>
+          {admin ? (
+            <Link
+              href="/admin/listings?create=1"
+              className="rounded-md bg-[#e6e8ec] px-4 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf]"
+            >
+              + Create a new listing
+            </Link>
+          ) : null}
           <div className="mx-1 hidden h-7 w-px bg-slate-200 sm:block" />
           <input
             type="number"
@@ -206,7 +219,7 @@ export function ListingsGrid() {
             placeholder="Min price"
             value={filters.minPrice}
             onChange={(e) => setFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
-            className="w-28 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="w-28 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
           />
           <input
             type="number"
@@ -214,12 +227,14 @@ export function ListingsGrid() {
             placeholder="Max price"
             value={filters.maxPrice}
             onChange={(e) => setFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
-            className="w-28 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="w-28 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
           />
           <select
             value={filters.beds}
             onChange={(e) => setFilters((prev) => ({ ...prev, beds: e.target.value }))}
-            className="w-36 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+            className={`w-36 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm ${
+              filters.beds ? "text-slate-900" : "text-slate-500"
+            }`}
           >
             <option value="">Any beds</option>
             <option value="1">1 bed</option>
@@ -241,7 +256,7 @@ export function ListingsGrid() {
                 propertyType: "",
               }));
             }}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+            className="rounded-md bg-[#e6e8ec] px-3 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf]"
           >
             Reset
           </button>
@@ -253,9 +268,9 @@ export function ListingsGrid() {
             placeholder="Search"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full rounded-full border border-slate-300 bg-white py-2 pl-4 pr-10 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+            className="w-full rounded-full border border-slate-300 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 placeholder:text-slate-500 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
           />
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
             ⌕
           </span>
         </div>

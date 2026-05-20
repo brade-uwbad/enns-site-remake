@@ -2,13 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Poppins } from "next/font/google";
 
-const nav = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/services", label: "Services" },
-  { href: "/listings", label: "Listings" },
-  { href: "/contact", label: "Contact" },
-] as const;
+import { SiteHeaderCta } from "@/components/site-header-cta";
+import { SiteHeaderNav } from "@/components/site-header-nav";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -32,25 +27,13 @@ export function SiteHeader() {
             className="h-6 w-auto"
           />
         </Link>
-
-        <nav
-          className={`absolute left-1/2 hidden -translate-x-1/2 items-center sm:flex ${poppins.className}`}
-          style={{ columnGap: "2.5rem" }}
-          aria-label="Main"
-        >
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="px-2 py-2 text-base font-normal text-[#140000] transition-all hover:font-medium"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Spacer balances the logo column so centered nav stays visually centered */}
-        <div className="w-[106px] shrink-0 sm:hidden" aria-hidden />
+        <SiteHeaderNav
+          className={`hidden items-center sm:flex ${poppins.className}`}
+          linkClassName="px-2 py-2 text-base font-normal text-[#140000] transition-all hover:font-medium"
+        />
+        <SiteHeaderCta
+          className={`rounded-full bg-[#070101] px-4 py-2 text-base font-normal text-white transition-colors hover:bg-[#070101ef] ${poppins.className}`}
+        />
       </div>
 
       <nav

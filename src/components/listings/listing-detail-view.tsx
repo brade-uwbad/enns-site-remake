@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ListingDetailGallery } from "@/components/listings/listing-detail-gallery";
+import { ListingAdminActions } from "@/components/listings/listing-admin-actions";
 import {
   amenityIconPath,
   canonicalAmenitiesFromStored,
@@ -98,20 +99,20 @@ export function ListingDetailView({ listing, nearby }: Props) {
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <div className="space-y-6">
-          <div className="flex items-baseline justify-between gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[28px]">
                 {soldPrefix}
                 {listing.address_line || listing.title}
               </h1>
-              <p className="mt-1 text-sm text-slate-400">{specLine(listing)}</p>
+              <p className="mt-1 text-sm text-slate-500">{specLine(listing)}</p>
             </div>
             <p className="text-xl font-semibold text-slate-900 tabular-nums sm:text-2xl">
               {formatPrice(listing.price_dollars)}
             </p>
           </div>
 
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
             {listing.description ||
               "building description building description building description building description building description building description building description building description building description."}
           </p>
@@ -129,6 +130,7 @@ export function ListingDetailView({ listing, nearby }: Props) {
         </div>
 
         <aside className="space-y-4">
+          <ListingAdminActions listingId={listing.id} status={listing.status} />
           <h2 className="text-base font-semibold text-slate-900">Where you&apos;ll be</h2>
           <iframe
             title={`Map for ${listing.title}`}

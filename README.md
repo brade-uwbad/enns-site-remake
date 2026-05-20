@@ -36,7 +36,7 @@ Optional:
 - `STORAGE_SUPABASE_LISTINGS_BUCKET` (default: `listing-images`)
 - `NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY` for Google Maps embed on `/listings/[id]` (optional fallback available)
 - `postal_code_centroids` table rows for centroid-based coordinate autofill on admin create/update
-- `ADMIN_UI_BYPASS_AUTH=true` for local/testing-only admin bypass
+- `ADMIN_UI_BYPASS_AUTH=true` for local dev only (`NODE_ENV=development`); ignored in production. Remove it to require real login locally.
 - `ADMIN_API_TOKEN` for static token mode
 
 1. Run dev server:
