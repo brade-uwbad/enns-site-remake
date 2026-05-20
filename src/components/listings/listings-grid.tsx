@@ -167,7 +167,9 @@ export function ListingsGrid() {
               >
                 {cat.icon}
               </span>
-              <span className={`text-xs font-medium ${selected ? "text-sky-800" : "text-slate-600"}`}>
+              <span
+                className={`text-xs font-medium ${selected ? "text-sky-800" : "text-slate-600"}`}
+              >
                 {cat.label}
               </span>
             </button>
@@ -283,7 +285,7 @@ export function ListingsGrid() {
                 }
                 alt={listing.title}
                 width={1200}
-                height={750}                
+                height={750}
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
               />
               {listing.status === "sold" ? (
@@ -293,7 +295,9 @@ export function ListingsGrid() {
               ) : null}
             </div>
             <div className="space-y-2 px-4 py-3">
-              <p className="line-clamp-1 text-base font-semibold text-slate-900">{cardTitle(listing)}</p>
+              <p className="line-clamp-1 text-base font-semibold text-slate-900">
+                {cardTitle(listing)}
+              </p>
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-sm font-semibold text-slate-900">
                   {formatPrice(listing.price_dollars)}
