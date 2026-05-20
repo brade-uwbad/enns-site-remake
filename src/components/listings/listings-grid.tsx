@@ -283,8 +283,7 @@ export function ListingsGrid() {
                 }
                 alt={listing.title}
                 width={1200}
-                height={750}
-                unoptimized
+                height={750}                
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
               />
               {listing.status === "sold" ? (

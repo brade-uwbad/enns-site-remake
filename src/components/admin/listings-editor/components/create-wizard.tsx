@@ -156,7 +156,7 @@ export function CreateWizard(props: Props) {
             {selectedPhotos.length === 0 && existingPhotos.length > 0
               ? existingPhotos.slice(0, 8).map((src) => (
                   <div key={src} className="group relative aspect-[4/3] overflow-hidden rounded-md border border-zinc-200">
-                    <Image src={src} alt="Existing listing photo" fill className="object-cover" unoptimized />
+                    <Image src={src} alt="Existing listing photo" fill className="object-cover" />
                     <div className="absolute inset-0 hidden items-center justify-center gap-2 bg-black/45 group-hover:flex">
                       <button
                         type="button"
@@ -189,7 +189,7 @@ export function CreateWizard(props: Props) {
             Close
           </button>
           <div className="relative h-[80vh] w-[90vw] max-w-5xl">
-            <Image src={previewSrc} alt="Preview selected photo" fill className="object-contain" unoptimized />
+            <Image src={previewSrc} alt="Preview selected photo" fill className="object-contain" />
           </div>
         </div>
       ) : null}
