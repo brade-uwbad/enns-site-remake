@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { useAdminUser } from "@/hooks/use-admin-user";
 
-const nav = [
+export const siteHeaderNavItems = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
@@ -23,7 +23,7 @@ export function SiteHeaderNav({ className, linkClassName }: SiteHeaderNavProps) 
 
   return (
     <nav className={className} style={{ columnGap: "2.5rem" }} aria-label="Main">
-      {nav.map((item, index) => (
+      {siteHeaderNavItems.map((item, index) => (
         <Link
           key={item.href}
           href={item.href}

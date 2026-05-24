@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { DashboardLead, ListingStatusCounts } from "@/lib/admin/dashboard-data";
+import { Button } from "@/components/ui/button";
 
 type AdminDashboardOverviewProps = {
   counts: ListingStatusCounts;
@@ -45,19 +46,19 @@ export function AdminDashboardOverview({ counts, leads }: AdminDashboardOverview
           ))}
         </div>
         <p className="mt-3 text-sm text-zinc-500">
-          {counts.total} listing{counts.total === 1 ? "" : "s"} total.{" "}
-          <Link href="/listings" className="font-medium text-[#4a6d95] hover:underline">
-            View public listings
-          </Link>
-          {" · "}
-          <Link href="/admin/listings" className="font-medium text-[#4a6d95] hover:underline">
-            Manage listings
-          </Link>
-          {" · "}
-          <Link href="/admin/content" className="font-medium text-[#4a6d95] hover:underline">
-            Edit site content
-          </Link>
+          {counts.total} listing{counts.total === 1 ? "" : "s"} total.
         </p>
+        <div className="mt-4 flex w-full gap-2 sm:gap-3">
+          <Button variant="outline" className="h-11 min-h-11 flex-1 basis-0 px-2 text-center text-sm" asChild>
+            <Link href="/listings">View public listings</Link>
+          </Button>
+          <Button className="h-11 min-h-11 flex-1 basis-0 px-2 text-center text-sm" asChild>
+            <Link href="/admin/listings">Manage listings</Link>
+          </Button>
+          <Button variant="outline" className="h-11 min-h-11 flex-1 basis-0 px-2 text-center text-sm" asChild>
+            <Link href="/admin/content">Edit site content</Link>
+          </Button>
+        </div>
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white shadow-sm">
