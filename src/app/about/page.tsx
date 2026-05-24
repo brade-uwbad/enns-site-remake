@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 
+import { ClientReviewsSection } from "@/components/reviews/client-reviews-section";
 import { fetchSiteContent } from "@/lib/content/query";
+import { fetchFeaturedReviews } from "@/lib/reviews/query";
 
 export const metadata: Metadata = {
   title: "About",
@@ -13,7 +15,10 @@ function digitsOnly(value: string) {
 }
 
 export default async function AboutPage() {
-  const { payload: c } = await fetchSiteContent("about");
+  const [{ payload: c }, featuredReviews] = await Promise.all([
+    fetchSiteContent("about"),
+    fetchFeaturedReviews(),
+  ]);
   const phoneHref = `tel:${digitsOnly(c.phone)}`;
   const emailHref = `mailto:${c.email}`;
 
@@ -104,6 +109,8 @@ export default async function AboutPage() {
           </div>
         </div>
       </div>
+
+      <ClientReviewsSection reviews={featuredReviews} />
     </div>
   );
 }
