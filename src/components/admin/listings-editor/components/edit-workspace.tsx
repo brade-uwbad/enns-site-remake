@@ -15,7 +15,6 @@ type Props = {
   onAddUploadFiles: (files: FileList | null) => void;
   onRemoveQueuedPhoto: (index: number) => void;
   onRemoveExistingPhoto: (url: string) => void;
-  onBackToCreate: () => void;
   onSavePanel: () => Promise<void>;
 };
 
@@ -32,7 +31,6 @@ export function EditWorkspace(props: Props) {
     onAddUploadFiles,
     onRemoveQueuedPhoto,
     onRemoveExistingPhoto,
-    onBackToCreate,
     onSavePanel,
   } = props;
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
@@ -236,9 +234,9 @@ export function EditWorkspace(props: Props) {
       <div className="flex items-center justify-between border-t border-zinc-200 pt-4">
         <button
           type="button"
-          onClick={() => (editorPanel === "menu" ? onBackToCreate() : onSetPanel("menu"))}
-          disabled={busy}
-          className="rounded-md px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 disabled:opacity-50"
+          onClick={() => onSetPanel("menu")}
+          disabled={busy || editorPanel === "menu"}
+          className="rounded-md px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Back
         </button>
