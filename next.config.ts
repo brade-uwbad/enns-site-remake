@@ -78,14 +78,8 @@ const nextConfig: NextConfig = {
         destination: "/listings",
         permanent: true,
       },
-
     ];
   },
-
-
-
-
-
 };
 
 export default nextConfig;
