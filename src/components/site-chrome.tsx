@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 
 import { AuthLandingRedirect } from "@/components/auth/auth-landing-redirect";
-import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
 /** Admin sign-in / sign-up / password recovery: no marketing footer. */
@@ -20,7 +19,13 @@ function isAdminAuthChromePath(pathname: string): boolean {
   return false;
 }
 
-export function SiteChrome({ children }: { children: React.ReactNode }) {
+export function SiteChrome({
+  children,
+  footer,
+}: {
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
   const pathname = usePathname();
   const hideFooter = isAdminAuthChromePath(pathname);
 
@@ -29,7 +34,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <AuthLandingRedirect />
       <SiteHeader />
       <main className="flex-1">{children}</main>
-      {!hideFooter ? <SiteFooter /> : null}
+      {!hideFooter ? footer : null}
     </>
   );
 }

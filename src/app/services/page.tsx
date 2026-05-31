@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Montserrat, Poppins } from "next/font/google";
 
+import { fetchSiteContent } from "@/lib/content/query";
+
 const poppins = Poppins({
   weight: ["400", "500"],
   subsets: ["latin"],
@@ -12,71 +14,62 @@ const montserrat = Montserrat({
   subsets: ["latin"],
 });
 
-const placeholderBody =
-  "Appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details.";
-
-const serviceCards = [
-  {
-    title: "Home Appraisal",
-    iconSrc: "/icons/appraisal.svg",
-    iconWidth: 116,
-    iconHeight: 99,
-    body: placeholderBody,
-  },
-  {
-    title: "Buying",
-    iconSrc: "/icons/buying.svg",
-    iconWidth: 111,
-    iconHeight: 99,
-    body: placeholderBody,
-  },
-  {
-    title: "Selling",
-    iconSrc: "/icons/selling.svg",
-    iconWidth: 95,
-    iconHeight: 90,
-    body: placeholderBody,
-  },
-] as const;
-
 export const metadata: Metadata = {
   title: "Services",
   description: "Enns Real Estate services in Kitchener–Waterloo and surrounding communities.",
 };
 
-/**
- * Services overview: hero copy and three service cards (appraisal, buying, selling).
- *
- * @returns JSX for `/services`.
- */
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const { payload: c } = await fetchSiteContent("services");
+
+  const serviceCards = [
+    {
+      title: c.appraisalTitle,
+      iconSrc: "/icons/appraisal.svg",
+      iconWidth: 116,
+      iconHeight: 99,
+      body: c.appraisalBody,
+    },
+    {
+      title: c.buyingTitle,
+      iconSrc: "/icons/buying.svg",
+      iconWidth: 111,
+      iconHeight: 99,
+      body: c.buyingBody,
+    },
+    {
+      title: c.sellingTitle,
+      iconSrc: "/icons/selling.svg",
+      iconWidth: 95,
+      iconHeight: 90,
+      body: c.sellingBody,
+    },
+  ] as const;
+
   return (
     <div className="w-full">
-      {/* MOBILE ONLY: hero */}
       <div className="mx-auto w-full max-w-3xl px-4 pb-3 pt-12 sm:px-6 sm:pb-4 md:hidden">
         <h1 className="text-center text-4xl font-medium text-slate-900 dark:text-zinc-50">
-          Enns Real Estate Services
+          {c.heroTitle}
         </h1>
         <p
           className={`${poppins.className} mt-6 text-center text-[20px] font-normal leading-normal text-[#7b7b7b]`}
         >
-          We’re here to help you value, buy, and sell your home.
+          {c.heroDescription}
         </p>
       </div>
 
-      {/* DESKTOP ONLY: hero */}
       <div className="mx-auto hidden w-full max-w-3xl px-4 pb-3 pt-12 sm:px-6 sm:pb-4 md:block">
         <h1 className="text-center text-4xl font-medium text-slate-900 dark:text-zinc-50 md:text-5xl">
-          Enns Real Estate Services
+          {c.heroTitle}
         </h1>
         <p
           className={`${poppins.className} mt-6 text-center text-[20px] font-normal leading-normal text-[#7b7b7b]`}
         >
-          We’re here to help you value, buy, and sell your home.
+          {c.heroDescription}
         </p>
       </div>
 
-      {/* Service cards (single column on mobile, three columns from md) */}
       <section
         className="bg-white pb-10 pt-5 dark:bg-zinc-950 sm:pb-14 sm:pt-6"
         aria-label="Service offerings"
