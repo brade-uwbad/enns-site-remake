@@ -55,7 +55,6 @@ export function ListingDetailGallery({ title, featuredImageUrl, images }: Props)
           alt={title}
           fill
           sizes="(min-width: 768px) 55vw, 100vw"
-          unoptimized
           priority
           className="object-cover"
         />
@@ -94,7 +93,6 @@ export function ListingDetailGallery({ title, featuredImageUrl, images }: Props)
                 alt={`${title} thumbnail ${i + 1}`}
                 fill
                 sizes="(min-width: 768px) 220px, 50vw"
-                unoptimized
                 className="object-cover"
               />
             </button>

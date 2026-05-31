@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteChrome } from "@/components/site-chrome";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 /** Sans body font via `next/font`; exposes `--font-geist-sans` on the document root. */
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
  * @param children - Page segment content (e.g. home, about).
  * @returns HTML document shell with header and `<main>`.
  */
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -39,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <SiteChrome>{children}</SiteChrome>
+        <SiteChrome footer={<SiteFooter />}>{children}</SiteChrome>
       </body>
     </html>
   );
