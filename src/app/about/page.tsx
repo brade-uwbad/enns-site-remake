@@ -66,7 +66,7 @@ export default async function AboutPage() {
             </div>
 
             <div className="mt-5 flex w-full flex-col md:mt-auto">
-              <div className="flex w-full flex-col gap-3 pt-2 text-sm text-slate-600 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+              <div className="flex w-full flex-row flex-wrap items-center justify-center gap-6 pt-2 text-sm text-slate-600 sm:gap-8">
                 <a
                   href={phoneHref}
                   className="flex items-center gap-2 transition-colors duration-200 hover:text-brand-gold"

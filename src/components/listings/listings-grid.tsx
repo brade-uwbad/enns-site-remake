@@ -243,87 +243,91 @@ export function ListingsGrid() {
           </span>
         </div>
 
-        <div className="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
-          <div className="inline-flex shrink-0 overflow-hidden rounded-sm border border-slate-300 bg-white">
-            <button
-              type="button"
-              onClick={() => setFilters((prev) => ({ ...prev, status: "active" }))}
-              className={`border-r px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
-                filters.status === "active"
-                  ? "border-sky-600 bg-white text-sky-600"
-                  : "border-slate-300 bg-white text-slate-400"
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="inline-flex overflow-hidden rounded-sm border border-slate-300 bg-white">
+              <button
+                type="button"
+                onClick={() => setFilters((prev) => ({ ...prev, status: "active" }))}
+                className={`border-r px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
+                  filters.status === "active"
+                    ? "border-sky-600 bg-white text-sky-600"
+                    : "border-slate-300 bg-white text-slate-400"
+                }`}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilters((prev) => ({ ...prev, status: "sold" }))}
+                className={`px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
+                  filters.status === "sold"
+                    ? "bg-white text-sky-600 ring-1 ring-inset ring-sky-600"
+                    : "bg-white text-slate-400"
+                }`}
+              >
+                Sold
+              </button>
+            </div>
+            {admin ? (
+              <Link
+                href="/admin/listings?create=1"
+                className="rounded-sm bg-[#e6e8ec] px-4 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf]"
+              >
+                + Create a new listing
+              </Link>
+            ) : null}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+            <input
+              type="number"
+              min="0"
+              placeholder="Min price"
+              value={filters.minPrice}
+              onChange={(e) => setFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
+              className="min-w-0 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 sm:w-28"
+            />
+            <input
+              type="number"
+              min="0"
+              placeholder="Max price"
+              value={filters.maxPrice}
+              onChange={(e) => setFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
+              className="min-w-0 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 sm:w-28"
+            />
+            <select
+              value={filters.beds}
+              onChange={(e) => setFilters((prev) => ({ ...prev, beds: e.target.value }))}
+              className={`min-w-0 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm sm:w-36 ${
+                filters.beds ? "text-slate-900" : "text-slate-500"
               }`}
             >
-              Active
-            </button>
+              <option value="">Any beds</option>
+              <option value="1">1 bed</option>
+              <option value="2">2 beds</option>
+              <option value="3">3 beds</option>
+              <option value="4">4 beds</option>
+              <option value="5">5 beds</option>
+            </select>
             <button
               type="button"
-              onClick={() => setFilters((prev) => ({ ...prev, status: "sold" }))}
-              className={`px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
-                filters.status === "sold"
-                  ? "bg-white text-sky-600 ring-1 ring-inset ring-sky-600"
-                  : "bg-white text-slate-400"
-              }`}
+              onClick={() => {
+                setSearchInput("");
+                setFilters((prev) => ({
+                  ...prev,
+                  minPrice: "",
+                  maxPrice: "",
+                  beds: "",
+                  q: "",
+                  propertyType: "",
+                }));
+              }}
+              className="rounded-sm bg-[#e6e8ec] px-3 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf] sm:w-auto"
             >
-              Sold
+              Reset
             </button>
           </div>
-          {admin ? (
-            <Link
-              href="/admin/listings?create=1"
-              className="shrink-0 rounded-sm bg-[#e6e8ec] px-4 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf]"
-            >
-              + Create a new listing
-            </Link>
-          ) : null}
-          <div className="mx-1 hidden h-7 w-px shrink-0 bg-slate-200 sm:block" />
-          <input
-            type="number"
-            min="0"
-            placeholder="Min price"
-            value={filters.minPrice}
-            onChange={(e) => setFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
-            className="w-28 shrink-0 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
-          />
-          <input
-            type="number"
-            min="0"
-            placeholder="Max price"
-            value={filters.maxPrice}
-            onChange={(e) => setFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
-            className="w-28 shrink-0 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
-          />
-          <select
-            value={filters.beds}
-            onChange={(e) => setFilters((prev) => ({ ...prev, beds: e.target.value }))}
-            className={`w-36 shrink-0 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm ${
-              filters.beds ? "text-slate-900" : "text-slate-500"
-            }`}
-          >
-            <option value="">Any beds</option>
-            <option value="1">1 bed</option>
-            <option value="2">2 beds</option>
-            <option value="3">3 beds</option>
-            <option value="4">4 beds</option>
-            <option value="5">5 beds</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput("");
-              setFilters((prev) => ({
-                ...prev,
-                minPrice: "",
-                maxPrice: "",
-                beds: "",
-                q: "",
-                propertyType: "",
-              }));
-            }}
-            className="shrink-0 rounded-sm bg-[#e6e8ec] px-3 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf]"
-          >
-            Reset
-          </button>
         </div>
       </div>
 
