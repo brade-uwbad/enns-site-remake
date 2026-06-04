@@ -25,13 +25,14 @@ export default function ForgotPasswordResetPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const [sessionState, setSessionState] = useState<"checking" | "ready" | "missing">("checking");
   const configured = isSupabaseBrowserConfigured();
+  const [sessionState, setSessionState] = useState<"checking" | "ready" | "missing">(
+    configured ? "checking" : "missing",
+  );
   const passwordChecks = checkPassword(password);
 
   useEffect(() => {
     if (!configured) {
-      setSessionState("missing");
       return;
     }
 
