@@ -41,7 +41,7 @@ export function ListingAdminActions({ listingId, status }: ListingAdminActionsPr
     return null;
   }
 
-  async function markAsSold() {
+  async function patchStatus(nextStatus: "active" | "sold") {
     if (!accessToken || !isSupabaseBrowserConfigured()) {
       setMessage("Sign in as admin to update this listing.");
       return;
@@ -55,18 +55,22 @@ export function ListingAdminActions({ listingId, status }: ListingAdminActionsPr
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({
-          status: "sold",
-          soldAt: new Date().toISOString(),
-        }),
+        body: JSON.stringify(
+          nextStatus === "sold"
+            ? { status: "sold", soldAt: new Date().toISOString() }
+            : { status: "active", soldAt: null },
+        ),
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data?.error?.message ?? "Could not mark as sold.");
+        throw new Error(
+          data?.error?.message ??
+            (nextStatus === "sold" ? "Could not mark as sold." : "Could not mark as active."),
+        );
       }
       router.refresh();
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Could not mark as sold.");
+      setMessage(e instanceof Error ? e.message : "Could not update listing status.");
     } finally {
       setBusy(false);
     }
@@ -75,17 +79,27 @@ export function ListingAdminActions({ listingId, status }: ListingAdminActionsPr
   return (
     <div className="w-full space-y-2">
       <div className="flex gap-2">
-        {status !== "sold" ? (
+        {status === "sold" ? (
           <button
             type="button"
             disabled={busy}
-            onClick={() => void markAsSold()}
+            onClick={() => void patchStatus("active")}
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-[#e6e8ec] px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-[#d8dadf] disabled:opacity-50"
+          >
+            <PencilIcon className="h-4 w-4 shrink-0" />
+            Mark as active
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void patchStatus("sold")}
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-[#e6e8ec] px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-[#d8dadf] disabled:opacity-50"
           >
             <PencilIcon className="h-4 w-4 shrink-0" />
             Mark as sold
           </button>
-        ) : null}
+        )}
         <Link
           href={`/admin/listings?edit=${listingId}`}
           className={`inline-flex items-center justify-center gap-2 rounded-md bg-[#4a6d95] px-3 py-2.5 text-sm font-medium text-white hover:bg-[#3f5f84] ${
