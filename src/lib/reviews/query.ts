@@ -25,7 +25,7 @@ export async function fetchFeaturedReviews(limit = ABOUT_FEATURED_REVIEW_LIMIT) 
     return listFeaturedReviews(limit);
   }
 
-  return (data ?? []).map((row) => normalizeReview(row));
+  return (data ?? []).map((row) => normalizeReview(row)).slice(0, limit);
 }
 
 /**

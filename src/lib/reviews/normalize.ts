@@ -1,3 +1,4 @@
+import { ABOUT_DISPLAY_ORDER_MIN } from "@/lib/reviews/constants";
 import type { ReviewRow } from "@/lib/store/types";
 
 type ReviewDbRow = {
@@ -21,7 +22,7 @@ export function normalizeReview(row: ReviewDbRow): ReviewRow {
     rating: row.rating ?? null,
     is_visible: row.is_visible,
     is_featured: row.is_featured ?? false,
-    display_order: row.display_order ?? 0,
+    display_order: row.display_order ?? ABOUT_DISPLAY_ORDER_MIN,
     created_at: row.created_at,
   };
 }

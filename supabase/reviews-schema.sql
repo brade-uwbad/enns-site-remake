@@ -11,7 +11,7 @@ create table if not exists public.reviews (
   rating int check (rating is null or (rating >= 1 and rating <= 5)),
   is_visible boolean not null default true,
   is_featured boolean not null default false,
-  display_order int not null default 0,
+  display_order int not null default 1 check (display_order >= 1 and display_order <= 3),
   created_at timestamptz not null default now()
 );
 

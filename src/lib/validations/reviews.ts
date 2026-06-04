@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { ABOUT_DISPLAY_ORDER_MAX, ABOUT_DISPLAY_ORDER_MIN } from "@/lib/reviews/constants";
+
 const reviewFieldsSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
   authorName: z.string().trim().min(1, "Author name is required").max(200),
@@ -7,7 +9,12 @@ const reviewFieldsSchema = z.object({
   rating: z.number().int().min(1).max(5).optional().nullable(),
   isVisible: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
-  displayOrder: z.number().int().min(0).max(99).optional(),
+  displayOrder: z
+    .number()
+    .int()
+    .min(ABOUT_DISPLAY_ORDER_MIN)
+    .max(ABOUT_DISPLAY_ORDER_MAX)
+    .optional(),
 });
 
 /** Admin body for `POST /api/admin/reviews`. */

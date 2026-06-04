@@ -4,11 +4,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  adminCardClass,
+  adminInputClass,
+  adminLinkClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminTextareaClass,
+  AdminPageHeader,
+} from "@/components/admin/admin-ui";
 import { useAdminUser } from "@/hooks/use-admin-user";
-import { ABOUT_FEATURED_REVIEW_LIMIT } from "@/lib/reviews/constants";
+import {
+  ABOUT_DISPLAY_ORDER_MAX,
+  ABOUT_DISPLAY_ORDER_MIN,
+  ABOUT_FEATURED_REVIEW_LIMIT,
+} from "@/lib/reviews/constants";
 import type { ReviewRow } from "@/lib/store/types";
 import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 
@@ -134,40 +144,35 @@ export function ReviewsManager({ initialReviews }: ReviewsManagerProps) {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-sm text-zinc-500">
-          <Link href="/admin/dashboard" className="text-[#4a6d95] hover:underline">
-            Dashboard
+      <AdminPageHeader
+        breadcrumb={
+          <Link href="/admin/dashboard" className={adminLinkClass}>
+            ← Back to dashboard
           </Link>
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">Client reviews</h1>
-        <p className="mt-2 max-w-2xl text-sm text-zinc-600">
-          Build a library of testimonials. Choose up to {ABOUT_FEATURED_REVIEW_LIMIT} to feature on the
-          About page ({featuredCount}/{ABOUT_FEATURED_REVIEW_LIMIT} selected). Use display order to control
-          left-to-right placement.
-        </p>
-        <p className="mt-2 text-sm text-zinc-500">
-          Public preview:{" "}
-          <Link href="/about" className="font-medium text-[#4a6d95] hover:underline" target="_blank">
-            /about
-          </Link>
-        </p>
-      </div>
+        }
+        title="Client reviews"
+        description={`Build a library of testimonials. Choose up to ${ABOUT_FEATURED_REVIEW_LIMIT} to feature on the About page (${featuredCount}/${ABOUT_FEATURED_REVIEW_LIMIT} selected). Use position ${ABOUT_DISPLAY_ORDER_MIN}–${ABOUT_DISPLAY_ORDER_MAX} for left-to-right placement (1 = left).`}
+      />
+      <p className="-mt-4 text-sm text-slate-600">
+        Public preview:{" "}
+        <Link href="/about" className={adminLinkClass} target="_blank">
+          /about
+        </Link>
+      </p>
 
       {message ? (
-        <p className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">{message}</p>
+        <p className="rounded-sm border border-slate-300 bg-[#eef4fa] px-4 py-3 text-sm text-[#140000]">
+          {message}
+        </p>
       ) : null}
 
-      <form
-        onSubmit={onCreate}
-        className="space-y-4 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm"
-      >
-        <h2 className="text-lg font-semibold text-zinc-900">Add review</h2>
+      <form onSubmit={onCreate} className={`space-y-4 p-5 sm:p-6 ${adminCardClass}`}>
+        <h2 className="text-lg font-semibold text-[#140000]">Add review</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">
-            <span className="font-medium text-zinc-700">Headline</span>
-            <Input
-              className="mt-1"
+            <span className="font-medium text-[#140000]">Headline</span>
+            <input
+              className={`mt-1 ${adminInputClass}`}
               value={draft.title}
               onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
               placeholder="Honest and Genuine"
@@ -175,9 +180,9 @@ export function ReviewsManager({ initialReviews }: ReviewsManagerProps) {
             />
           </label>
           <label className="block text-sm">
-            <span className="font-medium text-zinc-700">Author</span>
-            <Input
-              className="mt-1"
+            <span className="font-medium text-[#140000]">Author</span>
+            <input
+              className={`mt-1 ${adminInputClass}`}
               value={draft.authorName}
               onChange={(e) => setDraft((d) => ({ ...d, authorName: e.target.value }))}
               placeholder="Karen"
@@ -186,52 +191,48 @@ export function ReviewsManager({ initialReviews }: ReviewsManagerProps) {
           </label>
         </div>
         <label className="block text-sm">
-          <span className="font-medium text-zinc-700">Review text</span>
-          <Textarea
-            className="mt-1 min-h-28"
+          <span className="font-medium text-[#140000]">Review text</span>
+          <textarea
+            className={`mt-1 ${adminTextareaClass}`}
             value={draft.body}
             onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))}
             required
           />
         </label>
-        <Button type="submit" disabled={creating}>
+        <button type="submit" disabled={creating} className={adminPrimaryButtonClass}>
           {creating ? "Adding…" : "Add to library"}
-        </Button>
+        </button>
       </form>
 
       <ul className="space-y-4">
         {reviews.length === 0 ? (
-          <li className="rounded-lg border border-dashed border-zinc-300 bg-white px-5 py-10 text-center text-sm text-zinc-500">
+          <li
+            className={`px-5 py-10 text-center text-sm text-slate-600 ${adminCardClass} border-dashed`}
+          >
             No reviews yet. Add one above or seed the database.
           </li>
         ) : (
           reviews.map((review) => (
-            <li
-              key={review.id}
-              className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm"
-            >
+            <li key={review.id} className={`p-5 sm:p-6 ${adminCardClass}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-zinc-900">{review.title}</p>
-                  <p className="mt-1 text-sm text-zinc-500">-- {review.author_name}</p>
+                  <p className="font-semibold text-[#140000]">{review.title}</p>
+                  <p className="mt-1 text-sm text-slate-600">-- {review.author_name}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={busyId === review.id}
-                    onClick={() => onDelete(review.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
+                <button
+                  type="button"
+                  disabled={busyId === review.id}
+                  onClick={() => void onDelete(review.id)}
+                  className="rounded-sm border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                >
+                  Delete
+                </button>
               </div>
 
-              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-zinc-600">{review.body}</p>
+              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600">{review.body}</p>
 
-              <div className="mt-4 flex flex-wrap items-center gap-6 border-t border-zinc-100 pt-4">
-                <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <div className="mt-4 flex flex-col gap-4 border-t border-slate-200 pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
+                <label className="flex items-center gap-2 text-sm text-[#140000]">
                   <input
                     type="checkbox"
                     checked={review.is_visible}
@@ -240,32 +241,50 @@ export function ReviewsManager({ initialReviews }: ReviewsManagerProps) {
                   />
                   In library (visible)
                 </label>
-                <label className="flex items-center gap-2 text-sm text-zinc-700">
+                <label className="flex items-center gap-2 text-sm text-[#140000]">
                   <input
                     type="checkbox"
                     checked={review.is_featured}
-                    disabled={busyId === review.id || !review.is_visible}
+                    disabled={
+                      busyId === review.id ||
+                      !review.is_visible ||
+                      (featuredCount >= ABOUT_FEATURED_REVIEW_LIMIT && !review.is_featured)
+                    }
                     onChange={(e) => void patchReview(review.id, { isFeatured: e.target.checked })}
                   />
                   Show on About page
+                  {featuredCount >= ABOUT_FEATURED_REVIEW_LIMIT && !review.is_featured ? (
+                    <span className="text-xs text-slate-500">(max {ABOUT_FEATURED_REVIEW_LIMIT})</span>
+                  ) : null}
                 </label>
-                <label className="flex items-center gap-2 text-sm text-zinc-700">
-                  <span>Order</span>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={99}
-                    className="h-8 w-16"
-                    defaultValue={review.display_order}
-                    disabled={busyId === review.id || !review.is_featured}
-                    onBlur={(e) => {
-                      const displayOrder = Number.parseInt(e.target.value, 10);
-                      if (!Number.isNaN(displayOrder) && displayOrder !== review.display_order) {
-                        void patchReview(review.id, { displayOrder });
-                      }
-                    }}
-                  />
-                </label>
+                {review.is_featured ? (
+                  <label className="flex items-center gap-2 text-sm text-[#140000]">
+                    <span>Position</span>
+                    <select
+                      className="h-9 rounded-sm border border-zinc-300 bg-white px-2 text-sm text-[#140000]"
+                      value={Math.min(
+                        ABOUT_DISPLAY_ORDER_MAX,
+                        Math.max(ABOUT_DISPLAY_ORDER_MIN, review.display_order),
+                      )}
+                      disabled={busyId === review.id}
+                      onChange={(e) => {
+                        const displayOrder = Number.parseInt(e.target.value, 10);
+                        if (!Number.isNaN(displayOrder) && displayOrder !== review.display_order) {
+                          void patchReview(review.id, { displayOrder });
+                        }
+                      }}
+                    >
+                      {Array.from(
+                        { length: ABOUT_DISPLAY_ORDER_MAX - ABOUT_DISPLAY_ORDER_MIN + 1 },
+                        (_, i) => ABOUT_DISPLAY_ORDER_MIN + i,
+                      ).map((slot) => (
+                        <option key={slot} value={slot}>
+                          {slot}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
               </div>
             </li>
           ))

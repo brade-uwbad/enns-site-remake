@@ -1,4 +1,8 @@
-import { ABOUT_FEATURED_REVIEW_LIMIT } from "@/lib/reviews/constants";
+import {
+  ABOUT_DISPLAY_ORDER_MAX,
+  ABOUT_DISPLAY_ORDER_MIN,
+  ABOUT_FEATURED_REVIEW_LIMIT,
+} from "@/lib/reviews/constants";
 import { normalizeReview } from "@/lib/reviews/normalize";
 import type { ReviewRow } from "@/lib/store/types";
 import {
@@ -20,7 +24,7 @@ export type ReviewUpsertInput = {
   displayOrder?: number;
 };
 
-function toDbRow(input: ReviewUpsertInput) {
+function toDbRow(input: ReviewUpsertInput & { displayOrder: number }) {
   return {
     title: input.title.trim(),
     author_name: input.authorName.trim(),
@@ -28,8 +32,28 @@ function toDbRow(input: ReviewUpsertInput) {
     rating: input.rating ?? null,
     is_visible: input.isVisible ?? true,
     is_featured: input.isFeatured ?? false,
-    display_order: input.displayOrder ?? 0,
+    display_order: input.displayOrder,
   };
+}
+
+/** Place new/featured reviews at the end of the About row (after existing featured). */
+async function findEndDisplayOrder(excludeId?: string): Promise<number> {
+  const featuredCount = await countFeaturedReviewsAdmin(excludeId);
+  return Math.min(ABOUT_DISPLAY_ORDER_MIN + featuredCount, ABOUT_DISPLAY_ORDER_MAX);
+}
+
+async function assertDisplayOrderAvailable(order: number, excludeId?: string) {
+  const all = await fetchAllReviewsAdmin();
+  const conflict = all.find(
+    (r) =>
+      (!excludeId || r.id !== excludeId) && r.is_featured && r.is_visible && r.display_order === order,
+  );
+
+  if (conflict) {
+    throw new Error(
+      `Position ${order} is already used by "${conflict.title}". Pick 1, 2, or 3 for a different review first.`,
+    );
+  }
 }
 
 export async function fetchAllReviewsAdmin(): Promise<ReviewRow[]> {
@@ -86,7 +110,16 @@ export async function createReviewAdmin(input: ReviewUpsertInput): Promise<Revie
     }
   }
 
-  const row = toDbRow(input);
+  const isFeatured = input.isFeatured ?? false;
+  const displayOrder = isFeatured
+    ? (input.displayOrder ?? (await findEndDisplayOrder()))
+    : ABOUT_DISPLAY_ORDER_MIN;
+
+  if (isFeatured && input.displayOrder !== undefined) {
+    await assertDisplayOrderAvailable(displayOrder);
+  }
+
+  const row = toDbRow({ ...input, isFeatured, displayOrder });
 
   if (!hasSupabaseAdminConfig()) {
     return insertReviewMemory(row);
@@ -119,10 +152,17 @@ export async function updateReviewAdmin(id: string, input: Partial<ReviewUpsertI
   if (input.rating !== undefined) patch.rating = input.rating;
   if (input.isVisible !== undefined) patch.is_visible = input.isVisible;
   if (input.isFeatured !== undefined) patch.is_featured = input.isFeatured;
-  if (input.displayOrder !== undefined) patch.display_order = input.displayOrder;
+  if (input.displayOrder !== undefined) {
+    await assertDisplayOrderAvailable(input.displayOrder, id);
+    patch.display_order = input.displayOrder;
+  }
 
   if (input.isVisible === false) {
     patch.is_featured = false;
+  }
+
+  if (input.isFeatured === true && input.displayOrder === undefined) {
+    patch.display_order = await findEndDisplayOrder(id);
   }
 
   if (!hasSupabaseAdminConfig()) {
