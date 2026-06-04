@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AdminDashboardOverview } from "@/components/admin/admin-dashboard-overview";
+import { AdminChrome, AdminPageHeader } from "@/components/admin/admin-ui";
 import { fetchListingStatusCounts, fetchRecentLeads } from "@/lib/admin/dashboard-data";
 
 export const metadata: Metadata = {
@@ -11,19 +12,15 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  const [counts, leads] = await Promise.all([
-    fetchListingStatusCounts(),
-    Promise.resolve(fetchRecentLeads(8)),
-  ]);
+  const [counts, leads] = await Promise.all([fetchListingStatusCounts(), fetchRecentLeads(8)]);
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 py-10">
-      <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-6">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Dashboard</h1>
-        </div>
-        <AdminDashboardOverview counts={counts} leads={leads} />
-      </div>
-    </div>
+    <AdminChrome maxWidth="3xl">
+      <AdminPageHeader
+        title="Dashboard"
+        description="Listing counts, site content, reviews, and contact form inquiries."
+      />
+      <AdminDashboardOverview counts={counts} leads={leads} />
+    </AdminChrome>
   );
 }

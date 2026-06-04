@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { adminLinkClass, AdminChrome, AdminPageHeader } from "@/components/admin/admin-ui";
 import { SITE_CONTENT_PAGES } from "@/lib/content/keys";
 
 export const metadata: Metadata = {
@@ -10,38 +11,41 @@ export const metadata: Metadata = {
 
 export default function AdminContentHubPage() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 py-10">
-      <div className="mx-auto max-w-3xl space-y-6 px-4 sm:px-6">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Site content</h1>
-          <p className="mt-2 text-sm text-zinc-600">
-            Edit text on the main marketing pages. Changes appear on the live site without a redeploy.
-          </p>
-        </div>
-
-        <ul className="space-y-3">
-          {SITE_CONTENT_PAGES.map((page) => (
-            <li key={page.key}>
-              <Link
-                href={`/admin/content/${page.key}`}
-                className="block rounded-lg border border-zinc-200 bg-white px-5 py-4 shadow-sm transition-colors hover:border-[#4a6d95]/40 hover:bg-zinc-50"
-              >
-                <p className="font-medium text-[#140000]">{page.label}</p>
-                <p className="mt-1 text-sm text-zinc-600">{page.description}</p>
-                <p className="mt-2 text-xs text-zinc-500">Public: {page.publicPath}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        <p className="text-sm text-zinc-500">
-          Listing photos and pricing are managed under{" "}
-          <Link href="/admin/listings" className="font-medium text-[#4a6d95] hover:underline">
-            Listings
+    <AdminChrome maxWidth="3xl">
+      <AdminPageHeader
+        breadcrumb={
+          <Link href="/admin/dashboard" className={adminLinkClass}>
+            ← Back to dashboard
           </Link>
-          .
-        </p>
-      </div>
-    </div>
+        }
+        title="Site content"
+        description="Edit text on the main marketing pages. Changes appear on the live site without a redeploy."
+      />
+
+      <ul className="mx-auto max-w-3xl space-y-5">
+        {SITE_CONTENT_PAGES.map((page) => (
+          <li key={page.key}>
+            <Link
+              href={`/admin/content/${page.key}`}
+              className="block w-full rounded-lg border border-slate-300 bg-white p-5 text-left transition hover:border-slate-400"
+            >
+              <p className="text-base font-semibold text-slate-900">{page.label}</p>
+              <div className="mt-3 rounded-md bg-slate-100 px-4 py-3">
+                <p className="text-sm text-slate-600">{page.description}</p>
+                <p className="mt-2 text-xs text-slate-500">Public: {page.publicPath}</p>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-6 text-sm text-slate-600">
+        Listing photos and pricing are managed under{" "}
+        <Link href="/admin/listings" className={adminLinkClass}>
+          Listings
+        </Link>
+        .
+      </p>
+    </AdminChrome>
   );
 }
