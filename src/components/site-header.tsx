@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Poppins } from "next/font/google";
 
 import { SiteHeaderCta } from "@/components/site-header-cta";
-import { SiteHeaderNav } from "@/components/site-header-nav";
+import { SiteHeaderNav, siteHeaderNavItems } from "@/components/site-header-nav";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -40,7 +40,7 @@ export function SiteHeader() {
         className={`flex items-center justify-center gap-6 overflow-x-auto border-t border-zinc-100 px-4 py-2 sm:hidden ${poppins.className}`}
         aria-label="Main mobile"
       >
-        {nav.map((item) => (
+        {siteHeaderNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
