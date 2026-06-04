@@ -17,6 +17,7 @@ export type Listing = {
   description: string | null;
   amenities: string[];
   images: string[];
+  featured_image_url: string | null;
   status: "active" | "sold" | "draft";
   beds: number | null;
   baths: number | null;

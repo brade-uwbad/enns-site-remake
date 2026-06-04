@@ -122,6 +122,9 @@ export function toListingUpdate(input: ListingUpdateInput): Partial<ListingRow> 
   }
   if (input.images !== undefined) {
     row.images = input.images;
+    if (input.featuredImageUrl === undefined && input.images.length > 0) {
+      row.featured_image_url = input.images[0];
+    }
   }
   if (input.soldAt !== undefined) {
     row.sold_at = input.soldAt;

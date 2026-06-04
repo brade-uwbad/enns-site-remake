@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   amenitiesArrayFromSelections,
   type ListingAmenityLabel,
 } from "@/lib/listings/listing-amenities";
+import { EditorToast } from "@/components/admin/listings-editor/editor-toast";
 import { CreateWizard } from "@/components/admin/listings-editor/components/create-wizard";
+import {
+  reorderPhotosToMain,
+  type EditorPhotoItem,
+} from "@/components/admin/listings-editor/components/editor-photos-panel";
 import { EditWorkspace } from "@/components/admin/listings-editor/components/edit-workspace";
+import { adminLinkClass, AdminChrome } from "@/components/admin/admin-ui";
 import { TopControls } from "@/components/admin/listings-editor/components/top-controls";
 import {
   BLANK_EDITOR_STATE,
@@ -17,9 +24,7 @@ import {
   WIZARD_STEP_TITLES,
 } from "@/components/admin/listings-editor/types";
 import {
-  deriveSubtitle,
-  parseFloatOrNull,
-  parseIntOrNull,
+  buildListingWritePayload,
   splitList,
   toEditorState,
   toggleAmenitySelection,
@@ -58,6 +63,7 @@ export function ListingsEditor({
   startCreate = false,
   startEditId,
 }: ListingsEditorProps) {
+  const router = useRouter();
   const initial = resolveInitialEditorState(initialListings, startCreate, startEditId);
   const { accessToken } = useAdminUser();
   const [listings, setListings] = useState<Listing[]>(initialListings);
@@ -69,13 +75,26 @@ export function ListingsEditor({
   const [wizardStep, setWizardStep] = useState(0);
   const [editorPanel, setEditorPanel] = useState<EditorPanel>("menu");
 
-  async function loadListings() {
+  useEffect(() => {
+    if (!message) {
+      return;
+    }
+    const timer = window.setTimeout(() => setMessage(""), 5000);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
+  async function loadListings(): Promise<Listing[]> {
     const [activeRes, soldRes] = await Promise.all([
       fetch("/api/listings?limit=100"),
       fetch("/api/listings/sold?limit=100"),
     ]);
     const [activeData, soldData] = await Promise.all([activeRes.json(), soldRes.json()]);
-    setListings([...(activeData?.data?.listings ?? []), ...(soldData?.data?.listings ?? [])]);
+    const combined = [
+      ...(activeData?.data?.listings ?? []),
+      ...(soldData?.data?.listings ?? []),
+    ] as Listing[];
+    setListings(combined);
+    return combined;
   }
 
   const deepLinkMode = startCreate || Boolean(startEditId);
@@ -138,6 +157,11 @@ export function ListingsEditor({
     setField("imagesText", next.join("\n"));
   }
 
+  function setMainPhoto(photo: EditorPhotoItem) {
+    const { existingUrls, files } = reorderPhotosToMain(photo, existingPhotos, selectedPhotos);
+    setField("imagesText", existingUrls.join("\n"));
+    setUploadFiles(files);
+  }
 
   function setField<K extends keyof EditorState>(key: K, value: EditorState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -226,21 +250,8 @@ export function ListingsEditor({
         throw new Error("Postal code is required.");
       }
       const payload = {
-        title: address,
-        subtitle: deriveSubtitle(form),
-        city: form.city || null,
-        province: form.province || null,
-        postalCode,
-        addressLine: address,
-        priceDollars: form.priceDollars ? Number(form.priceDollars) : null,
-        description: form.description || null,
+        ...buildListingWritePayload(form, images, {}),
         amenities: amenitiesArrayFromSelections(form.amenitySelections),
-        images,
-        status: form.status,
-        beds: parseIntOrNull(form.beds),
-        baths: parseFloatOrNull(form.baths),
-        sqft: parseIntOrNull(form.sqft),
-        propertyType: form.propertyType || null,
       };
       const res = await fetch("/api/admin/listings", {
         method: "POST",
@@ -254,10 +265,8 @@ export function ListingsEditor({
 
       setMessage(hadPendingUpload ? "Uploaded image(s); listing created." : "Listing created.");
       await loadListings();
-      const id = data?.data?.listing?.id as string | undefined;
-      if (id) {
-        chooseListing(id);
-      }
+      resetToNew();
+      router.replace("/admin/listings");
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to create listing.");
     } finally {
@@ -286,22 +295,10 @@ export function ListingsEditor({
       if (!postalCode) {
         throw new Error("Postal code is required.");
       }
+      const existing = listings.find((l) => l.id === selectedId);
       const payload = {
-        title: address,
-        subtitle: deriveSubtitle(form),
-        city: form.city || null,
-        province: form.province || null,
-        postalCode,
-        addressLine: address,
-        priceDollars: form.priceDollars ? Number(form.priceDollars) : null,
-        description: form.description || null,
+        ...buildListingWritePayload(form, images, { existing }),
         amenities: amenitiesArrayFromSelections(form.amenitySelections),
-        images,
-        status: form.status,
-        beds: parseIntOrNull(form.beds),
-        baths: parseFloatOrNull(form.baths),
-        sqft: parseIntOrNull(form.sqft),
-        propertyType: form.propertyType || null,
       };
       const res = await fetch(`/api/admin/listings/${selectedId}`, {
         method: "PUT",
@@ -310,10 +307,26 @@ export function ListingsEditor({
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data?.error?.message ?? "Failed to update listing.");
+        const detail =
+          typeof data?.error?.details === "object"
+            ? JSON.stringify(data.error.details)
+            : null;
+        throw new Error(
+          detail ? `${data?.error?.message ?? "Failed to update listing."} ${detail}` : (data?.error?.message ?? "Failed to update listing."),
+        );
       }
       setMessage(hadPendingUpload ? "Uploaded image(s); listing updated." : "Listing updated.");
-      await loadListings();
+      const updated = data?.data?.listing as Listing | undefined;
+      if (updated) {
+        setListings((prev) => prev.map((l) => (l.id === selectedId ? { ...l, ...updated } : l)));
+        setForm(toEditorState(updated));
+      } else {
+        const all = await loadListings();
+        const refreshed = all.find((l) => l.id === selectedId);
+        if (refreshed) {
+          setForm(toEditorState(refreshed));
+        }
+      }
       return true;
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to update listing.");
@@ -386,6 +399,39 @@ export function ListingsEditor({
     }
   }
 
+  async function markAsActive() {
+    if (!selectedId) {
+      setMessage("Pick a listing first.");
+      return;
+    }
+    if (!requireAccessTokenForWrite()) {
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    try {
+      const res = await fetch(`/api/admin/listings/${selectedId}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          status: "active",
+          soldAt: null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? "Failed to mark listing as active.");
+      }
+      setMessage("Listing marked as active.");
+      await loadListings();
+      setForm((prev) => ({ ...prev, status: "active" }));
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Failed to mark listing as active.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function resetToNew() {
     setSelectedId("");
     setForm(BLANK_EDITOR_STATE);
@@ -428,38 +474,48 @@ export function ListingsEditor({
   const listingBackId = startEditId ?? (isEditing ? selectedId : "");
   const backHref = listingBackId ? `/listings/${listingBackId}` : "/listings";
   const backLabel = listingBackId ? "← Back to listing" : "← Back to listings";
+  const minimalEditChrome = deepLinkMode && isEditing;
+  const isCreateWizard = !isEditing;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 py-10">
-      <div className="mx-auto max-w-5xl space-y-6 px-4 text-[#140000] sm:px-6">
-        <div className="space-y-3">
-          <Link
-            href={backHref}
-            className="inline-flex text-sm font-medium text-[#4a6d95] hover:underline"
-          >
-            {backLabel}
-          </Link>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">{pageTitle}</h1>
-            {!deepLinkMode ? (
-              <p className="mt-2 text-sm text-zinc-600">
-                Create, update, and delete listings without terminal commands.
-              </p>
-            ) : null}
+    <>
+      {message ? <EditorToast message={message} onDismiss={() => setMessage("")} /> : null}
+      <AdminChrome maxWidth={isEditing || isCreateWizard ? "3xl" : "5xl"}>
+        <div
+          className={
+            isEditing || isCreateWizard ? "flex min-h-0 w-full flex-1 flex-col" : "space-y-6"
+          }
+        >
+        {!minimalEditChrome && !isCreateWizard ? (
+          <div className="space-y-3">
+            <Link
+              href={backHref}
+              className={`inline-flex text-sm ${adminLinkClass}`}
+            >
+              {backLabel}
+            </Link>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-[#140000] sm:text-4xl">{pageTitle}</h1>
+              {!deepLinkMode ? (
+                <p className="mt-2 text-sm text-zinc-600">
+                  Create, update, and delete listings without terminal commands.
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : null}
 
-        {!deepLinkMode ? (
+        {!deepLinkMode && !isCreateWizard ? (
           <TopControls
             listings={listings}
             selectedId={selectedId}
             busy={busy}
             formStatus={form.status}
-            message={message}
             onChooseListing={chooseListing}
             onCreateNewListing={resetToNew}
             onDeleteListing={deleteListing}
             onMarkAsSold={markAsSold}
+            onMarkAsActive={markAsActive}
           />
         ) : null}
 
@@ -470,11 +526,13 @@ export function ListingsEditor({
             form={form}
             existingPhotos={existingPhotos}
             selectedPhotos={selectedPhotos}
+            cancelHref="/admin/listings"
             onSetField={setField}
             onToggleAmenity={toggleAmenity}
             onAddUploadFiles={addUploadFiles}
             onRemoveQueuedPhoto={removeQueuedUploadFile}
             onRemoveExistingPhoto={removeExistingImage}
+            onSetMainPhoto={setMainPhoto}
             onPrevStep={prevStep}
             onNextStep={nextStep}
             onPublish={saveFromWizard}
@@ -486,16 +544,19 @@ export function ListingsEditor({
             form={form}
             existingPhotos={existingPhotos}
             selectedPhotos={selectedPhotos}
+            backHref={backHref}
             onSetPanel={setEditorPanel}
             onSetField={setField}
             onToggleAmenity={toggleAmenity}
             onAddUploadFiles={addUploadFiles}
             onRemoveQueuedPhoto={removeQueuedUploadFile}
             onRemoveExistingPhoto={removeExistingImage}
+            onSetMainPhoto={setMainPhoto}
             onSavePanel={saveEditorPanel}
           />
         )}
-      </div>
-    </div>
+        </div>
+      </AdminChrome>
+    </>
   );
 }
