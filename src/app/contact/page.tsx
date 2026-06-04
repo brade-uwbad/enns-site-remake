@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
+
 import { ContactForm } from "@/components/contact/contact-form";
+import { fetchSiteContent } from "@/lib/content/query";
 
 export const metadata: Metadata = {
   title: "Contact",
   description: "Get in touch with Brad Enns.",
 };
 
-/**
- * Public `/contact` page. Composes the page-level layout (heading, intro,
- * and contact info) around the `ContactForm` component.
- *
- * @returns JSX for `/contact`.
- */
-export default function ContactPage() {
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+export default async function ContactPage() {
+  const { payload: c } = await fetchSiteContent("contact");
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <header className="text-center">
-        <h1 className="text-4xl font-semibold tracking-tight text-zinc-900">Get in Touch</h1>
-        <p className="mx-auto mt-4 max-w-xl leading-relaxed text-zinc-600">
-          Ready to buy, sell, or have questions about the market? Send a message or give me a call.
-        </p>
+        <h1 className="text-4xl font-semibold tracking-tight text-zinc-900">{c.title}</h1>
+        <p className="mx-auto mt-4 max-w-xl leading-relaxed text-zinc-600">{c.intro}</p>
       </header>
 
       <div className="mt-12">
@@ -28,52 +28,58 @@ export default function ContactPage() {
 
       <section className="mt-16">
         <h2 className="text-center text-lg font-semibold tracking-tight text-zinc-900">
-          Other ways to reach me
+          {c.sectionTitle}
         </h2>
 
         <dl className="mx-auto mt-6 grid max-w-md grid-cols-[6rem_1fr] gap-x-6 gap-y-3 text-zinc-900">
           <dt className="font-semibold text-zinc-700">Mobile</dt>
           <dd>
-            <a href="tel:5195001641" className="hover:text-zinc-600 hover:underline">
-              (519) 500-1641
+            <a
+              href={`tel:${digitsOnly(c.mobile)}`}
+              className="hover:text-zinc-600 hover:underline"
+            >
+              {c.mobile}
             </a>
           </dd>
 
           <dt className="font-semibold text-zinc-700">Office</dt>
           <dd>
-            <a href="tel:5198887778" className="hover:text-zinc-600 hover:underline">
-              (519) 888-7778
+            <a
+              href={`tel:${digitsOnly(c.office)}`}
+              className="hover:text-zinc-600 hover:underline"
+            >
+              {c.office}
             </a>
           </dd>
 
           <dt className="font-semibold text-zinc-700">Fax</dt>
-          <dd>(519) 954-7575</dd>
+          <dd>{c.fax}</dd>
 
           <dt className="font-semibold text-zinc-700">Email</dt>
           <dd>
-            <a href="mailto:brad@mres.ca" className="hover:text-zinc-600 hover:underline">
-              brad@mres.ca
+            <a href={`mailto:${c.email}`} className="hover:text-zinc-600 hover:underline">
+              {c.email}
             </a>
           </dd>
 
           <dt className="font-semibold text-zinc-700">Address</dt>
           <dd>
             <a
-              href="https://maps.google.com/?q=368+Ash+Tree+Place+Waterloo+ON+N2T+1R7"
+              href={`https://maps.google.com/?q=${encodeURIComponent(`${c.addressLine1} ${c.addressLine2}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-zinc-600 hover:underline"
             >
-              368 Ash Tree Place
+              {c.addressLine1}
               <br />
-              Waterloo, ON N2T 1R7
+              {c.addressLine2}
             </a>
           </dd>
 
           <dt className="font-semibold text-zinc-700">Socials</dt>
           <dd className="flex items-center gap-3">
             <a
-              href="https://www.facebook.com/ennsrealestate"
+              href={c.facebookUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-zinc-600 hover:underline"
@@ -83,9 +89,8 @@ export default function ContactPage() {
             <span aria-hidden="true" className="text-zinc-400">
               ·
             </span>
-
             <a
-              href="https://ca.linkedin.com/pub/brad-enns/44/75b/5b9"
+              href={c.linkedinUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-zinc-600 hover:underline"

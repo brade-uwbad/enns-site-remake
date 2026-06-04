@@ -68,7 +68,7 @@ export type ServiceRow = {
 };
 
 /** Keys for CMS-style JSON blobs in `site_content`. */
-export type SiteContentKey = "homepage" | "about";
+export type { SiteContentKey } from "@/lib/content/keys";
 
 /** Persisted contact or valuation form submission. */
 export type ContactSubmissionRow = {

@@ -32,7 +32,7 @@ export const metadata: Metadata = {
  * @param children - Page segment content (e.g. home, about).
  * @returns HTML document shell with header and `<main>`.
  */
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
