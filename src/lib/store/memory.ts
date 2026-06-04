@@ -77,7 +77,7 @@ const seedReviews: ReviewRow[] = [
     rating: 5,
     is_visible: true,
     is_featured: true,
-    display_order: 0,
+    display_order: 1,
     created_at: nowIso(),
   },
   {
@@ -88,7 +88,7 @@ const seedReviews: ReviewRow[] = [
     rating: 5,
     is_visible: true,
     is_featured: true,
-    display_order: 1,
+    display_order: 2,
     created_at: nowIso(),
   },
   {
@@ -99,7 +99,7 @@ const seedReviews: ReviewRow[] = [
     rating: 5,
     is_visible: true,
     is_featured: true,
-    display_order: 2,
+    display_order: 3,
     created_at: nowIso(),
   },
   {
@@ -110,7 +110,7 @@ const seedReviews: ReviewRow[] = [
     rating: 5,
     is_visible: true,
     is_featured: false,
-    display_order: 0,
+    display_order: 1,
     created_at: nowIso(),
   },
 ];
@@ -400,7 +400,7 @@ export function addContactSubmission(
  * Latest contact or valuation submissions for the admin dashboard.
  */
 export function listRecentContactSubmissions(limit = 10): ContactSubmissionRow[] {
-  return contactSubmissions.slice(0, Math.max(1, limit));
+  return contactSubmissions.slice(0, limit);
 }
 
 /** Counts listings in the in-memory store by status (for admin dashboard). */

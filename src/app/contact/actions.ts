@@ -1,11 +1,18 @@
 "use server";
 
 import { headers } from "next/headers";
+import { saveContactSubmission } from "@/lib/contact/submissions";
 import { rateLimitContact } from "@/lib/rate-limit";
 import { Resend } from "resend";
 import { contactPageFormSchema, type ContactPageFormValues } from "@/lib/validations/contact";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+  return new Resend(apiKey);
+}
 
 export async function sendContactEmail(
   values: ContactPageFormValues,
@@ -37,6 +44,29 @@ export async function sendContactEmail(
   }
 
   const { name, email, phone, subject, message } = result.data;
+  const storedMessage = `Subject: ${subject}\n\n${message}`;
+
+  try {
+    await saveContactSubmission({
+      name,
+      email,
+      phone: phone?.trim() ? phone.trim() : null,
+      message: storedMessage,
+      source: "contact",
+    });
+  } catch (error) {
+    console.error("Contact submission save error:", error);
+    return { success: false, error: "Could not save your message. Please try again or call directly." };
+  }
+
+  const resend = getResendClient();
+  if (!resend) {
+    console.error("RESEND_API_KEY is not set");
+    return {
+      success: false,
+      error: "Email is not configured. Your message was saved; please call if you need a quick reply.",
+    };
+  }
 
   try {
     const data = await resend.emails.send({
