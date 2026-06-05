@@ -1,13 +1,27 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
-import { insertReview } from "@/lib/store/memory";
+import { createReviewAdmin, fetchAllReviewsAdmin } from "@/lib/reviews/admin";
 import { reviewCreateSchema } from "@/lib/validations/reviews";
 
 /**
- * `POST /api/admin/reviews` — Create a testimonial row (admin bearer token).
- *
- * @param request - JSON body validated by {@link reviewCreateSchema}.
- * @returns JSON `{ data: { review } }` with HTTP 201, or auth / validation errors.
+ * `GET /api/admin/reviews` — List all testimonials for admin curation.
+ */
+export async function GET(request: Request) {
+  const auth = await requireAdmin(request);
+  if (!auth.ok) {
+    return jsonError(auth.message, auth.status, "UNAUTHORIZED");
+  }
+
+  try {
+    const reviews = await fetchAllReviewsAdmin();
+    return jsonOk({ reviews });
+  } catch (err) {
+    return jsonError(err instanceof Error ? err.message : "Could not load reviews", 500, "INTERNAL_ERROR");
+  }
+}
+
+/**
+ * `POST /api/admin/reviews` — Create a testimonial.
  */
 export async function POST(request: Request) {
   const auth = await requireAdmin(request);
@@ -27,12 +41,10 @@ export async function POST(request: Request) {
     return jsonError("Validation failed", 400, "VALIDATION_ERROR", parsed.error.flatten());
   }
 
-  const data = insertReview({
-    author_name: parsed.data.authorName,
-    body: parsed.data.body,
-    rating: parsed.data.rating ?? null,
-    is_visible: parsed.data.isVisible ?? true,
-  });
-
-  return jsonOk({ review: data }, { status: 201 });
+  try {
+    const review = await createReviewAdmin(parsed.data);
+    return jsonOk({ review }, { status: 201 });
+  } catch (err) {
+    return jsonError(err instanceof Error ? err.message : "Could not create review", 400, "BAD_REQUEST");
+  }
 }

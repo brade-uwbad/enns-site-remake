@@ -6,6 +6,18 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* Sticky header: top bar (4rem) + mobile nav row when visible */
+:root {
+  --site-header-height: 4rem;
+  --site-header-offset: 4rem;
+}
+
+@media (max-width: 639px) {
+  :root {
+    --site-header-offset: 7.25rem;
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #140000;
@@ -14,7 +26,7 @@ html {
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-brand-gold: #ac9434; /* color scheme extracted from Figma */
   --font-heading: var(--font-sans); /* Starting here, these are shadcn/ui imports */
@@ -58,6 +70,7 @@ html {
 
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
 :root {

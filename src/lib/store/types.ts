@@ -47,13 +47,16 @@ export type ListingRow = {
   created_by: string | null;
 };
 
-/** Client testimonial stored for public display when `is_visible` is true. */
+/** Client testimonial; featured rows appear on the About page (up to 3). */
 export type ReviewRow = {
   id: string;
+  title: string;
   author_name: string;
   body: string;
   rating: number | null;
   is_visible: boolean;
+  is_featured: boolean;
+  display_order: number;
   created_at: string;
 };
 

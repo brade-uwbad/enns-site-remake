@@ -31,7 +31,7 @@ export default async function ContactPage() {
           {c.sectionTitle}
         </h2>
 
-        <dl className="mx-auto mt-6 grid max-w-md grid-cols-[6rem_1fr] gap-x-6 gap-y-3 text-zinc-900">
+        <dl className="mx-auto mt-6 max-w-md space-y-4 text-zinc-900 sm:grid sm:grid-cols-[6rem_1fr] sm:gap-x-6 sm:gap-y-3 sm:space-y-0">
           <dt className="font-semibold text-zinc-700">Mobile</dt>
           <dd>
             <a

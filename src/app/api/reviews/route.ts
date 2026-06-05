@@ -1,11 +1,16 @@
 import { jsonOk } from "@/lib/api/http";
-import { listReviews } from "@/lib/store/memory";
+import { fetchFeaturedReviews, fetchVisibleReviews } from "@/lib/reviews/query";
 
 /**
- * `GET /api/reviews` — Public list of visible reviews (newest first in the store).
+ * `GET /api/reviews` — Public testimonials.
  *
- * @returns JSON `{ data: { reviews } }`.
+ * Query `featured=1` returns up to 3 curated reviews for the About page.
+ * Default returns all visible reviews (newest first).
  */
-export async function GET() {
-  return jsonOk({ reviews: listReviews() });
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const featured = searchParams.get("featured") === "1" || searchParams.get("featured") === "true";
+
+  const reviews = featured ? await fetchFeaturedReviews() : await fetchVisibleReviews();
+  return jsonOk({ reviews });
 }

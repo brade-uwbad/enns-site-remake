@@ -99,15 +99,15 @@ export function ListingDetailView({ listing, nearby }: Props) {
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <div className="space-y-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[28px]">
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl md:text-[28px]">
                 {soldPrefix}
                 {listing.address_line || listing.title}
               </h1>
               <p className="mt-1 text-sm text-slate-500">{specLine(listing)}</p>
             </div>
-            <p className="text-xl font-semibold text-slate-900 tabular-nums sm:text-2xl">
+            <p className="text-lg font-semibold text-slate-900 tabular-nums sm:text-xl md:text-2xl">
               {formatPrice(listing.price_dollars)}
             </p>
           </div>

@@ -11,7 +11,7 @@ export async function SiteFooter() {
         <p className="text-sm text-zinc-600">
           © {new Date().getFullYear()} {payload.copyright}
         </p>
-        <div className="flex flex-wrap gap-4 text-sm">
+        <div className="flex flex-wrap gap-6 text-sm">
           <Link href="/contact" className="text-zinc-600 hover:text-zinc-900">
             Contact
           </Link>

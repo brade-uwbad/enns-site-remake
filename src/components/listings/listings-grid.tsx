@@ -26,11 +26,36 @@ type Listing = {
   status: "active" | "sold" | "draft";
 };
 
-const CATEGORIES: { label: string; value: PropertyType; icon: string }[] = [
-  { label: "Apartment", value: "apartment", icon: "⌂" },
-  { label: "Detached", value: "detached", icon: "⌂" },
-  { label: "Townhouse", value: "townhouse", icon: "⌂" },
-  { label: "Condo", value: "condo", icon: "⌂" },
+const CATEGORIES: {
+  label: string;
+  value: PropertyType;
+  iconGrey: string;
+  iconBlue: string;
+}[] = [
+  {
+    label: "Apartment",
+    value: "apartment",
+    iconGrey: "/icons/house_grey.png",
+    iconBlue: "/icons/house_blue.png",
+  },
+  {
+    label: "Detached",
+    value: "detached",
+    iconGrey: "/icons/detached_grey.png",
+    iconBlue: "/icons/detached_blue.png",
+  },
+  {
+    label: "Townhouse",
+    value: "townhouse",
+    iconGrey: "/icons/townhouse_grey.png",
+    iconBlue: "/icons/townhouse_blue.png",
+  },
+  {
+    label: "Condo",
+    value: "condo",
+    iconGrey: "/icons/condo_grey.png",
+    iconBlue: "/icons/condo_blue.png",
+  },
 ];
 
 const PROPERTY_LABEL: Record<PropertyType, string> = {
@@ -72,6 +97,26 @@ function cardSpecLine(listing: Listing) {
 
 function cardTitle(listing: Listing) {
   return listing.address_line || listing.title;
+}
+
+const SKELETON_CARD_COUNT = 8;
+
+function ListingCardSkeleton() {
+  return (
+    <div
+      className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-[0_4px_14px_rgba(15,23,42,0.08)]"
+      aria-hidden
+    >
+      <div className="aspect-[16/10] w-full animate-pulse bg-slate-200" />
+      <div className="space-y-3 px-4 py-3">
+        <div className="h-4 w-[85%] animate-pulse rounded-sm bg-slate-200" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="h-3.5 w-20 animate-pulse rounded-sm bg-slate-200" />
+          <div className="h-3 w-28 animate-pulse rounded-sm bg-slate-200" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function buildQuery(filters: Filters) {
@@ -122,6 +167,7 @@ export function ListingsGrid() {
     const endpoint = filters.status === "sold" ? "/api/listings/sold" : "/api/listings";
     const loadListings = async () => {
       setLoading(true);
+      setListings([]);
       setError("");
       try {
         const r = await fetch(`${endpoint}?${queryString}`);
@@ -147,7 +193,7 @@ export function ListingsGrid() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-10">
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-start sm:justify-center sm:gap-5">
         {CATEGORIES.map((cat) => {
           const selected = activeCategory === cat.value;
           return (
@@ -160,19 +206,22 @@ export function ListingsGrid() {
                   propertyType: prev.propertyType === cat.value ? "" : cat.value,
                 }))
               }
-              className="flex flex-col items-center gap-2 text-center"
+              className={`flex w-full flex-col items-center gap-3 rounded-md bg-white px-3 py-4 transition sm:w-[108px] ${
+                selected
+                  ? "border border-[#3A6696] shadow-none"
+                  : "border border-transparent shadow-[0_4px_14px_rgba(15,23,42,0.08)]"
+              }`}
+              aria-pressed={selected}
             >
-              <span
-                className={`flex h-14 w-14 items-center justify-center rounded-full border-2 text-lg text-slate-600 transition ${
-                  selected ? "border-sky-600 bg-sky-50 text-sky-800" : "border-slate-200 bg-white"
-                }`}
-                aria-hidden
-              >
-                {cat.icon}
-              </span>
-              <span
-                className={`text-xs font-medium ${selected ? "text-sky-800" : "text-slate-600"}`}
-              >
+              <Image
+                src={selected ? cat.iconBlue : cat.iconGrey}
+                alt=""
+                width={24}
+                height={24}
+                unoptimized
+                className="h-6 w-6 shrink-0 object-contain"
+              />
+              <span className={`text-xs font-medium ${selected ? "text-[#3A6696]" : "text-slate-500"}`}>
                 {cat.label}
               </span>
             </button>
@@ -180,116 +229,131 @@ export function ListingsGrid() {
         })}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex overflow-hidden rounded-md border border-slate-300 bg-white">
-            <button
-              type="button"
-              onClick={() => setFilters((prev) => ({ ...prev, status: "active" }))}
-              className={`border-r px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
-                filters.status === "active"
-                  ? "border-sky-600 bg-white text-sky-600"
-                  : "border-slate-300 bg-white text-slate-400"
-              }`}
-            >
-              Active
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilters((prev) => ({ ...prev, status: "sold" }))}
-              className={`px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
-                filters.status === "sold"
-                  ? "bg-white text-sky-600 ring-1 ring-inset ring-sky-600"
-                  : "bg-white text-slate-400"
-              }`}
-            >
-              Sold
-            </button>
-          </div>
-          {admin ? (
-            <Link
-              href="/admin/listings?create=1"
-              className="rounded-md bg-[#e6e8ec] px-4 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf]"
-            >
-              + Create a new listing
-            </Link>
-          ) : null}
-          <div className="mx-1 hidden h-7 w-px bg-slate-200 sm:block" />
-          <input
-            type="number"
-            min="0"
-            placeholder="Min price"
-            value={filters.minPrice}
-            onChange={(e) => setFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
-            className="w-28 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
-          />
-          <input
-            type="number"
-            min="0"
-            placeholder="Max price"
-            value={filters.maxPrice}
-            onChange={(e) => setFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
-            className="w-28 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500"
-          />
-          <select
-            value={filters.beds}
-            onChange={(e) => setFilters((prev) => ({ ...prev, beds: e.target.value }))}
-            className={`w-36 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm ${
-              filters.beds ? "text-slate-900" : "text-slate-500"
-            }`}
-          >
-            <option value="">Any beds</option>
-            <option value="1">1 bed</option>
-            <option value="2">2 beds</option>
-            <option value="3">3 beds</option>
-            <option value="4">4 beds</option>
-            <option value="5">5 beds</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput("");
-              setFilters((prev) => ({
-                ...prev,
-                minPrice: "",
-                maxPrice: "",
-                beds: "",
-                q: "",
-                propertyType: "",
-              }));
-            }}
-            className="rounded-md bg-[#e6e8ec] px-3 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf]"
-          >
-            Reset
-          </button>
-        </div>
-
-        <div className="relative w-full sm:max-w-xs">
+      <div className="flex flex-col gap-4">
+        <div className="relative w-full sm:max-w-xs sm:self-end">
           <input
             type="search"
             placeholder="Search"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full rounded-full border border-slate-300 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 placeholder:text-slate-500 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+            className="w-full rounded-sm border border-slate-300 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 placeholder:text-slate-500 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
           />
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
             ⌕
           </span>
         </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="inline-flex overflow-hidden rounded-sm border border-slate-300 bg-white">
+              <button
+                type="button"
+                onClick={() => setFilters((prev) => ({ ...prev, status: "active" }))}
+                className={`border-r px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
+                  filters.status === "active"
+                    ? "border-sky-600 bg-white text-sky-600"
+                    : "border-slate-300 bg-white text-slate-400"
+                }`}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilters((prev) => ({ ...prev, status: "sold" }))}
+                className={`px-5 py-2 text-xs font-semibold uppercase tracking-wide ${
+                  filters.status === "sold"
+                    ? "bg-white text-sky-600 ring-1 ring-inset ring-sky-600"
+                    : "bg-white text-slate-400"
+                }`}
+              >
+                Sold
+              </button>
+            </div>
+            {admin ? (
+              <Link
+                href="/admin/listings?create=1"
+                className="rounded-sm bg-[#e6e8ec] px-4 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf]"
+              >
+                + Create a new listing
+              </Link>
+            ) : null}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+            <input
+              type="number"
+              min="0"
+              placeholder="Min price"
+              value={filters.minPrice}
+              onChange={(e) => setFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
+              className="min-w-0 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 sm:w-28"
+            />
+            <input
+              type="number"
+              min="0"
+              placeholder="Max price"
+              value={filters.maxPrice}
+              onChange={(e) => setFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
+              className="min-w-0 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 sm:w-28"
+            />
+            <select
+              value={filters.beds}
+              onChange={(e) => setFilters((prev) => ({ ...prev, beds: e.target.value }))}
+              className={`min-w-0 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm sm:w-36 ${
+                filters.beds ? "text-slate-900" : "text-slate-500"
+              }`}
+            >
+              <option value="">Any beds</option>
+              <option value="1">1 bed</option>
+              <option value="2">2 beds</option>
+              <option value="3">3 beds</option>
+              <option value="4">4 beds</option>
+              <option value="5">5 beds</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput("");
+                setFilters((prev) => ({
+                  ...prev,
+                  minPrice: "",
+                  maxPrice: "",
+                  beds: "",
+                  q: "",
+                  propertyType: "",
+                }));
+              }}
+              className="rounded-sm bg-[#e6e8ec] px-3 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf] sm:w-auto"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
       </div>
 
-      {loading ? <p className="text-sm text-slate-600">Loading listings...</p> : null}
+      {loading ? (
+        <div
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
+          aria-busy="true"
+          aria-label="Loading listings"
+        >
+          {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
+            <ListingCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : null}
 
       {!loading && listings.length === 0 ? (
         <p className="text-sm text-slate-600">No listings match these filters.</p>
       ) : null}
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {!loading && listings.length > 0 ? (
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {listings.map((listing) => (
           <Link
             href={`/listings/${listing.id}`}
             key={listing.id}
-            className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="group overflow-hidden rounded-sm border border-slate-200 bg-white shadow-[0_4px_14px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(15,23,42,0.1)]"
           >
             <div className="relative aspect-[16/10] w-full overflow-hidden">
               <Image
@@ -304,7 +368,7 @@ export function ListingsGrid() {
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
               />
               {listing.status === "sold" ? (
-                <span className="absolute left-2 top-2 rounded bg-slate-900/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                <span className="absolute left-2 top-2 rounded-sm bg-slate-900/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
                   Sold
                 </span>
               ) : null}
@@ -323,6 +387,7 @@ export function ListingsGrid() {
           </Link>
         ))}
       </div>
+      ) : null}
     </div>
   );
 }

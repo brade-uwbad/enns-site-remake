@@ -71,18 +71,46 @@ const seedListings: ListingRow[] = [
 const seedReviews: ReviewRow[] = [
   {
     id: "22222222-2222-4222-8222-222222222201",
-    author_name: "Alex P.",
-    body: "Brad was responsive and clear through the whole process.",
+    title: "Honest and Genuine",
+    author_name: "Karen",
+    body: "We have bought and sold a couple houses with Brad and were very grateful for his honesty and genuine interest in our needs. Brad's very in-depth knowledge of local markets, professionalism and real estate expertise made the process smooth from start to finish.",
     rating: 5,
     is_visible: true,
+    is_featured: true,
+    display_order: 1,
     created_at: nowIso(),
   },
   {
     id: "22222222-2222-4222-8222-222222222202",
-    author_name: "Jordan K.",
-    body: "Great experience from first showing to closing.",
+    title: "Highly Recommend Brad!",
+    author_name: "Sarah",
+    body: "I loved working with Brad during the sale of my townhouse. He is savvy, but not pushy. He kept my stress level down throughout the entire process, and got me an amazing deal on my house.",
     rating: 5,
     is_visible: true,
+    is_featured: true,
+    display_order: 2,
+    created_at: nowIso(),
+  },
+  {
+    id: "22222222-2222-4222-8222-222222222203",
+    title: "Expectations Exceeded",
+    author_name: "Mike & Jen",
+    body: "Brad met and vastly exceeded our expectations as he navigated the journey of buying and selling our first and second homes. His guidance through a fast-moving market gave us confidence at every step.",
+    rating: 5,
+    is_visible: true,
+    is_featured: true,
+    display_order: 3,
+    created_at: nowIso(),
+  },
+  {
+    id: "22222222-2222-4222-8222-222222222204",
+    title: "Great Local Knowledge",
+    author_name: "Alex P.",
+    body: "Brad was responsive and clear through the whole process. Would work with him again without hesitation.",
+    rating: 5,
+    is_visible: true,
+    is_featured: false,
+    display_order: 1,
     created_at: nowIso(),
   },
 ];
@@ -257,6 +285,36 @@ export function listReviews(): ReviewRow[] {
   return [...reviews].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 }
 
+/** All reviews for admin (featured first, then display order). */
+export function listAllReviews(): ReviewRow[] {
+  return [...reviews].sort((a, b) => {
+    if (a.is_featured !== b.is_featured) {
+      return a.is_featured ? -1 : 1;
+    }
+    if (a.display_order !== b.display_order) {
+      return a.display_order - b.display_order;
+    }
+    return a.created_at < b.created_at ? 1 : -1;
+  });
+}
+
+/** Featured, visible reviews for the About page. */
+export function listFeaturedReviews(limit: number): ReviewRow[] {
+  return reviews
+    .filter((r) => r.is_visible && r.is_featured)
+    .sort((a, b) => {
+      if (a.display_order !== b.display_order) {
+        return a.display_order - b.display_order;
+      }
+      return a.created_at < b.created_at ? 1 : -1;
+    })
+    .slice(0, limit);
+}
+
+export function countFeaturedReviews(excludeId?: string): number {
+  return reviews.filter((r) => r.is_featured && r.is_visible && r.id !== excludeId).length;
+}
+
 /**
  * @param row - Review fields without `id` or `created_at`.
  * @returns The stored review including generated id and timestamp.
@@ -266,6 +324,22 @@ export function insertReview(row: Omit<ReviewRow, "id" | "created_at">): ReviewR
   const full: ReviewRow = { ...row, id, created_at: nowIso() };
   reviews = [full, ...reviews];
   return full;
+}
+
+export function updateReviewById(
+  id: string,
+  patch: Partial<Omit<ReviewRow, "id" | "created_at">>,
+): ReviewRow | null {
+  const index = reviews.findIndex((r) => r.id === id);
+  if (index < 0) {
+    return null;
+  }
+  const next = { ...reviews[index], ...patch };
+  if (!next.is_visible) {
+    next.is_featured = false;
+  }
+  reviews = [...reviews.slice(0, index), next, ...reviews.slice(index + 1)];
+  return next;
 }
 
 /**
@@ -326,7 +400,7 @@ export function addContactSubmission(
  * Latest contact or valuation submissions for the admin dashboard.
  */
 export function listRecentContactSubmissions(limit = 10): ContactSubmissionRow[] {
-  return contactSubmissions.slice(0, Math.max(1, limit));
+  return contactSubmissions.slice(0, limit);
 }
 
 /** Counts listings in the in-memory store by status (for admin dashboard). */
