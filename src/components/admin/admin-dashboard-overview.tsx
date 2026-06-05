@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { RecentLeadsSection } from "@/components/admin/recent-leads-section";
 import type { DashboardLead, ListingStatusCounts } from "@/lib/admin/dashboard-data";
+import { Button } from "@/components/ui/button";
 
 type AdminDashboardOverviewProps = {
   counts: ListingStatusCounts;
@@ -70,6 +71,17 @@ export function AdminDashboardOverview({ counts, leads }: AdminDashboardOverview
           </Link>{" "}
           page in the nav.
         </p>
+        <div className="mt-4 flex w-full gap-2 sm:gap-3">
+          <Button variant="outline" className="h-11 min-h-11 flex-1 basis-0 px-2 text-center text-sm" asChild>
+            <Link href="/listings">View public listings</Link>
+          </Button>
+          <Button className="h-11 min-h-11 flex-1 basis-0 px-2 text-center text-sm" asChild>
+            <Link href="/admin/listings">Manage listings</Link>
+          </Button>
+          <Button variant="outline" className="h-11 min-h-11 flex-1 basis-0 px-2 text-center text-sm" asChild>
+            <Link href="/admin/content">Edit site content</Link>
+          </Button>
+        </div>
       </section>
 
       <ul className="space-y-5">

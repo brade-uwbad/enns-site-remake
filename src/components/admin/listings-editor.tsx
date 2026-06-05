@@ -111,27 +111,6 @@ export function ListingsEditor({
     };
   }, [selectedPhotos]);
 
-  useEffect(() => {
-    if (startEditId) {
-      const listing = initialListings.find((l) => l.id === startEditId);
-      if (listing) {
-        setSelectedId(startEditId);
-        setForm(toEditorState(listing));
-        setWizardStep(0);
-        setEditorPanel("menu");
-        setUploadFiles([]);
-      }
-      return;
-    }
-    if (startCreate) {
-      setSelectedId("");
-      setForm(BLANK_EDITOR_STATE);
-      setUploadFiles([]);
-      setWizardStep(0);
-      setEditorPanel("menu");
-    }
-  }, [startCreate, startEditId, initialListings]);
-
   function chooseListing(id: string) {
     setSelectedId(id);
     const listing = listings.find((l) => l.id === id);

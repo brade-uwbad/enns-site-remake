@@ -15,11 +15,11 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
  */
 export default function AuthConfirmPage() {
   const router = useRouter();
-  const [status, setStatus] = useState<"loading" | "failed">("loading");
+  const configured = isSupabaseBrowserConfigured();
+  const [status, setStatus] = useState<"loading" | "failed">(configured ? "loading" : "failed");
 
   useEffect(() => {
-    if (!isSupabaseBrowserConfigured()) {
-      setStatus("failed");
+    if (!configured) {
       return;
     }
 
@@ -59,7 +59,7 @@ export default function AuthConfirmPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [configured, router]);
 
   if (status === "loading") {
     return (

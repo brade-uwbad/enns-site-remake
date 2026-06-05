@@ -9,10 +9,7 @@ import {
 import { AmenityPickerGrid } from "@/components/admin/listings-editor/components/amenity-picker-grid";
 import { ListingDetailsFields } from "@/components/admin/listings-editor/components/listing-details-fields";
 import { LISTING_AMENITIES } from "@/lib/listings/listing-amenities";
-import {
-  type EditorPanel,
-  type EditorState,
-} from "@/components/admin/listings-editor/types";
+import { type EditorPanel, type EditorState } from "@/components/admin/listings-editor/types";
 
 type Props = {
   busy: boolean;

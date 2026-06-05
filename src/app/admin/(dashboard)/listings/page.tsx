@@ -26,6 +26,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
 
   return (
     <ListingsEditor
+      key={`${startCreate}-${startEditId ?? ""}`}
       initialListings={[...active.items, ...sold.items]}
       startCreate={startCreate}
       startEditId={startEditId}
