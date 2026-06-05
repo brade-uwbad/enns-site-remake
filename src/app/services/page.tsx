@@ -46,7 +46,9 @@ export default async function ServicesPage() {
   return (
     <div className={`min-h-screen bg-white ${poppins.className}`}>
       <div className="mx-auto w-full max-w-3xl px-4 pb-3 pt-10 sm:px-6 sm:pb-4 sm:pt-12">
-        <h1 className="text-center text-3xl font-medium text-slate-900 sm:text-4xl md:text-5xl">{c.heroTitle}</h1>
+        <h1 className="text-center text-3xl font-medium text-slate-900 sm:text-4xl md:text-5xl">
+          {c.heroTitle}
+        </h1>
         <p className="mt-4 text-center text-base font-normal leading-relaxed text-slate-600 sm:mt-6 sm:text-lg md:text-[20px]">
           {c.heroDescription}
         </p>
