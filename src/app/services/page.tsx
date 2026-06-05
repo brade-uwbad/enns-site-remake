@@ -4,8 +4,6 @@ import { Poppins } from "next/font/google";
 
 import { fetchSiteContent } from "@/lib/content/query";
 
-import { fetchSiteContent } from "@/lib/content/query";
-
 const poppins = Poppins({
   weight: ["400", "500"],
   subsets: ["latin"],
