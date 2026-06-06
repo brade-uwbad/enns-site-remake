@@ -71,7 +71,7 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
       if (!res.ok) {
         throw new Error(data?.error?.message ?? "Could not save content.");
       }
-      setMessage("Saved. Refresh the public page to confirm.");
+      setMessage("Saved. Public pages should update on the next visit.");
       router.refresh();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Could not save content.");

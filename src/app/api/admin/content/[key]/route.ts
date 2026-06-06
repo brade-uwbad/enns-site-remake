@@ -2,6 +2,7 @@ import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
 import { upsertSiteContent } from "@/lib/content/admin";
 import { isSiteContentKey } from "@/lib/content/keys";
+import { revalidateSiteContent } from "@/lib/content/revalidate";
 import { fetchSiteContent } from "@/lib/content/query";
 import { siteContentSchemas } from "@/lib/validations/site-content";
 
@@ -59,6 +60,7 @@ export async function PUT(request: Request, ctx: Params) {
 
   try {
     const row = await upsertSiteContent(key, parsed.data);
+    revalidateSiteContent(key);
     return jsonOk({ content: row.payload, updatedAt: row.updatedAt });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to save content";

@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: "Get in touch with Brad Enns.",
 };
 
+export const dynamic = "force-dynamic";
+
 function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
 }

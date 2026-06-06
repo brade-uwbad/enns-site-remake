@@ -1,6 +1,8 @@
 import { HomeHero } from "@/components/home/home-hero";
 import { fetchSiteContent } from "@/lib/content/query";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const { payload } = await fetchSiteContent("homepage");
 

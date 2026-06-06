@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "Enns Real Estate services in Kitchener–Waterloo and surrounding communities.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ServicesPage() {
   const { payload: c } = await fetchSiteContent("services");
 
