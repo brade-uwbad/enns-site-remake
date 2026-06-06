@@ -33,9 +33,9 @@ export default async function ContactPage() {
           {c.sectionTitle}
         </h2>
 
-        <dl className="mx-auto mt-6 max-w-md space-y-4 text-zinc-900 sm:grid sm:grid-cols-[6rem_1fr] sm:gap-x-6 sm:gap-y-3 sm:space-y-0">
+        <dl className="mx-auto mt-6 w-fit space-y-4 text-left text-zinc-900 sm:grid sm:grid-cols-[auto_auto] sm:gap-x-10 sm:gap-y-3 sm:space-y-0">
           <dt className="font-semibold text-zinc-700">Mobile</dt>
-          <dd>
+          <dd className="sm:text-right">
             <a
               href={`tel:${digitsOnly(c.mobile)}`}
               className="hover:text-zinc-600 hover:underline"
@@ -45,7 +45,7 @@ export default async function ContactPage() {
           </dd>
 
           <dt className="font-semibold text-zinc-700">Office</dt>
-          <dd>
+          <dd className="sm:text-right">
             <a
               href={`tel:${digitsOnly(c.office)}`}
               className="hover:text-zinc-600 hover:underline"
@@ -55,17 +55,17 @@ export default async function ContactPage() {
           </dd>
 
           <dt className="font-semibold text-zinc-700">Fax</dt>
-          <dd>{c.fax}</dd>
+          <dd className="sm:text-right">{c.fax}</dd>
 
           <dt className="font-semibold text-zinc-700">Email</dt>
-          <dd>
+          <dd className="sm:text-right">
             <a href={`mailto:${c.email}`} className="hover:text-zinc-600 hover:underline">
               {c.email}
             </a>
           </dd>
 
           <dt className="font-semibold text-zinc-700">Address</dt>
-          <dd>
+          <dd className="sm:text-right">
             <a
               href={`https://maps.google.com/?q=${encodeURIComponent(`${c.addressLine1} ${c.addressLine2}`)}`}
               target="_blank"
@@ -79,7 +79,7 @@ export default async function ContactPage() {
           </dd>
 
           <dt className="font-semibold text-zinc-700">Socials</dt>
-          <dd className="flex items-center gap-3">
+          <dd className="flex items-center gap-3 sm:justify-end">
             <a
               href={c.facebookUrl}
               target="_blank"
