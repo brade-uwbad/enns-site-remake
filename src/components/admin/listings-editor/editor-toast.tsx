@@ -1,12 +1,14 @@
 "use client";
 
+import { Check, X } from "lucide-react";
+
 type EditorToastProps = {
   message: string;
   onDismiss: () => void;
 };
 
 function isErrorMessage(message: string) {
-  return /fail|error|could not|invalid|required/i.test(message);
+  return /fail|error|could not|invalid|required|must sign in/i.test(message);
 }
 
 export function EditorToast({ message, onDismiss }: EditorToastProps) {
@@ -22,6 +24,14 @@ export function EditorToast({ message, onDismiss }: EditorToastProps) {
       role="status"
       aria-live="polite"
     >
+      <span
+        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+          error ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600"
+        }`}
+        aria-hidden
+      >
+        {error ? <X className="h-3.5 w-3.5" strokeWidth={2.5} /> : <Check className="h-3.5 w-3.5" strokeWidth={2.5} />}
+      </span>
       <p className="flex-1 leading-snug">{message}</p>
       <button
         type="button"

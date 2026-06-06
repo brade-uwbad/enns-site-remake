@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "About Brad Enns and real estate services in Kitchener–Waterloo.",
 };
 
+export const dynamic = "force-dynamic";
+
 function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
 }

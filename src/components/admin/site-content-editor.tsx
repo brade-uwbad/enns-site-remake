@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { EditorToast } from "@/components/admin/listings-editor/editor-toast";
 import { SITE_CONTENT_PAGES } from "@/lib/content/keys";
 import { SITE_CONTENT_EDITOR_FIELDS } from "@/lib/content/editor-fields";
 import type { SiteContentKey } from "@/lib/content/keys";
@@ -43,6 +44,14 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    if (!message) {
+      return;
+    }
+    const timer = window.setTimeout(() => setMessage(""), 5000);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
   function setField(name: string, value: string) {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
@@ -71,7 +80,7 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
       if (!res.ok) {
         throw new Error(data?.error?.message ?? "Could not save content.");
       }
-      setMessage("Saved. Refresh the public page to confirm.");
+      setMessage("Saved. Public pages should update on the next visit.");
       router.refresh();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Could not save content.");
@@ -83,7 +92,9 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
   const title = page?.label ?? pageKey;
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-var(--site-header-offset)-3rem)] w-full min-h-0 max-w-3xl flex-col sm:h-[calc(100dvh-9rem)]">
+    <>
+      {message ? <EditorToast message={message} onDismiss={() => setMessage("")} /> : null}
+      <div className="mx-auto flex h-[calc(100dvh-var(--site-header-offset)-3rem)] w-full min-h-0 max-w-3xl flex-col sm:h-[calc(100dvh-9rem)]">
       <header className="shrink-0">
         <h1 className={EDITOR_TITLE_CLASS}>{title}</h1>
         {page?.description ? (
@@ -132,14 +143,6 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
               </label>
             ))}
           </div>
-
-          {message ? (
-            <p
-              className={`mt-4 text-center text-sm ${message.startsWith("Saved") ? "text-[#3A6696]" : "text-red-600"}`}
-            >
-              {message}
-            </p>
-          ) : null}
         </div>
 
         <div className="flex shrink-0 flex-col-reverse gap-4 pb-6 pt-8 sm:flex-row sm:items-center sm:justify-between sm:pb-8 sm:pt-12">
@@ -151,6 +154,7 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
           </button>
         </div>
       </form>
-    </div>
+      </div>
+    </>
   );
 }
