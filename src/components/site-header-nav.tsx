@@ -17,10 +17,33 @@ type SiteHeaderNavProps = {
   linkClassName?: string;
 };
 
-export function SiteHeaderNav({ className, linkClassName }: SiteHeaderNavProps) {
+function AdminDashboardLink({
+  linkClassName,
+  className = "",
+}: {
+  linkClassName?: string;
+  className?: string;
+}) {
   const pathname = usePathname();
   const { admin } = useAdminUser();
 
+  if (!admin) {
+    return null;
+  }
+
+  return (
+    <Link
+      href="/admin/dashboard"
+      className={`${linkClassName ?? ""} ${className} ${
+        pathname.startsWith("/admin/dashboard") ? "font-medium" : ""
+      }`}
+    >
+      Dashboard
+    </Link>
+  );
+}
+
+export function SiteHeaderNav({ className, linkClassName }: SiteHeaderNavProps) {
   return (
     <nav className={className} style={{ columnGap: "2.5rem" }} aria-label="Main">
       {siteHeaderNavItems.map((item, index) => (
@@ -32,16 +55,20 @@ export function SiteHeaderNav({ className, linkClassName }: SiteHeaderNavProps) 
           {item.label}
         </Link>
       ))}
-      {admin ? (
-        <Link
-          href="/admin/dashboard"
-          className={`${linkClassName ?? ""} ml-8 ${
-            pathname.startsWith("/admin/dashboard") ? "font-medium" : ""
-          }`}
-        >
-          Dashboard
+      <AdminDashboardLink linkClassName={linkClassName} className="ml-8" />
+    </nav>
+  );
+}
+
+export function SiteHeaderMobileNav({ className, linkClassName }: SiteHeaderNavProps) {
+  return (
+    <nav className={className} aria-label="Main mobile">
+      {siteHeaderNavItems.map((item) => (
+        <Link key={item.href} href={item.href} className={linkClassName}>
+          {item.label}
         </Link>
-      ) : null}
+      ))}
+      <AdminDashboardLink linkClassName={linkClassName} />
     </nav>
   );
 }
