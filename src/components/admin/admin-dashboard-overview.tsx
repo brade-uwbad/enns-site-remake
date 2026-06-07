@@ -35,6 +35,11 @@ const STATUS_CARDS: {
 
 const QUICK_LINKS: { href: string; title: string; description: string }[] = [
   {
+    href: "/admin/listings",
+    title: "Manage listings",
+    description: "Create, edit, delete, and mark listings active or sold.",
+  },
+  {
     href: "/admin/content",
     title: "Edit site content",
     description: "Update hero text, calls to action, and copy on marketing pages.",
