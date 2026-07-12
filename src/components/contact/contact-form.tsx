@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { FieldGroup } from "@/components/ui/field";
+import { ContactFormFields } from "@/components/contact/contact-form-fields";
 import { contactPageFormSchema, type ContactPageFormValues } from "@/lib/validations/contact";
 import { sendContactEmail } from "@/app/contact/actions";
 
@@ -76,109 +75,7 @@ export function ContactForm() {
 
       <form className="mt-6" noValidate onSubmit={form.handleSubmit(handleSubmit)}>
         <FieldGroup>
-          <Controller
-            name="name"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  placeholder="Your name"
-                  aria-invalid={fieldState.invalid}
-                />
-                {fieldState.error && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name="email"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  type="email"
-                  placeholder="your.email@example.com"
-                  aria-invalid={fieldState.invalid}
-                />
-                {fieldState.error && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name="phone"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Phone</FieldLabel>
-                <Input
-                  {...field}
-                  value={field.value ?? ""}
-                  id={field.name}
-                  type="tel"
-                  placeholder="(optional)"
-                  aria-invalid={fieldState.invalid}
-                />
-                <FieldDescription>
-                  Optional — share this if you’d prefer a call back.
-                </FieldDescription>
-                {fieldState.error && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name="subject"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Subject</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  placeholder="What's this about?"
-                  aria-invalid={fieldState.invalid}
-                />
-                {fieldState.error && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name="message"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Message</FieldLabel>
-                <Textarea
-                  {...field}
-                  id={field.name}
-                  rows={6}
-                  placeholder="Tell me a bit about what you're looking for..."
-                  aria-invalid={fieldState.invalid}
-                />
-                {fieldState.error && <FieldError errors={[fieldState.error]} />}
-              </Field>
-            )}
-          />
-
-          {/* Honeypot field: hidden from humans, filled by bots. */}
-          <div className="hidden" aria-hidden="true">
-            <label htmlFor="website">Website</label>
-            <input
-              {...form.register("honeypot")}
-              id="website"
-              type="text"
-              tabIndex={-1}
-              autoComplete="off"
-            />
-          </div>
+          <ContactFormFields form={form} />
 
           {status === "error" && errorMessage && (
             <div

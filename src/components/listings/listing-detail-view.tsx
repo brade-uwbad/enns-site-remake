@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ListingDetailGallery } from "@/components/listings/listing-detail-gallery";
 import { ListingAdminActions } from "@/components/listings/listing-admin-actions";
+import { ListingContactDialog } from "@/components/listings/listing-contact-dialog";
 import {
   amenityIconPath,
   canonicalAmenitiesFromStored,
@@ -139,12 +140,7 @@ export function ListingDetailView({ listing, nearby }: Props) {
             className="h-56 w-full rounded-md border border-slate-200 bg-white"
             referrerPolicy="no-referrer-when-downgrade"
           />
-          <Link
-            href="/contact"
-            className="flex w-full items-center justify-center rounded-md border border-sky-600 bg-white px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-sky-700 hover:bg-sky-50"
-          >
-            Contact Brad about this listing
-          </Link>
+          <ListingContactDialog listingLabel={listing.address_line || listing.title} />
         </aside>
       </div>
 
