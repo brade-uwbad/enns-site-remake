@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import {
-  amenitiesArrayFromSelections,
-  type ListingAmenityLabel,
-} from "@/lib/listings/listing-amenities";
 import { EditorToast } from "@/components/admin/listings-editor/editor-toast";
 import { AdminListingsGrid } from "@/components/admin/listings-editor/components/admin-listings-grid";
+import { NearbyListingsToggle } from "@/components/admin/nearby-listings-toggle";
 import { CreateWizard } from "@/components/admin/listings-editor/components/create-wizard";
 import {
+  movePhoto,
   reorderPhotosToMain,
   type EditorPhotoItem,
 } from "@/components/admin/listings-editor/components/editor-photos-panel";
@@ -27,15 +25,17 @@ import {
   buildListingWritePayload,
   splitList,
   toEditorState,
-  toggleAmenitySelection,
 } from "@/components/admin/listings-editor/utils";
 import { useAdminUser } from "@/hooks/use-admin-user";
+import type { ListingCategory } from "@/lib/listings/listing-categories";
 import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 
 type ListingsEditorProps = {
   initialListings: Listing[];
+  categories: ListingCategory[];
   startCreate?: boolean;
   startEditId?: string;
+  showNearbyListings?: boolean;
 };
 
 function resolveInitialEditorState(
@@ -60,8 +60,10 @@ function resolveInitialEditorState(
 
 export function ListingsEditor({
   initialListings,
+  categories,
   startCreate = false,
   startEditId,
+  showNearbyListings = true,
 }: ListingsEditorProps) {
   const router = useRouter();
   const initial = resolveInitialEditorState(initialListings, startCreate, startEditId);
@@ -144,15 +146,14 @@ export function ListingsEditor({
     setUploadFiles(files);
   }
 
-  function setField<K extends keyof EditorState>(key: K, value: EditorState[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+  function movePhotoBy(photo: EditorPhotoItem, delta: number) {
+    const { existingUrls, files } = movePhoto(photo, delta, existingPhotos, selectedPhotos);
+    setField("imagesText", existingUrls.join("\n"));
+    setUploadFiles(files);
   }
 
-  function toggleAmenity(id: ListingAmenityLabel) {
-    setForm((prev) => ({
-      ...prev,
-      amenitySelections: toggleAmenitySelection(prev.amenitySelections, id),
-    }));
+  function setField<K extends keyof EditorState>(key: K, value: EditorState[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   function requireAccessTokenForWrite(): boolean {
@@ -230,10 +231,7 @@ export function ListingsEditor({
       if (!postalCode) {
         throw new Error("Postal code is required.");
       }
-      const payload = {
-        ...buildListingWritePayload(form, images, {}),
-        amenities: amenitiesArrayFromSelections(form.amenitySelections),
-      };
+      const payload = buildListingWritePayload(form, images, {});
       const res = await fetch("/api/admin/listings", {
         method: "POST",
         headers: authHeaders(),
@@ -282,10 +280,7 @@ export function ListingsEditor({
         throw new Error("Postal code is required.");
       }
       const existing = listings.find((l) => l.id === selectedId);
-      const payload = {
-        ...buildListingWritePayload(form, images, { existing }),
-        amenities: amenitiesArrayFromSelections(form.amenitySelections),
-      };
+      const payload = buildListingWritePayload(form, images, { existing });
       const res = await fetch(`/api/admin/listings/${selectedId}`, {
         method: "PUT",
         headers: authHeaders(),
@@ -445,12 +440,16 @@ export function ListingsEditor({
         ) : null}
 
         {!deepLinkMode && isManageView ? (
-          <AdminListingsGrid
-            listings={listings}
-            busy={busy}
-            onEditListing={chooseListing}
-            onDeleteListing={(id) => void deleteListing(id)}
-          />
+          <>
+            <AdminListingsGrid
+              listings={listings}
+              categories={categories}
+              busy={busy}
+              onEditListing={chooseListing}
+              onDeleteListing={(id) => void deleteListing(id)}
+            />
+            <NearbyListingsToggle initialEnabled={showNearbyListings} />
+          </>
         ) : null}
 
         {isCreateWizard ? (
@@ -458,15 +457,16 @@ export function ListingsEditor({
             wizardStep={wizardStep}
             busy={busy}
             form={form}
+            categories={categories}
             existingPhotos={existingPhotos}
             selectedPhotos={selectedPhotos}
             cancelHref="/admin/listings"
             onSetField={setField}
-            onToggleAmenity={toggleAmenity}
             onAddUploadFiles={addUploadFiles}
             onRemoveQueuedPhoto={removeQueuedUploadFile}
             onRemoveExistingPhoto={removeExistingImage}
             onSetMainPhoto={setMainPhoto}
+            onMovePhoto={movePhotoBy}
             onPrevStep={prevStep}
             onNextStep={nextStep}
             onPublish={saveFromWizard}
@@ -481,11 +481,11 @@ export function ListingsEditor({
             backHref={backHref}
             onSetPanel={setEditorPanel}
             onSetField={setField}
-            onToggleAmenity={toggleAmenity}
             onAddUploadFiles={addUploadFiles}
             onRemoveQueuedPhoto={removeQueuedUploadFile}
             onRemoveExistingPhoto={removeExistingImage}
             onSetMainPhoto={setMainPhoto}
+            onMovePhoto={movePhotoBy}
             onSavePanel={saveEditorPanel}
           />
         ) : null}
