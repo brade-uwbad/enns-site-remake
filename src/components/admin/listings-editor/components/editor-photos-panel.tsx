@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Eye, FolderOpen, ImageIcon, Star, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, FolderOpen, ImageIcon, Star, Trash2 } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 const THUMB_COUNT = 4;
@@ -18,6 +18,8 @@ type Props = {
   onRemoveQueuedPhoto: (index: number) => void;
   onRemoveExistingPhoto: (url: string) => void;
   onSetMainPhoto: (photo: EditorPhotoItem) => void;
+  /** Move a photo `delta` positions in the combined order (-1 earlier, +1 later). */
+  onMovePhoto: (photo: EditorPhotoItem, delta: number) => void;
 };
 
 export function photoKey(photo: EditorPhotoItem) {
@@ -33,6 +35,23 @@ export function buildEditorPhotoList(
     items.push({ kind: "queued", index, src: item.previewUrl });
   });
   return items;
+}
+
+/** Split a reordered combined list back into existing URLs + queued files. */
+function toExistingAndFiles(
+  reordered: EditorPhotoItem[],
+  selectedPhotos: Array<{ file: File; previewUrl: string }>,
+): { existingUrls: string[]; files: File[] } {
+  const existingUrls: string[] = [];
+  const files: File[] = [];
+  for (const item of reordered) {
+    if (item.kind === "existing") {
+      existingUrls.push(item.src);
+    } else {
+      files.push(selectedPhotos[item.index]!.file);
+    }
+  }
+  return { existingUrls, files };
 }
 
 /** Move the chosen photo to the front of the combined list (main image). */
@@ -51,18 +70,30 @@ export function reorderPhotosToMain(
   }
 
   const reordered = [items[idx]!, ...items.filter((_, i) => i !== idx)];
-  const existingUrls: string[] = [];
-  const files: File[] = [];
+  return toExistingAndFiles(reordered, selectedPhotos);
+}
 
-  for (const item of reordered) {
-    if (item.kind === "existing") {
-      existingUrls.push(item.src);
-    } else {
-      files.push(selectedPhotos[item.index]!.file);
-    }
+/** Move a photo `delta` positions within the combined list (-1 earlier, +1 later). */
+export function movePhoto(
+  photo: EditorPhotoItem,
+  delta: number,
+  existingPhotos: string[],
+  selectedPhotos: Array<{ file: File; previewUrl: string }>,
+): { existingUrls: string[]; files: File[] } {
+  const items = buildEditorPhotoList(existingPhotos, selectedPhotos);
+  const idx = items.findIndex((p) => photoKey(p) === photoKey(photo));
+  const target = idx + delta;
+  if (idx < 0 || target < 0 || target >= items.length) {
+    return {
+      existingUrls: existingPhotos,
+      files: selectedPhotos.map((p) => p.file),
+    };
   }
 
-  return { existingUrls, files };
+  const reordered = [...items];
+  const [moved] = reordered.splice(idx, 1);
+  reordered.splice(target, 0, moved!);
+  return toExistingAndFiles(reordered, selectedPhotos);
 }
 
 export function EditorPhotosPanel({
@@ -72,6 +103,7 @@ export function EditorPhotosPanel({
   onRemoveQueuedPhoto,
   onRemoveExistingPhoto,
   onSetMainPhoto,
+  onMovePhoto,
 }: Props) {
   const [previewIndex, setPreviewIndex] = useState(0);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
@@ -136,8 +168,21 @@ export function EditorPhotosPanel({
   }
 
   function PhotoHoverActions({ photo, isMain }: { photo: EditorPhotoItem; isMain: boolean }) {
+    const position = photos.findIndex((p) => photoKey(p) === photoKey(photo));
+    const canMoveEarlier = position > 0;
+    const canMoveLater = position >= 0 && position < photos.length - 1;
     return (
-      <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute inset-0 z-10 flex flex-wrap items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+        {canMoveEarlier ? (
+          <button
+            type="button"
+            onClick={() => onMovePhoto(photo, -1)}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
+            aria-label="Move photo earlier"
+          >
+            <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => setPreviewSrc(photo.src)}
@@ -164,6 +209,16 @@ export function EditorPhotosPanel({
         >
           <Trash2 className="h-4 w-4" strokeWidth={2} />
         </button>
+        {canMoveLater ? (
+          <button
+            type="button"
+            onClick={() => onMovePhoto(photo, 1)}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
+            aria-label="Move photo later"
+          >
+            <ChevronRight className="h-4 w-4" strokeWidth={2} />
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -370,7 +425,17 @@ export function EditorPhotosPanel({
                     unoptimized={photo.kind === "existing"}
                   />
                   <MainStarButton photo={photo} photoIndex={photoIndex} />
-                  <div className="absolute inset-0 z-[5] flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="absolute inset-0 z-[5] flex flex-wrap items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                    {photoIndex > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => onMovePhoto(photo, -1)}
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
+                        aria-label="Move photo earlier"
+                      >
+                        <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => setPreviewSrc(photo.src)}
@@ -387,6 +452,16 @@ export function EditorPhotosPanel({
                     >
                       <Trash2 className="h-4 w-4" strokeWidth={2} />
                     </button>
+                    {photoIndex < photos.length - 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => onMovePhoto(photo, 1)}
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
+                        aria-label="Move photo later"
+                      >
+                        <ChevronRight className="h-4 w-4" strokeWidth={2} />
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               ))}
