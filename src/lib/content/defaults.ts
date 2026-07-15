@@ -8,6 +8,7 @@ const DEFAULTS: SiteContentPayloadMap = {
     heroDescription:
       "Real estate and brief agent description. Real estate and brief agent description. Real estate and brief agent description.",
     heroCtaLabel: "LEARN MORE",
+    heroImageUrl: "/images/homepage_background_temp.jpg",
     primaryCtaLabel: "View listings",
     secondaryCtaLabel: "Contact Brad",
     sectionTitle: "How I can help",
@@ -37,15 +38,23 @@ const DEFAULTS: SiteContentPayloadMap = {
   services: {
     heroTitle: "Enns Real Estate Services",
     heroDescription: "We're here to help you value, buy, and sell your home.",
-    appraisalTitle: "Home Appraisal",
-    appraisalBody:
-      "Appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details.",
-    buyingTitle: "Buying",
-    buyingBody:
-      "Appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details.",
-    sellingTitle: "Selling",
-    sellingBody:
-      "Appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details.",
+    services: [
+      {
+        title: "Home Appraisal",
+        body: "Appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details.",
+        iconUrl: "/icons/appraisal.svg",
+      },
+      {
+        title: "Buying",
+        body: "Appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details.",
+        iconUrl: "/icons/buying.svg",
+      },
+      {
+        title: "Selling",
+        body: "Appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details appraisal details.",
+        iconUrl: "/icons/selling.svg",
+      },
+    ],
   },
   contact: {
     title: "Get in Touch",

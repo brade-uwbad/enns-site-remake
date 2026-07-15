@@ -1,13 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { EditorToast } from "@/components/admin/listings-editor/editor-toast";
-import { SITE_CONTENT_PAGES } from "@/lib/content/keys";
+import { SITE_CONTENT_PAGES, type SiteContentKey } from "@/lib/content/keys";
 import { SITE_CONTENT_EDITOR_FIELDS } from "@/lib/content/editor-fields";
-import type { SiteContentKey } from "@/lib/content/keys";
 import type { SiteContentPayload } from "@/lib/content/types";
 import { useAdminUser } from "@/hooks/use-admin-user";
 import { formatAdminDateTime } from "@/lib/format-admin-datetime";
@@ -42,6 +42,7 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
 
   const [form, setForm] = useState(() => payloadToFormState(initialPayload));
   const [busy, setBusy] = useState(false);
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -54,6 +55,37 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
 
   function setField(name: string, value: string) {
     setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function onUploadImage(fieldName: string, file: File) {
+    if (isSupabaseBrowserConfigured() && !accessToken) {
+      setMessage("You must sign in as an admin before uploading.");
+      return;
+    }
+
+    setUploadingField(fieldName);
+    setMessage("");
+    try {
+      const headers: Record<string, string> = {};
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
+      const body = new FormData();
+      body.append("file", file);
+
+      const res = await fetch("/api/admin/content/upload", { method: "POST", headers, body });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? "Could not upload image.");
+      }
+      setField(fieldName, data.data.url as string);
+      setMessage("Image uploaded. Click Save changes to publish it.");
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Could not upload image.");
+    } finally {
+      setUploadingField(null);
+    }
   }
 
   async function onSave(e: React.FormEvent) {
@@ -122,26 +154,70 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
       <form className="mt-8 flex min-h-0 flex-1 flex-col" onSubmit={(e) => void onSave(e)}>
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="grid gap-4">
-            {fields.map((field) => (
-              <label key={field.name} className="text-sm">
-                <span className="mb-1 block">{field.label}</span>
-                {field.multiline ? (
-                  <textarea
-                    value={form[field.name] ?? ""}
-                    onChange={(e) => setField(field.name, e.target.value)}
-                    rows={4}
-                    className={`${EDITOR_FIELD_INPUT_CLASS} min-h-20 resize-y`}
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={form[field.name] ?? ""}
-                    onChange={(e) => setField(field.name, e.target.value)}
-                    className={EDITOR_FIELD_INPUT_CLASS}
-                  />
-                )}
-              </label>
-            ))}
+            {fields.map((field) =>
+              field.image ? (
+                <div key={field.name} className="text-sm">
+                  <span className="mb-1 block">{field.label}</span>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                    <div className="relative aspect-video w-full overflow-hidden rounded-md border border-zinc-300 bg-slate-100 sm:w-64">
+                      {form[field.name] ? (
+                        <Image
+                          src={form[field.name]}
+                          alt=""
+                          fill
+                          sizes="256px"
+                          unoptimized
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-slate-500">
+                          No image set
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={uploadingField === field.name}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            void onUploadImage(field.name, file);
+                          }
+                          e.target.value = "";
+                        }}
+                        className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#3A6696] file:px-3 file:py-1.5 file:text-white hover:file:bg-[#32587f]"
+                      />
+                      <p className="text-xs text-slate-500">
+                        {uploadingField === field.name
+                          ? "Uploading…"
+                          : "JPG or PNG, up to 10MB. A wide landscape photo works best."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <label key={field.name} className="text-sm">
+                  <span className="mb-1 block">{field.label}</span>
+                  {field.multiline ? (
+                    <textarea
+                      value={form[field.name] ?? ""}
+                      onChange={(e) => setField(field.name, e.target.value)}
+                      rows={4}
+                      className={`${EDITOR_FIELD_INPUT_CLASS} min-h-20 resize-y`}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={form[field.name] ?? ""}
+                      onChange={(e) => setField(field.name, e.target.value)}
+                      className={EDITOR_FIELD_INPUT_CLASS}
+                    />
+                  )}
+                </label>
+              ),
+            )}
           </div>
         </div>
 
