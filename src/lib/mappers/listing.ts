@@ -51,7 +51,6 @@ export function toListingInsert(
     property_type: input.propertyType ?? null,
     status: input.status,
     sold_at: null,
-    amenities: input.amenities ?? [],
     featured_image_url: input.featuredImageUrl ?? null,
     images: input.images ?? [],
     created_by: userId,
@@ -113,9 +112,6 @@ export function toListingUpdate(input: ListingUpdateInput): Partial<ListingRow> 
   }
   if (input.status !== undefined) {
     row.status = input.status;
-  }
-  if (input.amenities !== undefined) {
-    row.amenities = input.amenities;
   }
   if (input.featuredImageUrl !== undefined) {
     row.featured_image_url = input.featuredImageUrl;

@@ -2,13 +2,12 @@
 
 import Image from "next/image";
 
-import {
-  PROPERTY_TYPE_LABEL,
-  type Listing,
-} from "@/components/admin/listings-editor/types";
+import { labelForCategory, type ListingCategory } from "@/lib/listings/listing-categories";
+import { type Listing } from "@/components/admin/listings-editor/types";
 
 type AdminListingsGridProps = {
   listings: Listing[];
+  categories: ListingCategory[];
   busy: boolean;
   onEditListing: (id: string) => void;
   onDeleteListing: (id: string) => void;
@@ -26,9 +25,9 @@ function formatPrice(priceDollars: number | null) {
   }).format(priceDollars);
 }
 
-function cardSpecLine(listing: Listing) {
+function cardSpecLine(listing: Listing, categories: ListingCategory[]) {
   const parts = [
-    listing.property_type ? PROPERTY_TYPE_LABEL[listing.property_type] : null,
+    listing.property_type ? labelForCategory(categories, listing.property_type) : null,
     listing.beds !== null ? `${listing.beds} Bed` : null,
     listing.baths !== null ? `${listing.baths} Bath` : null,
   ].filter(Boolean);
@@ -41,6 +40,7 @@ function cardTitle(listing: Listing) {
 
 export function AdminListingsGrid({
   listings,
+  categories,
   busy,
   onEditListing,
   onDeleteListing,
@@ -82,7 +82,9 @@ export function AdminListingsGrid({
               <p className="text-sm font-semibold text-slate-900">
                 {formatPrice(listing.price_dollars)}
               </p>
-              <p className="line-clamp-1 text-xs text-slate-500">{cardSpecLine(listing)}</p>
+              <p className="line-clamp-1 text-xs text-slate-500">
+                {cardSpecLine(listing, categories)}
+              </p>
             </div>
           </div>
           <div className="mt-auto grid grid-cols-2 border-t border-slate-200">

@@ -35,7 +35,6 @@ const seedListings: ListingRow[] = [
     sold_at: null,
     featured_image_url: "https://placehold.co/1200x800/png?text=Listing",
     images: [],
-    amenities: ["wifi", "parking", "in-unit laundry"],
     created_at: nowIso(),
     updated_at: nowIso(),
     created_by: ADMIN_USER_ID,
@@ -61,7 +60,6 @@ const seedListings: ListingRow[] = [
     sold_at: nowIso(),
     featured_image_url: null,
     images: [],
-    amenities: ["ac/heating", "parking"],
     created_at: nowIso(),
     updated_at: nowIso(),
     created_by: ADMIN_USER_ID,
@@ -155,6 +153,11 @@ const siteContent: Record<
   ]),
 ) as Record<SiteContentKey, { payload: SiteContentPayload<SiteContentKey>; updated_at: string }>;
 let contactSubmissions: ContactSubmissionRow[] = [];
+
+/** Site-wide feature flags (mirrors the `site_settings` table). */
+const siteSettings: Record<string, unknown> = {
+  show_nearby_listings: true,
+};
 
 /**
  * @internal
@@ -376,6 +379,16 @@ export function upsertSiteContent<K extends SiteContentKey>(
   };
   siteContent[key] = row as (typeof siteContent)[K];
   return siteContent[key] as { payload: SiteContentPayload<K>; updated_at: string };
+}
+
+/** @returns The stored value for a site setting, or `undefined` if unset. */
+export function getSiteSetting(key: string): unknown {
+  return siteSettings[key];
+}
+
+/** Sets a site setting value in the in-memory store. */
+export function setSiteSetting(key: string, value: unknown): void {
+  siteSettings[key] = value;
 }
 
 /**

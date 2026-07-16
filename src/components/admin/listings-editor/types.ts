@@ -1,9 +1,5 @@
-import {
-  emptyAmenitySelections,
-  type ListingAmenitySelections,
-} from "@/lib/listings/listing-amenities";
-
-export type PropertyType = "apartment" | "detached" | "townhouse" | "condo";
+/** A listing's category slug. Categories are admin-editable, so this is free text. */
+export type PropertyType = string;
 
 export type Listing = {
   id: string;
@@ -15,7 +11,6 @@ export type Listing = {
   address_line: string | null;
   price_dollars: number | null;
   description: string | null;
-  amenities: string[];
   images: string[];
   featured_image_url: string | null;
   status: "active" | "sold" | "draft";
@@ -32,7 +27,6 @@ export type EditorState = {
   addressLine: string;
   priceDollars: string;
   description: string;
-  amenitySelections: ListingAmenitySelections;
   imagesText: string;
   status: "active" | "sold" | "draft";
   beds: string;
@@ -48,7 +42,6 @@ export const BLANK_EDITOR_STATE: EditorState = {
   addressLine: "",
   priceDollars: "",
   description: "",
-  amenitySelections: emptyAmenitySelections(),
   imagesText: "",
   status: "active",
   beds: "",
@@ -57,18 +50,10 @@ export const BLANK_EDITOR_STATE: EditorState = {
   propertyType: "",
 };
 
-export const PROPERTY_TYPE_LABEL: Record<PropertyType, string> = {
-  apartment: "Apartment",
-  detached: "Detached",
-  townhouse: "Townhouse",
-  condo: "Condo",
-};
-
 export const WIZARD_STEP_TITLES = [
   "Property Type",
   "Listing Details",
   "Photos",
-  "Amenities",
 ] as const;
 
-export type EditorPanel = "menu" | "photos" | "details" | "amenities";
+export type EditorPanel = "menu" | "photos" | "details";

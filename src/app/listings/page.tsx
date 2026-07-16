@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 
 import { ListingsGrid } from "@/components/listings/listings-grid";
+import { getListingCategories } from "@/lib/listings/listing-categories-store";
 
 const poppins = Poppins({
   weight: ["400", "500", "600"],
@@ -13,10 +14,14 @@ export const metadata: Metadata = {
   description: "Active and sold property listings.",
 };
 
+export const dynamic = "force-dynamic";
+
 /**
  * Marketing listings index matching design layout (category strip + grid).
  */
-export default function ListingsPage() {
+export default async function ListingsPage() {
+  const categories = await getListingCategories();
+
   return (
     <div className={`mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 ${poppins.className}`}>
       <div className="mx-auto max-w-xl text-center">
@@ -24,7 +29,7 @@ export default function ListingsPage() {
       </div>
 
       <div className="mt-8">
-        <ListingsGrid />
+        <ListingsGrid categories={categories} />
       </div>
     </div>
   );

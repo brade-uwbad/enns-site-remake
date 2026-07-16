@@ -18,7 +18,6 @@ create table if not exists public.listings (
   sold_at timestamptz,
   featured_image_url text,
   images text[] not null default '{}',
-  amenities text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   created_by uuid

@@ -20,9 +20,8 @@ export const listingCreateSchema = z.object({
   beds: z.number().int().min(0).optional().nullable(),
   baths: z.number().min(0).optional().nullable(),
   sqft: z.number().int().min(0).optional().nullable(),
-  propertyType: z.enum(["apartment", "detached", "townhouse", "condo"]).optional().nullable(),
+  propertyType: z.string().max(80).optional().nullable(),
   status: z.enum(["active", "sold", "draft"]).default("draft"),
-  amenities: z.array(z.string().min(1).max(120)).max(100).optional(),
   featuredImageUrl: imageUrl.optional().nullable(),
   images: z.array(imageUrl).max(50).optional(),
 });
@@ -38,3 +37,20 @@ export const listingUpdateSchema = listingCreateSchema.partial().extend({
 export type ListingCreateInput = z.infer<typeof listingCreateSchema>;
 /** Inferred type from {@link listingUpdateSchema}. */
 export type ListingUpdateInput = z.infer<typeof listingUpdateSchema>;
+
+/**
+ * Request body for `PUT /api/admin/listings/categories`. Values/icons are
+ * optional here; the store derives slugs and drops blank rows on save.
+ */
+export const listingCategoriesUpdateSchema = z.object({
+  categories: z
+    .array(
+      z.object({
+        value: z.string().max(80).optional(),
+        label: z.string().max(120).optional(),
+        iconGrey: z.string().max(2000).optional(),
+        iconBlue: z.string().max(2000).optional(),
+      }),
+    )
+    .max(20),
+});

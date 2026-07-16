@@ -3,16 +3,11 @@
 /** Publication state for a listing in the store or database. */
 export type ListingStatus = "active" | "sold" | "draft";
 
-/** Categorization of a listing by built form. */
-export type PropertyType = "apartment" | "detached" | "townhouse" | "condo";
-
-/** Allowed values for {@link PropertyType}, suitable for `<select>` options. */
-export const PROPERTY_TYPES: PropertyType[] = [
-  "apartment",
-  "detached",
-  "townhouse",
-  "condo",
-];
+/**
+ * A listing's category slug (e.g. "leases", "detached"). Categories are
+ * admin-editable, so this is a free-form string rather than a fixed enum.
+ */
+export type PropertyType = string;
 
 /**
  * Property listing record: pricing, address, media, and lifecycle fields.
@@ -41,7 +36,6 @@ export type ListingRow = {
   sold_at: string | null;
   featured_image_url: string | null;
   images: string[];
-  amenities: string[];
   created_at: string;
   updated_at: string;
   created_by: string | null;

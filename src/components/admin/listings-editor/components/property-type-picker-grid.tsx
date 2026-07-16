@@ -1,18 +1,27 @@
 import Image from "next/image";
 
-import type { PropertyType } from "@/components/admin/listings-editor/types";
-import { PROPERTY_TYPE_OPTIONS } from "@/lib/listings/property-type-options";
+import type { ListingCategory } from "@/lib/listings/listing-categories";
 
 type PropertyTypePickerGridProps = {
-  value: "" | PropertyType;
-  onChange: (type: PropertyType) => void;
+  value: string;
+  categories: ListingCategory[];
+  onChange: (type: string) => void;
 };
 
-export function PropertyTypePickerGrid({ value, onChange }: PropertyTypePickerGridProps) {
+export function PropertyTypePickerGrid({ value, categories, onChange }: PropertyTypePickerGridProps) {
+  if (categories.length === 0) {
+    return (
+      <p className="text-sm text-slate-600">
+        No categories yet. Add one under Listing categories in the admin first.
+      </p>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 gap-4">
-      {PROPERTY_TYPE_OPTIONS.map(({ value: type, label, iconGrey, iconBlue }) => {
+      {categories.map(({ value: type, label, iconGrey, iconBlue }) => {
         const selected = value === type;
+        const icon = selected ? iconBlue : iconGrey;
         return (
           <button
             key={type}
@@ -25,14 +34,16 @@ export function PropertyTypePickerGrid({ value, onChange }: PropertyTypePickerGr
                 : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
             }`}
           >
-            <Image
-              src={selected ? iconBlue : iconGrey}
-              alt=""
-              width={36}
-              height={36}
-              unoptimized
-              className="h-9 w-9 object-contain"
-            />
+            {icon ? (
+              <Image
+                src={icon}
+                alt=""
+                width={36}
+                height={36}
+                unoptimized
+                className="h-9 w-9 object-contain"
+              />
+            ) : null}
             <span className={`text-sm font-medium ${selected ? "text-[#3A6696]" : "text-slate-600"}`}>
               {label}
             </span>

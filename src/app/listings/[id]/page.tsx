@@ -6,6 +6,8 @@ import {
   fetchPostalCentroids,
   fetchPublicListingById,
 } from "@/lib/listings/query";
+import { getShowNearbyListings } from "@/lib/settings/nearby-listings";
+import { getListingCategories } from "@/lib/listings/listing-categories-store";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -82,6 +84,15 @@ export default async function ListingDetailPage(ctx: Params) {
     notFound();
   }
 
+  const [showNearby, categories] = await Promise.all([
+    getShowNearbyListings(),
+    getListingCategories(),
+  ]);
+
+  if (!showNearby) {
+    return <ListingDetailView listing={listing} nearby={[]} categories={categories} />;
+  }
+
   const { items } = await fetchListings(listing.status === "sold" ? "sold" : "active", {
     page: 1,
     limit: 100,
@@ -118,5 +129,5 @@ export default async function ListingDetailPage(ctx: Params) {
     .slice(0, 5)
     .map((entry) => entry.item);
 
-  return <ListingDetailView listing={listing} nearby={nearby} />;
+  return <ListingDetailView listing={listing} nearby={nearby} categories={categories} />;
 }

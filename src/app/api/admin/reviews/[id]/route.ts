@@ -1,6 +1,6 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
-import { deleteReviewAdmin, updateReviewAdmin } from "@/lib/reviews/admin";
+import { deleteReviewAdmin, fetchAllReviewsAdmin, updateReviewAdmin } from "@/lib/reviews/admin";
 import { reviewUpdateSchema } from "@/lib/validations/reviews";
 
 type Params = { params: Promise<{ id: string }> };
@@ -33,7 +33,8 @@ export async function PATCH(request: Request, ctx: Params) {
 
   try {
     const review = await updateReviewAdmin(id, parsed.data);
-    return jsonOk({ review });
+    const reviews = await fetchAllReviewsAdmin();
+    return jsonOk({ review, reviews });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not update review";
     const status = message === "Review not found" ? 404 : 400;
@@ -57,7 +58,8 @@ export async function DELETE(request: Request, ctx: Params) {
 
   try {
     await deleteReviewAdmin(id);
-    return jsonOk({ deleted: true, id });
+    const reviews = await fetchAllReviewsAdmin();
+    return jsonOk({ deleted: true, id, reviews });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not delete review";
     return jsonError(message, message === "Review not found" ? 404 : 400, "NOT_FOUND");

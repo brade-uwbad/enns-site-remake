@@ -1,9 +1,5 @@
+import { titleCaseSlug } from "@/lib/listings/listing-categories";
 import {
-  amenitySelectionsFromStored,
-  type ListingAmenitySelections,
-} from "@/lib/listings/listing-amenities";
-import {
-  PROPERTY_TYPE_LABEL,
   type EditorState,
   type Listing,
   type PropertyType,
@@ -17,7 +13,7 @@ export function deriveSubtitle(
   const parts = [
     form.beds.trim() ? `${form.beds.trim()} Bed` : null,
     form.baths.trim() ? `${form.baths.trim()} Bath` : null,
-    propertyType ? PROPERTY_TYPE_LABEL[propertyType] : null,
+    propertyType ? titleCaseSlug(propertyType) : null,
     form.city.trim() ? `in ${form.city.trim()}` : null,
   ].filter(Boolean);
   return parts.length ? parts.join(" ") : null;
@@ -43,7 +39,6 @@ export type ListingWritePayload = {
   addressLine: string;
   priceDollars: number | null;
   description: string | null;
-  amenities: string[];
   images: string[];
   featuredImageUrl: string | null;
   status: EditorState["status"];
@@ -57,7 +52,7 @@ export function buildListingWritePayload(
   form: EditorState,
   images: string[],
   options?: { existing?: Pick<Listing, "property_type"> | null },
-): Omit<ListingWritePayload, "amenities"> {
+): ListingWritePayload {
   const propertyType = form.propertyType || options?.existing?.property_type || null;
   const address = form.addressLine.trim();
   const beds = parseIntOrNull(form.beds);
@@ -110,7 +105,6 @@ export function toEditorState(listing: Listing): EditorState {
         ? ""
         : String(listing.price_dollars),
     description: listing.description ?? "",
-    amenitySelections: amenitySelectionsFromStored(listing.amenities ?? []),
     imagesText: images.join("\n"),
     status: listing.status,
     beds: listing.beds === null || listing.beds === undefined ? "" : String(listing.beds),
@@ -145,14 +139,4 @@ export function splitList(text: string) {
     .split(/[,\n]/)
     .map((s) => s.trim())
     .filter(Boolean);
-}
-
-export function toggleAmenitySelection(
-  current: ListingAmenitySelections,
-  id: keyof ListingAmenitySelections,
-): ListingAmenitySelections {
-  return {
-    ...current,
-    [id]: !current[id],
-  };
 }

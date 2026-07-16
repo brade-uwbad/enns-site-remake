@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { useAdminUser } from "@/hooks/use-admin-user";
-
-type PropertyType = "apartment" | "detached" | "townhouse" | "condo";
+import { SoldRibbon } from "@/components/listings/sold-ribbon";
+import { labelForCategory, type ListingCategory } from "@/lib/listings/listing-categories";
 
 type Listing = {
   id: string;
@@ -19,50 +19,10 @@ type Listing = {
   beds: number | null;
   baths: number | null;
   sqft: number | null;
-  property_type: PropertyType | null;
-  amenities: string[];
+  property_type: string | null;
   images: string[];
   featured_image_url: string | null;
   status: "active" | "sold" | "draft";
-};
-
-const CATEGORIES: {
-  label: string;
-  value: PropertyType;
-  iconGrey: string;
-  iconBlue: string;
-}[] = [
-  {
-    label: "Apartment",
-    value: "apartment",
-    iconGrey: "/icons/house_grey.png",
-    iconBlue: "/icons/house_blue.png",
-  },
-  {
-    label: "Detached",
-    value: "detached",
-    iconGrey: "/icons/detached_grey.png",
-    iconBlue: "/icons/detached_blue.png",
-  },
-  {
-    label: "Townhouse",
-    value: "townhouse",
-    iconGrey: "/icons/townhouse_grey.png",
-    iconBlue: "/icons/townhouse_blue.png",
-  },
-  {
-    label: "Condo",
-    value: "condo",
-    iconGrey: "/icons/condo_grey.png",
-    iconBlue: "/icons/condo_blue.png",
-  },
-];
-
-const PROPERTY_LABEL: Record<PropertyType, string> = {
-  apartment: "Apartment",
-  detached: "Detached",
-  townhouse: "Townhouse",
-  condo: "Condo",
 };
 
 type Filters = {
@@ -71,7 +31,7 @@ type Filters = {
   maxPrice: string;
   beds: string;
   q: string;
-  propertyType: "" | PropertyType;
+  propertyType: string;
 };
 
 function formatPrice(priceDollars: number | null) {
@@ -86,9 +46,9 @@ function formatPrice(priceDollars: number | null) {
   }).format(priceDollars);
 }
 
-function cardSpecLine(listing: Listing) {
+function cardSpecLine(listing: Listing, categories: ListingCategory[]) {
   const parts = [
-    listing.property_type ? PROPERTY_LABEL[listing.property_type] : null,
+    listing.property_type ? labelForCategory(categories, listing.property_type) : null,
     listing.beds !== null ? `${listing.beds} Bed` : null,
     listing.baths !== null ? `${listing.baths} Bath` : null,
   ].filter(Boolean);
@@ -139,7 +99,7 @@ function buildQuery(filters: Filters) {
   return params.toString();
 }
 
-export function ListingsGrid() {
+export function ListingsGrid({ categories }: { categories: ListingCategory[] }) {
   const { admin } = useAdminUser();
   const [filters, setFilters] = useState<Filters>({
     status: "active",
@@ -193,41 +153,46 @@ export function ListingsGrid() {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-start sm:justify-center sm:gap-5">
-        {CATEGORIES.map((cat) => {
-          const selected = activeCategory === cat.value;
-          return (
-            <button
-              key={cat.label}
-              type="button"
-              onClick={() =>
-                setFilters((prev) => ({
-                  ...prev,
-                  propertyType: prev.propertyType === cat.value ? "" : cat.value,
-                }))
-              }
-              className={`flex w-full flex-col items-center gap-3 rounded-md bg-white px-3 py-4 transition sm:w-[108px] ${
-                selected
-                  ? "border border-[#3A6696] shadow-none"
-                  : "border border-transparent shadow-[0_4px_14px_rgba(15,23,42,0.08)]"
-              }`}
-              aria-pressed={selected}
-            >
-              <Image
-                src={selected ? cat.iconBlue : cat.iconGrey}
-                alt=""
-                width={24}
-                height={24}
-                unoptimized
-                className="h-6 w-6 shrink-0 object-contain"
-              />
-              <span className={`text-xs font-medium ${selected ? "text-[#3A6696]" : "text-slate-500"}`}>
-                {cat.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {categories.length > 0 ? (
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-start sm:justify-center sm:gap-5">
+          {categories.map((cat) => {
+            const selected = activeCategory === cat.value;
+            const icon = selected ? cat.iconBlue : cat.iconGrey;
+            return (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    propertyType: prev.propertyType === cat.value ? "" : cat.value,
+                  }))
+                }
+                className={`flex w-full flex-col items-center gap-3 rounded-md bg-white px-3 py-4 transition sm:w-[108px] ${
+                  selected
+                    ? "border border-[#3A6696] shadow-none"
+                    : "border border-transparent shadow-[0_4px_14px_rgba(15,23,42,0.08)]"
+                }`}
+                aria-pressed={selected}
+              >
+                {icon ? (
+                  <Image
+                    src={icon}
+                    alt=""
+                    width={24}
+                    height={24}
+                    unoptimized
+                    className="h-6 w-6 shrink-0 object-contain"
+                  />
+                ) : null}
+                <span className={`text-xs font-medium ${selected ? "text-[#3A6696]" : "text-slate-500"}`}>
+                  {cat.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-3 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-2">
         <div className="relative w-full min-w-0 lg:w-40 lg:shrink-0">
@@ -364,11 +329,7 @@ export function ListingsGrid() {
                 height={750}
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
               />
-              {listing.status === "sold" ? (
-                <span className="absolute left-2 top-2 rounded-sm bg-slate-900/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
-                  Sold
-                </span>
-              ) : null}
+              {listing.status === "sold" ? <SoldRibbon /> : null}
             </div>
             <div className="space-y-2 px-4 py-3">
               <p className="line-clamp-1 text-base font-semibold text-slate-900">
@@ -378,7 +339,9 @@ export function ListingsGrid() {
                 <p className="text-sm font-semibold text-slate-900">
                   {formatPrice(listing.price_dollars)}
                 </p>
-                <p className="line-clamp-1 text-xs text-slate-500">{cardSpecLine(listing)}</p>
+                <p className="line-clamp-1 text-xs text-slate-500">
+                  {cardSpecLine(listing, categories)}
+                </p>
               </div>
             </div>
           </Link>

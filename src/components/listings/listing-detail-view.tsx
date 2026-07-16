@@ -4,11 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ListingDetailGallery } from "@/components/listings/listing-detail-gallery";
 import { ListingAdminActions } from "@/components/listings/listing-admin-actions";
-import {
-  amenityIconPath,
-  canonicalAmenitiesFromStored,
-  type ListingAmenityLabel,
-} from "@/lib/listings/listing-amenities";
+import { ListingContactDialog } from "@/components/listings/listing-contact-dialog";
+import { labelForCategory, type ListingCategory } from "@/lib/listings/listing-categories";
 
 type Listing = {
   id: string;
@@ -23,10 +20,9 @@ type Listing = {
   beds: number | null;
   baths: number | null;
   sqft: number | null;
-  property_type: "apartment" | "detached" | "townhouse" | "condo" | null;
+  property_type: string | null;
   featured_image_url: string | null;
   images: string[];
-  amenities: string[];
   status: "active" | "sold" | "draft";
 };
 
@@ -48,46 +44,24 @@ function fullAddress(listing: Listing) {
     .join(", ");
 }
 
-const PROPERTY_TYPE_LABEL: Record<NonNullable<Listing["property_type"]>, string> = {
-  apartment: "Apartment",
-  detached: "Detached",
-  townhouse: "Townhouse",
-  condo: "Condo",
-};
-
-function specLine(listing: Listing) {
+function specLine(listing: Listing, categories: ListingCategory[]) {
   const parts = [
     listing.beds !== null ? `${listing.beds} Bed` : null,
     listing.baths !== null ? `${listing.baths} Bath` : null,
-    listing.property_type ? PROPERTY_TYPE_LABEL[listing.property_type] : null,
+    listing.property_type ? labelForCategory(categories, listing.property_type) : null,
     listing.city ? `in ${listing.city}` : null,
   ].filter(Boolean);
   return parts.join(" ");
 }
 
-function ListingAmenityRow({ label }: { label: ListingAmenityLabel }) {
-  const src = amenityIconPath(label);
-  return (
-    <li className="flex items-center gap-3 text-sm text-slate-700">
-      {src ? (
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center">
-          <Image src={src} alt="" width={24} height={24} className="max-h-6 max-w-6 object-contain" unoptimized />
-        </span>
-      ) : null}
-      <span>{label}</span>
-    </li>
-  );
-}
-
 type Props = {
   listing: Listing;
   nearby: Listing[];
+  categories: ListingCategory[];
 };
 
-export function ListingDetailView({ listing, nearby }: Props) {
+export function ListingDetailView({ listing, nearby, categories }: Props) {
   const mapQuery = encodeURIComponent(fullAddress(listing) || listing.title);
-  const soldPrefix = listing.status === "sold" ? "SOLD - " : "";
-  const amenityList = canonicalAmenitiesFromStored(listing.amenities);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
@@ -95,6 +69,7 @@ export function ListingDetailView({ listing, nearby }: Props) {
         title={listing.title}
         featuredImageUrl={listing.featured_image_url}
         images={listing.images}
+        sold={listing.status === "sold"}
       />
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
@@ -102,10 +77,9 @@ export function ListingDetailView({ listing, nearby }: Props) {
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
             <div>
               <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl md:text-[28px]">
-                {soldPrefix}
                 {listing.address_line || listing.title}
               </h1>
-              <p className="mt-1 text-sm text-slate-500">{specLine(listing)}</p>
+              <p className="mt-1 text-sm text-slate-500">{specLine(listing, categories)}</p>
             </div>
             <p className="text-lg font-semibold text-slate-900 tabular-nums sm:text-xl md:text-2xl">
               {formatPrice(listing.price_dollars)}
@@ -116,17 +90,6 @@ export function ListingDetailView({ listing, nearby }: Props) {
             {listing.description ||
               "building description building description building description building description building description building description building description building description building description."}
           </p>
-
-          {amenityList.length > 0 ? (
-            <section>
-              <h2 className="text-base font-semibold text-slate-900">What&apos;s included</h2>
-              <ul className="mt-4 grid gap-y-3 gap-x-10 sm:grid-cols-2">
-                {amenityList.map((item) => (
-                  <ListingAmenityRow key={item} label={item} />
-                ))}
-              </ul>
-            </section>
-          ) : null}
         </div>
 
         <aside className="space-y-4">
@@ -139,12 +102,7 @@ export function ListingDetailView({ listing, nearby }: Props) {
             className="h-56 w-full rounded-md border border-slate-200 bg-white"
             referrerPolicy="no-referrer-when-downgrade"
           />
-          <Link
-            href="/contact"
-            className="flex w-full items-center justify-center rounded-md border border-sky-600 bg-white px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-sky-700 hover:bg-sky-50"
-          >
-            Contact Brad about this listing
-          </Link>
+          <ListingContactDialog listingLabel={listing.address_line || listing.title} />
         </aside>
       </div>
 
@@ -179,7 +137,7 @@ export function ListingDetailView({ listing, nearby }: Props) {
                   {[
                     item.beds !== null ? `${item.beds} Bed` : null,
                     item.baths !== null ? `${item.baths} Bath` : null,
-                    item.property_type ? PROPERTY_TYPE_LABEL[item.property_type] : null,
+                    item.property_type ? labelForCategory(categories, item.property_type) : null,
                     item.city ? `in ${item.city}` : null,
                   ]
                     .filter(Boolean)
