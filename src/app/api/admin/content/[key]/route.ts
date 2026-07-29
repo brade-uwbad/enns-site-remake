@@ -26,8 +26,8 @@ export async function GET(request: Request, ctx: Params) {
     const row = await fetchSiteContent(key);
     return jsonOk({ content: row.payload, updatedAt: row.updatedAt });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to load content";
-    return jsonError(message, 500, "CONTENT_ERROR");
+    console.error("GET /api/admin/content/[key] failed:", e);
+    return jsonError("Failed to load content", 500, "CONTENT_ERROR");
   }
 }
 
@@ -63,7 +63,7 @@ export async function PUT(request: Request, ctx: Params) {
     revalidateSiteContent(key);
     return jsonOk({ content: row.payload, updatedAt: row.updatedAt });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to save content";
-    return jsonError(message, 500, "CONTENT_ERROR");
+    console.error("PUT /api/admin/content/[key] failed:", e);
+    return jsonError("Failed to save content", 500, "CONTENT_ERROR");
   }
 }

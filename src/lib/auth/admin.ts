@@ -1,5 +1,6 @@
 import { isAdminAuthBypassEnabled } from "@/lib/auth/admin-bypass";
 import { isAdminJwtUser } from "@/lib/auth/roles";
+import { timingSafeStringEqual } from "@/lib/auth/timing-safe-equal";
 import { getSupabaseAdminClient, hasSupabaseAdminConfig } from "@/lib/supabase/server";
 
 /** Admin identity returned when Supabase-backed admin auth succeeds. */
@@ -58,7 +59,7 @@ export async function requireAdmin(request: Request): Promise<AdminAuthResult> {
     if (!token) {
       return { ok: false, status: 401, message: "Missing Bearer token" };
     }
-    if (token !== staticAdminToken) {
+    if (!timingSafeStringEqual(token, staticAdminToken)) {
       return { ok: false, status: 401, message: "Invalid admin token" };
     }
     return { ok: true, user: { id: "static-admin", email: "admin@local" } };

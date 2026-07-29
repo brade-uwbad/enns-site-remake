@@ -42,7 +42,7 @@ export async function PUT(request: Request) {
     revalidatePath("/listings/[id]", "page");
     return jsonOk({ categories });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to save categories";
-    return jsonError(message, 500, "CATEGORIES_ERROR");
+    console.error("PUT /api/admin/listings/categories failed:", e);
+    return jsonError("Failed to save categories", 500, "CATEGORIES_ERROR");
   }
 }

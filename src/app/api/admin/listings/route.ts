@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const data = await createAdminListing(row);
     return jsonOk({ listing: data }, { status: 201 });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to create listing";
-    return jsonError(message, 500, "LISTINGS_ERROR");
+    console.error("POST /api/admin/listings failed:", e);
+    return jsonError("Failed to create listing", 500, "LISTINGS_ERROR");
   }
 }

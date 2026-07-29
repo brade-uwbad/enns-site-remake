@@ -30,10 +30,19 @@ export type ListQuery = z.infer<typeof listQuerySchema>;
  * @param query - Pagination and filter options (validated with {@link listQuerySchema}).
  * @returns `items` for the requested page and `total` count after filters (before pagination).
  */
+/**
+ * Reduces a user search term to characters safe to interpolate into a PostgREST
+ * `ilike`/`.or()` filter string.
+ *
+ * Uses an allowlist (letters incl. accented, digits, spaces, hyphen, apostrophe) rather than a
+ * denylist: PostgREST filter grammar treats `. , ( ) *` and the `ilike` wildcards `% _` as
+ * structural, so any of them reaching the builder could distort the OR expression. Collapses
+ * runs of whitespace and trims.
+ */
 function sanitizeSearchLike(value: string) {
   return value
-    .replace(/[%_\\]/g, "")
-    .replace(/,/g, " ")
+    .replace(/[^\p{L}\p{N}\s'-]/gu, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 

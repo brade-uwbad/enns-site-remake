@@ -86,8 +86,8 @@ export async function PUT(request: Request, ctx: Params) {
     }
     return jsonOk({ listing: data });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to update listing";
-    return jsonError(message, 500, "LISTINGS_ERROR");
+    console.error("PUT /api/admin/listings/[id] failed:", e);
+    return jsonError("Failed to update listing", 500, "LISTINGS_ERROR");
   }
 }
 
@@ -123,7 +123,7 @@ export async function DELETE(request: Request, ctx: Params) {
     }
     return jsonOk({ deleted: true, id });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to delete listing";
-    return jsonError(message, 500, "LISTINGS_ERROR");
+    console.error("DELETE /api/admin/listings/[id] failed:", e);
+    return jsonError("Failed to delete listing", 500, "LISTINGS_ERROR");
   }
 }

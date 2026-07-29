@@ -2,11 +2,17 @@ import { jsonError, jsonOk } from "@/lib/api/http";
 import { buildAdminUserMetadata } from "@/lib/auth/admin-user-metadata";
 import { formatAuthError } from "@/lib/auth/format-auth-error";
 import { checkPassword } from "@/lib/auth/password";
+import { timingSafeStringEqual } from "@/lib/auth/timing-safe-equal";
 import { getSupabaseAdminClient, hasSupabaseAdminConfig } from "@/lib/supabase/server";
 import { adminRegisterSchema } from "@/lib/validations/admin-auth";
 
 /**
- * Creates a confirmed admin user via the service role (no manual role assignment in Supabase).
+ * Creates a confirmed admin user via the service role.
+ *
+ * @remarks
+ * Because a successful call grants full admin/CMS access, the request must carry a valid
+ * invite secret in the `x-admin-invite` header matching `ADMIN_REGISTRATION_SECRET`. The
+ * route fails closed: if no secret is configured on the server, registration is refused.
  */
 export async function POST(request: Request) {
   if (!hasSupabaseAdminConfig()) {
@@ -15,6 +21,19 @@ export async function POST(request: Request) {
       503,
       "CONFIG_ERROR",
     );
+  }
+
+  // Gate: only callers holding the invite secret may create admin accounts.
+  const registrationSecret = process.env.ADMIN_REGISTRATION_SECRET;
+  if (!registrationSecret) {
+    return jsonError(
+      "Admin registration is disabled. Set ADMIN_REGISTRATION_SECRET on the server to enable it.",
+      503,
+      "CONFIG_ERROR",
+    );
+  }
+  if (!timingSafeStringEqual(request.headers.get("x-admin-invite"), registrationSecret)) {
+    return jsonError("Invalid or missing admin invite secret", 401, "UNAUTHORIZED");
   }
 
   let body: unknown;

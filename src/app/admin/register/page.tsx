@@ -50,6 +50,8 @@ export default function AdminRegisterPage() {
 
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [inviteCode, setInviteCode] = useState("");
+
   const [busy, setBusy] = useState(false);
 
   const [message, setMessage] = useState("");
@@ -90,7 +92,7 @@ export default function AdminRegisterPage() {
 
         method: "POST",
 
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-admin-invite": inviteCode.trim() },
 
         body: JSON.stringify({
 
@@ -221,6 +223,22 @@ export default function AdminRegisterPage() {
           onChange={setConfirmPassword}
 
           autoComplete="new-password"
+
+        />
+
+        <AuthField
+
+          id="register-invite"
+
+          label="Invite code"
+
+          type="password"
+
+          value={inviteCode}
+
+          onChange={setInviteCode}
+
+          autoComplete="off"
 
         />
 
