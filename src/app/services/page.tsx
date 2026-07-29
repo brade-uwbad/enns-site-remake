@@ -12,6 +12,12 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Services",
   description: "Enns Real Estate services in Kitchener–Waterloo and surrounding communities.",
+  alternates: { canonical: "/services" },
+  openGraph: {
+    title: "Services | Brad Enns",
+    description: "Enns Real Estate services in Kitchener–Waterloo and surrounding communities.",
+    url: "/services",
+  },
 };
 
 export const dynamic = "force-dynamic";

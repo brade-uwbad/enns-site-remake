@@ -1,3 +1,5 @@
+import { revalidatePath } from "next/cache";
+
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
 import { createAdminListing } from "@/lib/listings/admin";
@@ -43,6 +45,8 @@ export async function POST(request: Request) {
   const row = toListingInsert(auth.user.id, input);
   try {
     const data = await createAdminListing(row);
+    // New listing appears in the (cached) index and sitemap.
+    revalidatePath("/listings");
     return jsonOk({ listing: data }, { status: 201 });
   } catch (e) {
     console.error("POST /api/admin/listings failed:", e);

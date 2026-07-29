@@ -5,7 +5,14 @@ import { fetchSiteContent } from "@/lib/content/query";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with Brad Enns.",
+  description: "Get in touch with Brad Enns for buying, selling, or a home valuation in Kitchener–Waterloo.",
+  alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "Contact | Brad Enns",
+    description:
+      "Get in touch with Brad Enns for buying, selling, or a home valuation in Kitchener–Waterloo.",
+    url: "/contact",
+  },
 };
 
 export const dynamic = "force-dynamic";

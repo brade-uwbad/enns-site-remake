@@ -1,3 +1,5 @@
+import { revalidatePath } from "next/cache";
+
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
 import {
@@ -84,6 +86,9 @@ export async function PUT(request: Request, ctx: Params) {
     if (!data) {
       return jsonError("Listing not found", 404, "NOT_FOUND");
     }
+    // Refresh the cached detail page and index after edits.
+    revalidatePath(`/listings/${id}`);
+    revalidatePath("/listings");
     return jsonOk({ listing: data });
   } catch (e) {
     console.error("PUT /api/admin/listings/[id] failed:", e);
@@ -121,6 +126,9 @@ export async function DELETE(request: Request, ctx: Params) {
     if (!ok) {
       return jsonError("Listing not found", 404, "NOT_FOUND");
     }
+    // Drop the deleted listing from the cached detail page and index.
+    revalidatePath(`/listings/${id}`);
+    revalidatePath("/listings");
     return jsonOk({ deleted: true, id });
   } catch (e) {
     console.error("DELETE /api/admin/listings/[id] failed:", e);
