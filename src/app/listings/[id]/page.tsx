@@ -183,50 +183,44 @@ export default async function ListingDetailPage(ctx: Params) {
 
   const listingJsonLd = buildListingJsonLd(listing);
 
-  if (!showNearby) {
-    return (
-      <>
-        <JsonLd data={listingJsonLd} />
-        <ListingDetailView listing={listing} nearby={[]} categories={categories} />
-      </>
+  let nearby: Awaited<ReturnType<typeof fetchListings>>["items"] = [];
+  if (showNearby) {
+    const { items } = await fetchListings(listing.status === "sold" ? "sold" : "active", {
+      page: 1,
+      limit: 100,
+    });
+
+    const candidates = items.filter((item) => item.id !== listing.id);
+    const sourcePrefix = postalPrefix(listing.postal_code);
+    const candidatePrefixes = candidates
+      .map((item) => postalPrefix(item.postal_code))
+      .filter((p): p is string => Boolean(p));
+    const centroidMap = await fetchPostalCentroids(
+      sourcePrefix ? [sourcePrefix, ...candidatePrefixes] : candidatePrefixes,
     );
+
+    const sourceCentroid = sourcePrefix ? centroidMap[sourcePrefix] : undefined;
+    const sourceCoords = hasCoords(listing)
+      ? { latitude: listing.latitude, longitude: listing.longitude }
+      : sourceCentroid;
+
+    nearby = candidates
+      .map((item) => {
+        const itemCoords = hasCoords(item)
+          ? { latitude: item.latitude, longitude: item.longitude }
+          : undefined;
+        const p = postalPrefix(item.postal_code);
+        const c = p ? centroidMap[p] : undefined;
+        const destinationCoords = itemCoords ?? c;
+        if (!sourceCoords || !destinationCoords) {
+          return { item, distanceKm: Number.POSITIVE_INFINITY };
+        }
+        return { item, distanceKm: haversineKm(sourceCoords, destinationCoords) };
+      })
+      .sort((a, b) => a.distanceKm - b.distanceKm)
+      .slice(0, 5)
+      .map((entry) => entry.item);
   }
-
-  const { items } = await fetchListings(listing.status === "sold" ? "sold" : "active", {
-    page: 1,
-    limit: 100,
-  });
-
-  const candidates = items.filter((item) => item.id !== listing.id);
-  const sourcePrefix = postalPrefix(listing.postal_code);
-  const candidatePrefixes = candidates
-    .map((item) => postalPrefix(item.postal_code))
-    .filter((p): p is string => Boolean(p));
-  const centroidMap = await fetchPostalCentroids(
-    sourcePrefix ? [sourcePrefix, ...candidatePrefixes] : candidatePrefixes,
-  );
-
-  const sourceCentroid = sourcePrefix ? centroidMap[sourcePrefix] : undefined;
-  const sourceCoords = hasCoords(listing)
-    ? { latitude: listing.latitude, longitude: listing.longitude }
-    : sourceCentroid;
-
-  const nearby = candidates
-    .map((item) => {
-      const itemCoords = hasCoords(item)
-        ? { latitude: item.latitude, longitude: item.longitude }
-        : undefined;
-      const p = postalPrefix(item.postal_code);
-      const c = p ? centroidMap[p] : undefined;
-      const destinationCoords = itemCoords ?? c;
-      if (!sourceCoords || !destinationCoords) {
-        return { item, distanceKm: Number.POSITIVE_INFINITY };
-      }
-      return { item, distanceKm: haversineKm(sourceCoords, destinationCoords) };
-    })
-    .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, 5)
-    .map((entry) => entry.item);
 
   return (
     <>
