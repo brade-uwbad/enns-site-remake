@@ -4,10 +4,13 @@ export type ContentEditorField = {
   name: string;
   label: string;
   multiline?: boolean;
+  /** Renders an image upload + preview instead of a text input. */
+  image?: boolean;
 };
 
 export const SITE_CONTENT_EDITOR_FIELDS: Record<SiteContentKey, ContentEditorField[]> = {
   homepage: [
+    { name: "heroImageUrl", label: "Hero background image", image: true },
     { name: "heroEyebrow", label: "Hero eyebrow" },
     { name: "heroTitle", label: "Hero title" },
     { name: "heroDescription", label: "Hero description", multiline: true },
@@ -37,15 +40,11 @@ export const SITE_CONTENT_EDITOR_FIELDS: Record<SiteContentKey, ContentEditorFie
     { name: "email", label: "Email display" },
     { name: "ctaLabel", label: "CTA button label" },
   ],
+  // The services page has a variable number of cards, so it uses a dedicated
+  // editor (ServicesContentEditor) rather than these flat fields.
   services: [
     { name: "heroTitle", label: "Page title" },
     { name: "heroDescription", label: "Intro", multiline: true },
-    { name: "appraisalTitle", label: "Appraisal card title" },
-    { name: "appraisalBody", label: "Appraisal card body", multiline: true },
-    { name: "buyingTitle", label: "Buying card title" },
-    { name: "buyingBody", label: "Buying card body", multiline: true },
-    { name: "sellingTitle", label: "Selling card title" },
-    { name: "sellingBody", label: "Selling card body", multiline: true },
   ],
   contact: [
     { name: "title", label: "Page title" },

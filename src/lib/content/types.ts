@@ -5,6 +5,7 @@ export type HomepageContent = {
   heroTitle: string;
   heroDescription: string;
   heroCtaLabel: string;
+  heroImageUrl: string;
   primaryCtaLabel: string;
   secondaryCtaLabel: string;
   sectionTitle: string;
@@ -32,15 +33,17 @@ export type AboutContent = {
   ctaLabel: string;
 };
 
+export type ServiceCard = {
+  title: string;
+  body: string;
+  /** Public URL/path of the card icon. Empty string = no icon. */
+  iconUrl: string;
+};
+
 export type ServicesContent = {
   heroTitle: string;
   heroDescription: string;
-  appraisalTitle: string;
-  appraisalBody: string;
-  buyingTitle: string;
-  buyingBody: string;
-  sellingTitle: string;
-  sellingBody: string;
+  services: ServiceCard[];
 };
 
 export type ContactContent = {

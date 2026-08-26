@@ -12,6 +12,7 @@ export default async function HomePage() {
       heroTitle={payload.heroTitle}
       heroDescription={payload.heroDescription}
       heroCtaLabel={payload.heroCtaLabel}
+      heroImageUrl={payload.heroImageUrl}
     />
   );
 }

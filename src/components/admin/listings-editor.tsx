@@ -3,19 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import {
-  amenitiesArrayFromSelections,
-  type ListingAmenityLabel,
-} from "@/lib/listings/listing-amenities";
 import { EditorToast } from "@/components/admin/listings-editor/editor-toast";
+import { AdminListingsGrid } from "@/components/admin/listings-editor/components/admin-listings-grid";
+import { NearbyListingsToggle } from "@/components/admin/nearby-listings-toggle";
 import { CreateWizard } from "@/components/admin/listings-editor/components/create-wizard";
 import {
+  movePhoto,
   reorderPhotosToMain,
   type EditorPhotoItem,
 } from "@/components/admin/listings-editor/components/editor-photos-panel";
 import { EditWorkspace } from "@/components/admin/listings-editor/components/edit-workspace";
-import { adminLinkClass, AdminChrome } from "@/components/admin/admin-ui";
-import { TopControls } from "@/components/admin/listings-editor/components/top-controls";
+import { adminLinkClass, adminPrimaryButtonClass, AdminChrome, AdminPageHeader } from "@/components/admin/admin-ui";
 import {
   BLANK_EDITOR_STATE,
   type EditorPanel,
@@ -27,15 +25,17 @@ import {
   buildListingWritePayload,
   splitList,
   toEditorState,
-  toggleAmenitySelection,
 } from "@/components/admin/listings-editor/utils";
 import { useAdminUser } from "@/hooks/use-admin-user";
+import type { ListingCategory } from "@/lib/listings/listing-categories";
 import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 
 type ListingsEditorProps = {
   initialListings: Listing[];
+  categories: ListingCategory[];
   startCreate?: boolean;
   startEditId?: string;
+  showNearbyListings?: boolean;
 };
 
 function resolveInitialEditorState(
@@ -60,8 +60,10 @@ function resolveInitialEditorState(
 
 export function ListingsEditor({
   initialListings,
+  categories,
   startCreate = false,
   startEditId,
+  showNearbyListings = true,
 }: ListingsEditorProps) {
   const router = useRouter();
   const initial = resolveInitialEditorState(initialListings, startCreate, startEditId);
@@ -74,6 +76,7 @@ export function ListingsEditor({
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [wizardStep, setWizardStep] = useState(0);
   const [editorPanel, setEditorPanel] = useState<EditorPanel>("menu");
+  const [isCreating, setIsCreating] = useState(startCreate);
 
   useEffect(() => {
     if (!message) {
@@ -112,6 +115,7 @@ export function ListingsEditor({
   }, [selectedPhotos]);
 
   function chooseListing(id: string) {
+    setIsCreating(false);
     setSelectedId(id);
     const listing = listings.find((l) => l.id === id);
     setForm(listing ? toEditorState(listing) : BLANK_EDITOR_STATE);
@@ -142,15 +146,14 @@ export function ListingsEditor({
     setUploadFiles(files);
   }
 
-  function setField<K extends keyof EditorState>(key: K, value: EditorState[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+  function movePhotoBy(photo: EditorPhotoItem, delta: number) {
+    const { existingUrls, files } = movePhoto(photo, delta, existingPhotos, selectedPhotos);
+    setField("imagesText", existingUrls.join("\n"));
+    setUploadFiles(files);
   }
 
-  function toggleAmenity(id: ListingAmenityLabel) {
-    setForm((prev) => ({
-      ...prev,
-      amenitySelections: toggleAmenitySelection(prev.amenitySelections, id),
-    }));
+  function setField<K extends keyof EditorState>(key: K, value: EditorState[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   function requireAccessTokenForWrite(): boolean {
@@ -228,10 +231,7 @@ export function ListingsEditor({
       if (!postalCode) {
         throw new Error("Postal code is required.");
       }
-      const payload = {
-        ...buildListingWritePayload(form, images, {}),
-        amenities: amenitiesArrayFromSelections(form.amenitySelections),
-      };
+      const payload = buildListingWritePayload(form, images, {});
       const res = await fetch("/api/admin/listings", {
         method: "POST",
         headers: authHeaders(),
@@ -244,7 +244,12 @@ export function ListingsEditor({
 
       setMessage(hadPendingUpload ? "Uploaded image(s); listing created." : "Listing created.");
       await loadListings();
-      resetToNew();
+      setIsCreating(false);
+      setSelectedId("");
+      setForm(BLANK_EDITOR_STATE);
+      setUploadFiles([]);
+      setWizardStep(0);
+      setEditorPanel("menu");
       router.replace("/admin/listings");
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to create listing.");
@@ -275,10 +280,7 @@ export function ListingsEditor({
         throw new Error("Postal code is required.");
       }
       const existing = listings.find((l) => l.id === selectedId);
-      const payload = {
-        ...buildListingWritePayload(form, images, { existing }),
-        amenities: amenitiesArrayFromSelections(form.amenitySelections),
-      };
+      const payload = buildListingWritePayload(form, images, { existing });
       const res = await fetch(`/api/admin/listings/${selectedId}`, {
         method: "PUT",
         headers: authHeaders(),
@@ -315,9 +317,10 @@ export function ListingsEditor({
     return false;
   }
 
-  async function deleteListing() {
-    if (!selectedId) {
-      setMessage("Pick a listing first.");
+  async function deleteListing(id: string) {
+    const listing = listings.find((l) => l.id === id);
+    const label = listing?.address_line || listing?.title || "this listing";
+    if (!window.confirm(`Delete "${label}" permanently?`)) {
       return;
     }
     if (!requireAccessTokenForWrite()) {
@@ -326,7 +329,7 @@ export function ListingsEditor({
     setBusy(true);
     setMessage("");
     try {
-      const res = await fetch(`/api/admin/listings/${selectedId}`, {
+      const res = await fetch(`/api/admin/listings/${id}`, {
         method: "DELETE",
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
       });
@@ -335,8 +338,10 @@ export function ListingsEditor({
         throw new Error(data?.error?.message ?? "Failed to delete listing.");
       }
       setMessage("Listing deleted.");
-      setSelectedId("");
-      setForm(BLANK_EDITOR_STATE);
+      if (selectedId === id) {
+        setSelectedId("");
+        setForm(BLANK_EDITOR_STATE);
+      }
       await loadListings();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to delete listing.");
@@ -345,73 +350,8 @@ export function ListingsEditor({
     }
   }
 
-  async function markAsSold() {
-    if (!selectedId) {
-      setMessage("Pick a listing first.");
-      return;
-    }
-    if (!requireAccessTokenForWrite()) {
-      return;
-    }
-    setBusy(true);
-    setMessage("");
-    try {
-      const res = await fetch(`/api/admin/listings/${selectedId}`, {
-        method: "PATCH",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          status: "sold",
-          soldAt: new Date().toISOString(),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error?.message ?? "Failed to mark listing as sold.");
-      }
-      setMessage("Listing marked as sold.");
-      await loadListings();
-      setForm((prev) => ({ ...prev, status: "sold" }));
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Failed to mark listing as sold.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function markAsActive() {
-    if (!selectedId) {
-      setMessage("Pick a listing first.");
-      return;
-    }
-    if (!requireAccessTokenForWrite()) {
-      return;
-    }
-    setBusy(true);
-    setMessage("");
-    try {
-      const res = await fetch(`/api/admin/listings/${selectedId}`, {
-        method: "PATCH",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          status: "active",
-          soldAt: null,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error?.message ?? "Failed to mark listing as active.");
-      }
-      setMessage("Listing marked as active.");
-      await loadListings();
-      setForm((prev) => ({ ...prev, status: "active" }));
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Failed to mark listing as active.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   function resetToNew() {
+    setIsCreating(true);
     setSelectedId("");
     setForm(BLANK_EDITOR_STATE);
     setUploadFiles([]);
@@ -454,7 +394,8 @@ export function ListingsEditor({
   const backHref = listingBackId ? `/listings/${listingBackId}` : "/listings";
   const backLabel = listingBackId ? "← Back to listing" : "← Back to listings";
   const minimalEditChrome = deepLinkMode && isEditing;
-  const isCreateWizard = !isEditing;
+  const isCreateWizard = isCreating && !isEditing;
+  const isManageView = !isEditing && !isCreating;
 
   return (
     <>
@@ -465,58 +406,72 @@ export function ListingsEditor({
             isEditing || isCreateWizard ? "flex min-h-0 w-full flex-1 flex-col" : "space-y-6"
           }
         >
-        {!minimalEditChrome && !isCreateWizard ? (
+        {!minimalEditChrome && !isCreateWizard && isManageView ? (
+          <AdminPageHeader
+            breadcrumb={
+              <Link href="/admin/dashboard" className={adminLinkClass}>
+                ← Back to dashboard
+              </Link>
+            }
+            title="Admin listings"
+            description="Create, update, and delete listings without terminal commands."
+            actions={
+              <button
+                type="button"
+                onClick={resetToNew}
+                disabled={busy}
+                className={`${adminPrimaryButtonClass} px-4 py-2`}
+              >
+                Create new listing
+              </button>
+            }
+          />
+        ) : !minimalEditChrome && !isCreateWizard ? (
           <div className="space-y-3">
-            <Link
-              href={backHref}
-              className={`inline-flex text-sm ${adminLinkClass}`}
-            >
-              {backLabel}
-            </Link>
+            {!deepLinkMode ? (
+              <Link href={backHref} className={`inline-flex text-sm ${adminLinkClass}`}>
+                {backLabel}
+              </Link>
+            ) : null}
             <div>
               <h1 className="text-3xl font-semibold tracking-tight text-[#140000] sm:text-4xl">{pageTitle}</h1>
-              {!deepLinkMode ? (
-                <p className="mt-2 text-sm text-zinc-600">
-                  Create, update, and delete listings without terminal commands.
-                </p>
-              ) : null}
             </div>
           </div>
         ) : null}
 
-        {!deepLinkMode && !isCreateWizard ? (
-          <TopControls
-            listings={listings}
-            selectedId={selectedId}
-            busy={busy}
-            formStatus={form.status}
-            onChooseListing={chooseListing}
-            onCreateNewListing={resetToNew}
-            onDeleteListing={deleteListing}
-            onMarkAsSold={markAsSold}
-            onMarkAsActive={markAsActive}
-          />
+        {!deepLinkMode && isManageView ? (
+          <>
+            <AdminListingsGrid
+              listings={listings}
+              categories={categories}
+              busy={busy}
+              onEditListing={chooseListing}
+              onDeleteListing={(id) => void deleteListing(id)}
+            />
+            <NearbyListingsToggle initialEnabled={showNearbyListings} />
+          </>
         ) : null}
 
-        {!isEditing ? (
+        {isCreateWizard ? (
           <CreateWizard
             wizardStep={wizardStep}
             busy={busy}
             form={form}
+            categories={categories}
             existingPhotos={existingPhotos}
             selectedPhotos={selectedPhotos}
             cancelHref="/admin/listings"
             onSetField={setField}
-            onToggleAmenity={toggleAmenity}
             onAddUploadFiles={addUploadFiles}
             onRemoveQueuedPhoto={removeQueuedUploadFile}
             onRemoveExistingPhoto={removeExistingImage}
             onSetMainPhoto={setMainPhoto}
+            onMovePhoto={movePhotoBy}
             onPrevStep={prevStep}
             onNextStep={nextStep}
             onPublish={saveFromWizard}
           />
-        ) : (
+        ) : isEditing ? (
           <EditWorkspace
             busy={busy}
             editorPanel={editorPanel}
@@ -526,14 +481,14 @@ export function ListingsEditor({
             backHref={backHref}
             onSetPanel={setEditorPanel}
             onSetField={setField}
-            onToggleAmenity={toggleAmenity}
             onAddUploadFiles={addUploadFiles}
             onRemoveQueuedPhoto={removeQueuedUploadFile}
             onRemoveExistingPhoto={removeExistingImage}
             onSetMainPhoto={setMainPhoto}
+            onMovePhoto={movePhotoBy}
             onSavePanel={saveEditorPanel}
           />
-        )}
+        ) : null}
         </div>
       </AdminChrome>
     </>

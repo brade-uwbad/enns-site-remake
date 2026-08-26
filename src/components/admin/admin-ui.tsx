@@ -26,14 +26,26 @@ type AdminPageHeaderProps = {
   title: string;
   description?: string;
   breadcrumb?: ReactNode;
+  actions?: ReactNode;
 };
 
-export function AdminPageHeader({ title, description, breadcrumb }: AdminPageHeaderProps) {
+export function AdminPageHeader({ title, description, breadcrumb, actions }: AdminPageHeaderProps) {
   return (
     <header className="mb-8">
       {breadcrumb ? <div className="mb-2 text-sm text-slate-600">{breadcrumb}</div> : null}
-      <h1 className="text-2xl font-semibold tracking-tight text-[#140000] sm:text-3xl md:text-4xl">{title}</h1>
-      {description ? <p className="mt-2 max-w-2xl text-sm text-slate-600">{description}</p> : null}
+      <div
+        className={
+          actions
+            ? "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            : undefined
+        }
+      >
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-[#140000] sm:text-3xl md:text-4xl">{title}</h1>
+          {description ? <p className="mt-2 max-w-2xl text-sm text-slate-600">{description}</p> : null}
+        </div>
+        {actions ? <div className="shrink-0">{actions}</div> : null}
+      </div>
     </header>
   );
 }

@@ -4,6 +4,7 @@ import {
   ABOUT_FEATURED_REVIEW_LIMIT,
 } from "@/lib/reviews/constants";
 import { normalizeReview } from "@/lib/reviews/normalize";
+import { planReviewOrder } from "@/lib/reviews/reorder";
 import type { ReviewRow } from "@/lib/store/types";
 import {
   countFeaturedReviews,
@@ -136,36 +137,72 @@ export async function createReviewAdmin(input: ReviewUpsertInput): Promise<Revie
 }
 
 export async function updateReviewAdmin(id: string, input: Partial<ReviewUpsertInput>): Promise<ReviewRow> {
-  if (input.isFeatured) {
-    const featuredCount = await countFeaturedReviewsAdmin(id);
-    if (featuredCount >= ABOUT_FEATURED_REVIEW_LIMIT) {
+  const all = await fetchAllReviewsAdmin();
+  const current = all.find((review) => review.id === id);
+  if (!current) {
+    throw new Error("Review not found");
+  }
+
+  // Resolve the review's next curation state. Hiding a review also unfeatures it.
+  const nextIsVisible = input.isVisible ?? current.is_visible;
+  let nextIsFeatured = input.isFeatured ?? current.is_featured;
+  if (!nextIsVisible) {
+    nextIsFeatured = false;
+  }
+
+  const wasShown = current.is_featured && current.is_visible;
+  const willBeShown = nextIsFeatured && nextIsVisible;
+
+  // Enforce the About-page limit only when this review is newly joining the row.
+  if (willBeShown && !wasShown) {
+    const shownOthers = all.filter(
+      (review) => review.id !== id && review.is_featured && review.is_visible,
+    ).length;
+    if (shownOthers >= ABOUT_FEATURED_REVIEW_LIMIT) {
       throw new Error(
         `Only ${ABOUT_FEATURED_REVIEW_LIMIT} reviews can be featured on the About page. Unfeature another review first.`,
       );
     }
   }
 
+  // Field edits that don't affect ordering.
   const patch: Record<string, unknown> = {};
-  if (input.title !== undefined) patch.title = input.title.trim();
-  if (input.authorName !== undefined) patch.author_name = input.authorName.trim();
-  if (input.body !== undefined) patch.body = input.body.trim();
-  if (input.rating !== undefined) patch.rating = input.rating;
-  if (input.isVisible !== undefined) patch.is_visible = input.isVisible;
-  if (input.isFeatured !== undefined) patch.is_featured = input.isFeatured;
-  if (input.displayOrder !== undefined) {
-    await assertDisplayOrderAvailable(input.displayOrder, id);
-    patch.display_order = input.displayOrder;
+  if (input.title !== undefined) {
+    patch.title = input.title.trim();
+  }
+  if (input.authorName !== undefined) {
+    patch.author_name = input.authorName.trim();
+  }
+  if (input.body !== undefined) {
+    patch.body = input.body.trim();
+  }
+  if (input.rating !== undefined) {
+    patch.rating = input.rating;
+  }
+  if (input.isVisible !== undefined) {
+    patch.is_visible = nextIsVisible;
+  }
+  if (nextIsFeatured !== current.is_featured) {
+    patch.is_featured = nextIsFeatured;
   }
 
-  if (input.isVisible === false) {
-    patch.is_featured = false;
-  }
-
-  if (input.isFeatured === true && input.displayOrder === undefined) {
-    patch.display_order = await findEndDisplayOrder(id);
+  // Work out the position changes (swap / compaction / append) for this review
+  // and any siblings it displaces, keeping the row contiguous as 1..N.
+  const assignments = planReviewOrder(all, id, {
+    nextIsFeatured,
+    nextIsVisible,
+    requestedOrder: input.displayOrder,
+  });
+  const siblingUpdates = assignments.filter((assignment) => assignment.id !== id);
+  const ownOrder = assignments.find((assignment) => assignment.id === id);
+  if (ownOrder) {
+    patch.display_order = ownOrder.displayOrder;
   }
 
   if (!hasSupabaseAdminConfig()) {
+    for (const sibling of siblingUpdates) {
+      updateReviewMemory(sibling.id, { display_order: sibling.displayOrder });
+    }
     const updated = updateReviewMemory(id, patch);
     if (!updated) {
       throw new Error("Review not found");
@@ -174,6 +211,20 @@ export async function updateReviewAdmin(id: string, input: Partial<ReviewUpsertI
   }
 
   const supabase = getSupabaseAdminClient();
+  for (const sibling of siblingUpdates) {
+    const { error } = await supabase
+      .from("reviews")
+      .update({ display_order: sibling.displayOrder })
+      .eq("id", sibling.id);
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  if (Object.keys(patch).length === 0) {
+    return current;
+  }
+
   const { data, error } = await supabase.from("reviews").update(patch).eq("id", id).select().single();
 
   if (error) {
@@ -184,10 +235,21 @@ export async function updateReviewAdmin(id: string, input: Partial<ReviewUpsertI
 }
 
 export async function deleteReviewAdmin(id: string): Promise<void> {
+  // Removing a featured review would leave a gap in the About row, so compact
+  // the remaining reviews down before deleting.
+  const all = await fetchAllReviewsAdmin();
+  const target = all.find((review) => review.id === id);
+  const siblingUpdates = target
+    ? planReviewOrder(all, id, { nextIsFeatured: false, nextIsVisible: false })
+    : [];
+
   if (!hasSupabaseAdminConfig()) {
     const ok = deleteReviewMemory(id);
     if (!ok) {
       throw new Error("Review not found");
+    }
+    for (const sibling of siblingUpdates) {
+      updateReviewMemory(sibling.id, { display_order: sibling.displayOrder });
     }
     return;
   }
@@ -197,5 +259,15 @@ export async function deleteReviewAdmin(id: string): Promise<void> {
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  for (const sibling of siblingUpdates) {
+    const { error: reorderError } = await supabase
+      .from("reviews")
+      .update({ display_order: sibling.displayOrder })
+      .eq("id", sibling.id);
+    if (reorderError) {
+      throw new Error(reorderError.message);
+    }
   }
 }

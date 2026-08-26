@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { SiteContentEditor } from "@/components/admin/site-content-editor";
+import { ServicesContentEditor } from "@/components/admin/services-content-editor";
 import { AdminChrome } from "@/components/admin/admin-ui";
-import { isSiteContentKey } from "@/lib/content/keys";
-import { SITE_CONTENT_PAGES } from "@/lib/content/keys";
+import { isSiteContentKey, SITE_CONTENT_PAGES } from "@/lib/content/keys";
 import { fetchSiteContent } from "@/lib/content/query";
+import type { ServicesContent } from "@/lib/content/types";
 
 type Params = { params: Promise<{ key: string }> };
 
@@ -28,7 +29,14 @@ export default async function AdminContentEditPage(ctx: Params) {
 
   return (
     <AdminChrome maxWidth="3xl">
-      <SiteContentEditor pageKey={key} initialPayload={row.payload} updatedAt={row.updatedAt} />
+      {key === "services" ? (
+        <ServicesContentEditor
+          initialPayload={row.payload as ServicesContent}
+          updatedAt={row.updatedAt}
+        />
+      ) : (
+        <SiteContentEditor pageKey={key} initialPayload={row.payload} updatedAt={row.updatedAt} />
+      )}
     </AdminChrome>
   );
 }

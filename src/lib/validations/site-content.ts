@@ -9,6 +9,7 @@ export const homepageContentSchema = z.object({
   heroTitle: optionalText,
   heroDescription: optionalText,
   heroCtaLabel: optionalText,
+  heroImageUrl: optionalText,
   primaryCtaLabel: optionalText,
   secondaryCtaLabel: optionalText,
   sectionTitle: optionalText,
@@ -36,15 +37,16 @@ export const aboutContentSchema = z.object({
   ctaLabel: optionalText,
 });
 
+export const serviceCardSchema = z.object({
+  title: optionalText,
+  body: optionalText,
+  iconUrl: optionalText,
+});
+
 export const servicesContentSchema = z.object({
   heroTitle: optionalText,
   heroDescription: optionalText,
-  appraisalTitle: optionalText,
-  appraisalBody: optionalText,
-  buyingTitle: optionalText,
-  buyingBody: optionalText,
-  sellingTitle: optionalText,
-  sellingBody: optionalText,
+  services: z.array(serviceCardSchema).max(8),
 });
 
 export const contactContentSchema = z.object({

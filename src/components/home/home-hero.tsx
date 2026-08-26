@@ -9,18 +9,24 @@ const poppins = Poppins({
   weight: ["400", "500", "600"],
 });
 
-const HERO_IMAGE = "/images/homepage_background_temp.jpg";
+const FALLBACK_HERO_IMAGE = "/images/homepage_background_temp.jpg";
 
 type HomeHeroProps = Pick<
   HomepageContent,
-  "heroEyebrow" | "heroTitle" | "heroDescription" | "heroCtaLabel"
+  "heroEyebrow" | "heroTitle" | "heroDescription" | "heroCtaLabel" | "heroImageUrl"
 >;
 
-export function HomeHero({ heroEyebrow, heroTitle, heroDescription, heroCtaLabel }: HomeHeroProps) {
+export function HomeHero({
+  heroEyebrow,
+  heroTitle,
+  heroDescription,
+  heroCtaLabel,
+  heroImageUrl,
+}: HomeHeroProps) {
   return (
     <section className="relative min-h-[calc(100dvh-var(--site-header-offset))] w-full overflow-hidden">
       <Image
-        src={HERO_IMAGE}
+        src={heroImageUrl || FALLBACK_HERO_IMAGE}
         alt=""
         fill
         priority

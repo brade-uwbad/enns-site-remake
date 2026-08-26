@@ -70,7 +70,10 @@ export function ReviewsManager({ initialReviews }: ReviewsManagerProps) {
     if (!res.ok) {
       throw new Error(data?.error?.message ?? "Could not save review.");
     }
-    return data.data.review as ReviewRow;
+    return {
+      review: data.data.review as ReviewRow,
+      reviews: data.data.reviews as ReviewRow[] | undefined,
+    };
   }
 
   async function onCreate(e: React.FormEvent) {
@@ -108,8 +111,12 @@ export function ReviewsManager({ initialReviews }: ReviewsManagerProps) {
     setBusyId(id);
     setMessage("");
     try {
-      const updated = await apiPatch(id, body);
-      setReviews((prev) => prev.map((r) => (r.id === id ? updated : r)));
+      const { review, reviews: updatedList } = await apiPatch(id, body);
+      // Reordering can shift sibling positions too, so prefer the full list the
+      // server returns; fall back to patching just this review.
+      setReviews((prev) =>
+        updatedList ?? prev.map((r) => (r.id === id ? review : r)),
+      );
       router.refresh();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Could not save review.");
@@ -133,7 +140,8 @@ export function ReviewsManager({ initialReviews }: ReviewsManagerProps) {
       if (!res.ok) {
         throw new Error(data?.error?.message ?? "Could not delete review.");
       }
-      setReviews((prev) => prev.filter((r) => r.id !== id));
+      const updatedList = data.data.reviews as ReviewRow[] | undefined;
+      setReviews((prev) => updatedList ?? prev.filter((r) => r.id !== id));
       router.refresh();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Could not delete review.");
@@ -263,7 +271,7 @@ export function ReviewsManager({ initialReviews }: ReviewsManagerProps) {
                     <select
                       className="h-9 rounded-sm border border-zinc-300 bg-white px-2 text-sm text-[#140000]"
                       value={Math.min(
-                        ABOUT_DISPLAY_ORDER_MAX,
+                        featuredCount,
                         Math.max(ABOUT_DISPLAY_ORDER_MIN, review.display_order),
                       )}
                       disabled={busyId === review.id}
@@ -275,7 +283,7 @@ export function ReviewsManager({ initialReviews }: ReviewsManagerProps) {
                       }}
                     >
                       {Array.from(
-                        { length: ABOUT_DISPLAY_ORDER_MAX - ABOUT_DISPLAY_ORDER_MIN + 1 },
+                        { length: Math.min(featuredCount, ABOUT_DISPLAY_ORDER_MAX) },
                         (_, i) => ABOUT_DISPLAY_ORDER_MIN + i,
                       ).map((slot) => (
                         <option key={slot} value={slot}>

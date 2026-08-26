@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { useMemo, type ReactNode } from "react";
-import { AmenityPickerGrid } from "@/components/admin/listings-editor/components/amenity-picker-grid";
 import {
   buildEditorPhotoList,
   EditorPhotosPanel,
@@ -8,7 +7,7 @@ import {
 } from "@/components/admin/listings-editor/components/editor-photos-panel";
 import { ListingDetailsFields } from "@/components/admin/listings-editor/components/listing-details-fields";
 import { PropertyTypePickerGrid } from "@/components/admin/listings-editor/components/property-type-picker-grid";
-import { LISTING_AMENITIES } from "@/lib/listings/listing-amenities";
+import type { ListingCategory } from "@/lib/listings/listing-categories";
 import {
   WIZARD_STEP_TITLES,
   type EditorState,
@@ -29,25 +28,22 @@ const WIZARD_STEP_COPY: { title: string; subtitle: string }[] = [
     title: "Add photos to your listing",
     subtitle: "Upload images for the property",
   },
-  {
-    title: "Select listing amenities",
-    subtitle: "Choose everything included with the property",
-  },
 ];
 
 type Props = {
   wizardStep: number;
   busy: boolean;
   form: EditorState;
+  categories: ListingCategory[];
   existingPhotos: string[];
   selectedPhotos: Array<{ file: File; previewUrl: string }>;
   cancelHref: string;
   onSetField: <K extends keyof EditorState>(key: K, value: EditorState[K]) => void;
-  onToggleAmenity: (id: (typeof LISTING_AMENITIES)[number]["id"]) => void;
   onAddUploadFiles: (files: FileList | null) => void;
   onRemoveQueuedPhoto: (index: number) => void;
   onRemoveExistingPhoto: (url: string) => void;
   onSetMainPhoto: (photo: EditorPhotoItem) => void;
+  onMovePhoto: (photo: EditorPhotoItem, delta: number) => void;
   onPrevStep: () => void;
   onNextStep: () => void;
   onPublish: () => Promise<void>;
@@ -128,7 +124,7 @@ function CreateWizardShell({
             </button>
           )}
         </div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {WIZARD_STEP_TITLES.map((label, i) => (
             <div
               key={label}
@@ -147,15 +143,16 @@ export function CreateWizard(props: Props) {
     wizardStep,
     busy,
     form,
+    categories,
     existingPhotos,
     selectedPhotos,
     cancelHref,
     onSetField,
-    onToggleAmenity,
     onAddUploadFiles,
     onRemoveQueuedPhoto,
     onRemoveExistingPhoto,
     onSetMainPhoto,
+    onMovePhoto,
     onPrevStep,
     onNextStep,
     onPublish,
@@ -179,6 +176,7 @@ export function CreateWizard(props: Props) {
       {wizardStep === 0 ? (
         <PropertyTypePickerGrid
           value={form.propertyType}
+          categories={categories}
           onChange={(type) => onSetField("propertyType", type)}
         />
       ) : null}
@@ -193,11 +191,8 @@ export function CreateWizard(props: Props) {
           onRemoveQueuedPhoto={onRemoveQueuedPhoto}
           onRemoveExistingPhoto={onRemoveExistingPhoto}
           onSetMainPhoto={onSetMainPhoto}
+          onMovePhoto={onMovePhoto}
         />
-      ) : null}
-
-      {wizardStep === 3 ? (
-        <AmenityPickerGrid selections={form.amenitySelections} onToggle={onToggleAmenity} />
       ) : null}
     </CreateWizardShell>
   );

@@ -1,14 +1,12 @@
 import Link from "next/link";
-import { CircleDollarSign, ImageIcon, List } from "lucide-react";
+import { CircleDollarSign, ImageIcon } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 import {
   buildEditorPhotoList,
   EditorPhotosPanel,
   type EditorPhotoItem,
 } from "@/components/admin/listings-editor/components/editor-photos-panel";
-import { AmenityPickerGrid } from "@/components/admin/listings-editor/components/amenity-picker-grid";
 import { ListingDetailsFields } from "@/components/admin/listings-editor/components/listing-details-fields";
-import { LISTING_AMENITIES } from "@/lib/listings/listing-amenities";
 import { type EditorPanel, type EditorState } from "@/components/admin/listings-editor/types";
 
 type Props = {
@@ -20,11 +18,11 @@ type Props = {
   backHref?: string;
   onSetPanel: (panel: EditorPanel) => void;
   onSetField: <K extends keyof EditorState>(key: K, value: EditorState[K]) => void;
-  onToggleAmenity: (id: (typeof LISTING_AMENITIES)[number]["id"]) => void;
   onAddUploadFiles: (files: FileList | null) => void;
   onRemoveQueuedPhoto: (index: number) => void;
   onRemoveExistingPhoto: (url: string) => void;
   onSetMainPhoto: (photo: EditorPhotoItem) => void;
+  onMovePhoto: (photo: EditorPhotoItem, delta: number) => void;
   onSavePanel: () => Promise<void>;
 };
 
@@ -45,12 +43,6 @@ const MENU_SECTIONS: {
     label: "Details",
     description: "Edit the listing name, address, description, and price",
     Icon: CircleDollarSign,
-  },
-  {
-    panel: "amenities",
-    label: "Amenities",
-    description: "Let clients know what's included with the listing",
-    Icon: List,
   },
 ];
 
@@ -93,11 +85,11 @@ export function EditWorkspace(props: Props) {
     backHref,
     onSetPanel,
     onSetField,
-    onToggleAmenity,
     onAddUploadFiles,
     onRemoveQueuedPhoto,
     onRemoveExistingPhoto,
     onSetMainPhoto,
+    onMovePhoto,
     onSavePanel,
   } = props;
   const onMenu = editorPanel === "menu";
@@ -158,9 +150,7 @@ export function EditWorkspace(props: Props) {
       ? "Editing listing photos"
       : editorPanel === "details"
         ? "Edit listing details"
-        : editorPanel === "amenities"
-          ? "Edit listing amenities"
-          : "Listing Editor";
+        : "Listing Editor";
 
   const panelBody =
     editorPanel === "menu" ? (
@@ -188,11 +178,10 @@ export function EditWorkspace(props: Props) {
         onRemoveQueuedPhoto={onRemoveQueuedPhoto}
         onRemoveExistingPhoto={onRemoveExistingPhoto}
         onSetMainPhoto={onSetMainPhoto}
+        onMovePhoto={onMovePhoto}
       />
-    ) : editorPanel === "details" ? (
-      <ListingDetailsFields form={form} onSetField={onSetField} />
     ) : (
-      <AmenityPickerGrid selections={form.amenitySelections} onToggle={onToggleAmenity} />
+      <ListingDetailsFields form={form} onSetField={onSetField} />
     );
 
   return (
