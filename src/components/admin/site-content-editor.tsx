@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { ADMIN_IMAGE_UPLOAD_FORMAT_HINT } from "@/components/admin/image-upload-hint";
 import { EditorToast } from "@/components/admin/listings-editor/editor-toast";
 import { SITE_CONTENT_PAGES, type SiteContentKey } from "@/lib/content/keys";
 import { SITE_CONTENT_EDITOR_FIELDS } from "@/lib/content/editor-fields";
@@ -80,7 +81,7 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
         throw new Error(data?.error?.message ?? "Could not upload image.");
       }
       setField(fieldName, data.data.url as string);
-      setMessage("Image uploaded. Click Save changes to publish it.");
+      setMessage("Photo uploaded. Click Save changes to publish it.");
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Could not upload image.");
     } finally {
@@ -156,47 +157,13 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
           <div className="grid gap-4">
             {fields.map((field) =>
               field.image ? (
-                <div key={field.name} className="text-sm">
-                  <span className="mb-1 block">{field.label}</span>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-                    <div className="relative aspect-video w-full overflow-hidden rounded-md border border-zinc-300 bg-slate-100 sm:w-64">
-                      {form[field.name] ? (
-                        <Image
-                          src={form[field.name]}
-                          alt=""
-                          fill
-                          sizes="256px"
-                          unoptimized
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-xs text-slate-500">
-                          No image set
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        disabled={uploadingField === field.name}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            void onUploadImage(field.name, file);
-                          }
-                          e.target.value = "";
-                        }}
-                        className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#3A6696] file:px-3 file:py-1.5 file:text-white hover:file:bg-[#32587f]"
-                      />
-                      <p className="text-xs text-slate-500">
-                        {uploadingField === field.name
-                          ? "Uploading…"
-                          : "JPG or PNG, up to 10MB. A wide landscape photo works best."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <ImageField
+                  key={field.name}
+                  label={field.label}
+                  url={form[field.name] ?? ""}
+                  uploading={uploadingField === field.name}
+                  onPick={(file) => void onUploadImage(field.name, file)}
+                />
               ) : (
                 <label key={field.name} className="text-sm">
                   <span className="mb-1 block">{field.label}</span>
@@ -232,5 +199,52 @@ export function SiteContentEditor({ pageKey, initialPayload, updatedAt }: SiteCo
       </form>
       </div>
     </>
+  );
+}
+
+function ImageField({
+  label,
+  url,
+  uploading,
+  onPick,
+}: {
+  label: string;
+  url: string;
+  uploading: boolean;
+  onPick: (file: File) => void;
+}) {
+  return (
+    <div className="text-sm">
+      <span className="mb-1 block">{label}</span>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+        <div className="relative aspect-square w-full max-w-[10rem] shrink-0 overflow-hidden rounded-xl border border-zinc-300 bg-slate-100">
+          {url ? (
+            <Image src={url} alt="" fill sizes="160px" unoptimized className="object-cover object-top" />
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs text-slate-500">No photo</div>
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <input
+            type="file"
+            accept="image/*"
+            disabled={uploading}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                onPick(file);
+              }
+              e.target.value = "";
+            }}
+            className="text-xs file:mr-2 file:rounded-md file:border-0 file:bg-[#3A6696] file:px-3 file:py-1.5 file:text-white hover:file:bg-[#32587f]"
+          />
+          <p className="text-xs text-slate-500">
+            {uploading
+              ? "Uploading…"
+              : `${ADMIN_IMAGE_UPLOAD_FORMAT_HINT} Save changes after uploading.`}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

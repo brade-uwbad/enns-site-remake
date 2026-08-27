@@ -19,6 +19,8 @@ export type HomepageContent = {
 };
 
 export type AboutContent = {
+  /** Profile photo URL or site path (e.g. `/images/brad-enns.jpg`). */
+  photoUrl: string;
   eyebrow: string;
   headline: string;
   bio: string;

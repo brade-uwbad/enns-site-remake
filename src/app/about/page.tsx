@@ -23,6 +23,7 @@ export default async function AboutPage() {
   ]);
   const phoneHref = `tel:${digitsOnly(c.phone)}`;
   const emailHref = `mailto:${c.email}`;
+  const photoSrc = c.photoUrl.trim() || "/images/brad-enns.jpg";
 
   return (
     <div className="min-h-screen bg-white">
@@ -37,7 +38,7 @@ export default async function AboutPage() {
             <div className="flex items-start gap-4 md:hidden">
               <div className="relative aspect-square w-1/2 shrink-0 overflow-hidden rounded-xl">
                 <Image
-                  src="/images/brad-enns.jpg"
+                  src={photoSrc}
                   alt="Brad Enns, Enns Real Estate"
                   fill
                   className="object-cover object-top"
@@ -57,17 +58,18 @@ export default async function AboutPage() {
               </div>
             </div>
 
-            <div className="relative hidden aspect-square w-full overflow-hidden rounded-xl md:block">
+            <div className="relative hidden min-h-64 flex-1 overflow-hidden rounded-xl md:block">
               <Image
-                src="/images/brad-enns.jpg"
+                src={photoSrc}
                 alt="Brad Enns, Enns Real Estate"
                 fill
                 className="object-cover object-top"
                 priority
+                sizes="(min-width: 768px) 40vw, 100vw"
               />
             </div>
 
-            <div className="mt-5 flex w-full flex-col md:mt-auto">
+            <div className="mt-5 flex w-full shrink-0 flex-col">
               <div className="flex w-full flex-row flex-wrap items-center justify-center gap-6 pt-2 text-sm text-slate-600 sm:gap-8">
                 <a
                   href={phoneHref}

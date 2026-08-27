@@ -27,6 +27,7 @@ export const SITE_CONTENT_EDITOR_FIELDS: Record<SiteContentKey, ContentEditorFie
     { name: "footerNote", label: "Footer note", multiline: true },
   ],
   about: [
+    { name: "photoUrl", label: "Profile photo", image: true },
     { name: "eyebrow", label: "Eyebrow" },
     { name: "headline", label: "Headline" },
     { name: "bio", label: "Bio", multiline: true },
