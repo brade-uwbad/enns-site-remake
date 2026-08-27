@@ -11,10 +11,20 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "Listings",
-  description: "Active and sold property listings.",
+  description:
+    "Browse active and recently sold homes for sale in Kitchener–Waterloo and surrounding communities.",
+  alternates: { canonical: "/listings" },
+  openGraph: {
+    title: "Listings | Brad Enns",
+    description:
+      "Browse active and recently sold homes for sale in Kitchener–Waterloo and surrounding communities.",
+    url: "/listings",
+  },
 };
 
-export const dynamic = "force-dynamic";
+// Listings render live via a client-side fetch; the server shell can be cached and refreshed
+// on demand (the categories admin route revalidates this path).
+export const revalidate = 3600;
 
 /**
  * Marketing listings index matching design layout (category strip + grid).

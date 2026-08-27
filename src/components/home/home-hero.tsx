@@ -27,7 +27,7 @@ export function HomeHero({
     <section className="relative min-h-[calc(100dvh-var(--site-header-offset))] w-full overflow-hidden">
       <Image
         src={heroImageUrl || FALLBACK_HERO_IMAGE}
-        alt=""
+        alt="Kitchener–Waterloo homes and neighbourhoods served by Brad Enns Real Estate"
         fill
         priority
         sizes="100vw"

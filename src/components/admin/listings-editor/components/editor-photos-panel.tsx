@@ -124,9 +124,13 @@ export function EditorPhotosPanel({
 
   const photoOrderKey = photos.map((p) => photoKey(p)).join("|");
 
-  useEffect(() => {
+  // Reset the hero preview to the first photo whenever the photo set/order changes.
+  // Done during render (React's recommended alternative to a setState-in-effect).
+  const [prevPhotoOrderKey, setPrevPhotoOrderKey] = useState(photoOrderKey);
+  if (photoOrderKey !== prevPhotoOrderKey) {
+    setPrevPhotoOrderKey(photoOrderKey);
     setPreviewIndex(0);
-  }, [photoOrderKey]);
+  }
 
   useEffect(() => {
     if (!previewSrc && !showAllPhotos) {
@@ -167,7 +171,7 @@ export function EditorPhotosPanel({
     }
   }
 
-  function PhotoHoverActions({ photo, isMain }: { photo: EditorPhotoItem; isMain: boolean }) {
+  function renderPhotoHoverActions({ photo, isMain }: { photo: EditorPhotoItem; isMain: boolean }) {
     const position = photos.findIndex((p) => photoKey(p) === photoKey(photo));
     const canMoveEarlier = position > 0;
     const canMoveLater = position >= 0 && position < photos.length - 1;
@@ -223,7 +227,7 @@ export function EditorPhotosPanel({
     );
   }
 
-  function MainStarButton({
+  function renderMainStarButton({
     photo,
     photoIndex,
     className = "",
@@ -283,9 +287,9 @@ export function EditorPhotosPanel({
               Main
             </span>
           ) : null}
-          {previewPhoto ? (
-            <PhotoHoverActions photo={previewPhoto} isMain={safePreviewIndex === 0} />
-          ) : null}
+          {previewPhoto
+            ? renderPhotoHoverActions({ photo: previewPhoto, isMain: safePreviewIndex === 0 })
+            : null}
         </div>
 
         <div className="grid grid-cols-2 grid-rows-2 gap-3 md:h-[280px]">
@@ -348,7 +352,7 @@ export function EditorPhotosPanel({
                   className="object-cover"
                   unoptimized={photo!.kind === "existing"}
                 />
-                <PhotoHoverActions photo={photo!} isMain={thumbIndex === 0} />
+                {renderPhotoHoverActions({ photo: photo!, isMain: thumbIndex === 0 })}
               </div>
             );
           })}
@@ -424,7 +428,7 @@ export function EditorPhotosPanel({
                     className="object-cover"
                     unoptimized={photo.kind === "existing"}
                   />
-                  <MainStarButton photo={photo} photoIndex={photoIndex} />
+                  {renderMainStarButton({ photo, photoIndex })}
                   <div className="absolute inset-0 z-[5] flex flex-wrap items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                     {photoIndex > 0 ? (
                       <button

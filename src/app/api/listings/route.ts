@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to load listings";
-    return jsonError(message, 500, "LISTINGS_ERROR");
+    console.error("GET /api/listings failed:", e);
+    return jsonError("Failed to load listings", 500, "LISTINGS_ERROR");
   }
 }

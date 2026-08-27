@@ -44,13 +44,14 @@ export async function POST(request: Request) {
       .from(bucket)
       .upload(filePath, bytes, { contentType: file.type, upsert: false });
     if (uploadError) {
-      return jsonError(uploadError.message, 500, "UPLOAD_ERROR");
+      console.error("POST /api/admin/listings/upload storage error:", uploadError);
+      return jsonError("Failed to upload image", 500, "UPLOAD_ERROR");
     }
 
     const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
     return jsonOk({ url: data.publicUrl, path: filePath, bucket });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to upload image";
-    return jsonError(message, 500, "UPLOAD_ERROR");
+    console.error("POST /api/admin/listings/upload failed:", e);
+    return jsonError("Failed to upload image", 500, "UPLOAD_ERROR");
   }
 }

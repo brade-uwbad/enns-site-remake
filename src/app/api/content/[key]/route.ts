@@ -17,7 +17,7 @@ export async function GET(_request: Request, ctx: Params) {
     const row = await fetchSiteContent(key);
     return jsonOk({ content: row.payload, updatedAt: row.updatedAt });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to load content";
-    return jsonError(message, 500, "CONTENT_ERROR");
+    console.error("GET /api/content/[key] failed:", e);
+    return jsonError("Failed to load content", 500, "CONTENT_ERROR");
   }
 }

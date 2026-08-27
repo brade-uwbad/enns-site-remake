@@ -2,12 +2,67 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { ClientReviewsSection } from "@/components/reviews/client-reviews-section";
+import { JsonLd, type JsonLdData } from "@/components/seo/json-ld";
 import { fetchSiteContent } from "@/lib/content/query";
 import { fetchFeaturedReviews } from "@/lib/reviews/query";
+import { AGENT_NAME, absoluteUrl } from "@/lib/site-config";
+
+type FeaturedReview = Awaited<ReturnType<typeof fetchFeaturedReviews>>[number];
+
+/** Build `RealEstateAgent` review + aggregate-rating structured data for the About page. */
+function buildReviewsJsonLd(reviews: FeaturedReview[]): JsonLdData | null {
+  if (reviews.length === 0) {
+    return null;
+  }
+  const rated = reviews.filter((r) => typeof r.rating === "number" && r.rating > 0);
+  const reviewNodes = reviews.map((r) => ({
+    "@type": "Review",
+    author: { "@type": "Person", name: r.author_name },
+    ...(r.title ? { name: r.title } : {}),
+    reviewBody: r.body,
+    ...(typeof r.rating === "number" && r.rating > 0
+      ? {
+          reviewRating: {
+            "@type": "Rating",
+            ratingValue: r.rating,
+            bestRating: 5,
+          },
+        }
+      : {}),
+    ...(r.created_at ? { datePublished: r.created_at } : {}),
+  }));
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "@id": absoluteUrl("/#agent"),
+    name: AGENT_NAME,
+    url: absoluteUrl("/about"),
+    review: reviewNodes,
+    ...(rated.length > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(
+              (rated.reduce((sum, r) => sum + (r.rating as number), 0) / rated.length).toFixed(1),
+            ),
+            reviewCount: rated.length,
+            bestRating: 5,
+          },
+        }
+      : {}),
+  };
+}
 
 export const metadata: Metadata = {
   title: "About",
   description: "About Brad Enns and real estate services in Kitchener–Waterloo.",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About Brad Enns",
+    description: "About Brad Enns and real estate services in Kitchener–Waterloo.",
+    url: "/about",
+  },
 };
 
 export const dynamic = "force-dynamic";
@@ -23,9 +78,11 @@ export default async function AboutPage() {
   ]);
   const phoneHref = `tel:${digitsOnly(c.phone)}`;
   const emailHref = `mailto:${c.email}`;
+  const reviewsJsonLd = buildReviewsJsonLd(featuredReviews);
 
   return (
     <div className="min-h-screen bg-white">
+      {reviewsJsonLd ? <JsonLd data={reviewsJsonLd} /> : null}
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 md:py-8">
         <div className="md:hidden">
           <p className="mb-2 text-base font-medium text-brand-gold">{c.eyebrow}</p>

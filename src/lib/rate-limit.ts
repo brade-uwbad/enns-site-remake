@@ -1,3 +1,7 @@
+// TODO(security): This is a per-process, in-memory limiter. On serverless/edge (Vercel) the
+// state is NOT shared across instances and resets on redeploy, so it is best-effort only.
+// For production, back this with a shared store (Upstash Redis / Vercel KV) and extend it to
+// the admin registration and upload routes. See docs/security-audit.md (finding 7).
 type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
