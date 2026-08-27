@@ -22,6 +22,7 @@ type Listing = {
   sqft: number | null;
   property_type: string | null;
   featured_image_url: string | null;
+  external_url: string | null;
   images: string[];
   status: "active" | "sold" | "draft";
 };
@@ -80,6 +81,16 @@ export function ListingDetailView({ listing, nearby, categories }: Props) {
                 {listing.address_line || listing.title}
               </h1>
               <p className="mt-1 text-sm text-slate-500">{specLine(listing, categories)}</p>
+              {listing.external_url ? (
+                <a
+                  href={listing.external_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex text-sm font-medium text-[#3A6696] underline-offset-2 hover:underline"
+                >
+                  View More Photos & Virtual Tour
+                </a>
+              ) : null}
             </div>
             <p className="text-lg font-semibold text-slate-900 tabular-nums sm:text-xl md:text-2xl">
               {formatPrice(listing.price_dollars)}

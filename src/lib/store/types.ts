@@ -33,8 +33,10 @@ export type ListingRow = {
   sqft: number | null;
   property_type: PropertyType | null;
   status: ListingStatus;
+  display_order: number;
   sold_at: string | null;
   featured_image_url: string | null;
+  external_url: string | null;
   images: string[];
   created_at: string;
   updated_at: string;

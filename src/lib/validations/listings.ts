@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const imageUrl = z.string().url().max(2000);
+const httpUrl = z.string().url().max(2000);
 
 /**
  * Request body for `POST /api/admin/listings` (camelCase; mapped to snake_case listing fields server-side).
@@ -23,6 +24,7 @@ export const listingCreateSchema = z.object({
   propertyType: z.string().max(80).optional().nullable(),
   status: z.enum(["active", "sold", "draft"]).default("draft"),
   featuredImageUrl: imageUrl.optional().nullable(),
+  externalUrl: httpUrl.optional().nullable(),
   images: z.array(imageUrl).max(50).optional(),
 });
 
@@ -37,6 +39,12 @@ export const listingUpdateSchema = listingCreateSchema.partial().extend({
 export type ListingCreateInput = z.infer<typeof listingCreateSchema>;
 /** Inferred type from {@link listingUpdateSchema}. */
 export type ListingUpdateInput = z.infer<typeof listingUpdateSchema>;
+
+/** Request body for `PUT /api/admin/listings/reorder`. */
+export const listingReorderSchema = z.object({
+  status: z.enum(["active", "sold"]),
+  ids: z.array(z.string().uuid()).min(1).max(200),
+});
 
 /**
  * Request body for `PUT /api/admin/listings/categories`. Values/icons are
