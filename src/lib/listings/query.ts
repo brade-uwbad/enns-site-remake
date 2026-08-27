@@ -37,21 +37,17 @@ function sanitizeSearchLike(value: string) {
     .trim();
 }
 
-export async function fetchListings(status: "active" | "sold", query: ListQuery) {
-  if (!hasSupabaseReadConfig()) {
-    return queryListings(status, query);
-  }
+function isMissingDisplayOrderColumn(message: string) {
+  return message.includes("display_order") && message.includes("does not exist");
+}
 
-  const from = (query.page - 1) * query.limit;
-  const to = from + query.limit - 1;
+function buildListingsQuery(
+  status: "active" | "sold",
+  query: ListQuery,
+  useDisplayOrder: boolean,
+) {
   const supabase = getSupabaseReadClient();
-
-  let db = supabase
-    .from("listings")
-    .select("*", { count: "exact" })
-    .eq("status", status)
-    .order("updated_at", { ascending: false })
-    .range(from, to);
+  let db = supabase.from("listings").select("*", { count: "exact" }).eq("status", status);
 
   if (query.minPrice !== undefined) {
     db = db.gte("price_dollars", query.minPrice);
@@ -73,7 +69,26 @@ export async function fetchListings(status: "active" | "sold", query: ListQuery)
     db = db.or(`title.ilike.%${q}%,city.ilike.%${q}%`);
   }
 
-  const { data, error, count } = await db;
+  if (useDisplayOrder) {
+    db = db.order("display_order", { ascending: true }).order("created_at", { ascending: true });
+  } else {
+    db = db.order("created_at", { ascending: false });
+  }
+
+  const from = (query.page - 1) * query.limit;
+  const to = from + query.limit - 1;
+  return db.range(from, to);
+}
+
+export async function fetchListings(status: "active" | "sold", query: ListQuery) {
+  if (!hasSupabaseReadConfig()) {
+    return queryListings(status, query);
+  }
+
+  let { data, error, count } = await buildListingsQuery(status, query, true);
+  if (error && isMissingDisplayOrderColumn(error.message)) {
+    ({ data, error, count } = await buildListingsQuery(status, query, false));
+  }
   if (error) {
     throw new Error(error.message);
   }

@@ -99,18 +99,46 @@ function buildQuery(filters: Filters) {
   return params.toString();
 }
 
+function canReorderListings(filters: Filters) {
+  return (
+    !filters.q.trim() &&
+    !filters.minPrice.trim() &&
+    !filters.maxPrice.trim() &&
+    !filters.beds.trim() &&
+    !filters.propertyType
+  );
+}
+
+function moveListing(listings: Listing[], fromId: string, toId: string) {
+  const fromIndex = listings.findIndex((listing) => listing.id === fromId);
+  const toIndex = listings.findIndex((listing) => listing.id === toId);
+  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
+    return listings;
+  }
+  const next = [...listings];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
 export function ListingsGrid({ categories }: { categories: ListingCategory[] }) {
-  const { admin } = useAdminUser();
-  const [filters, setFilters] = useState<Filters>({
+  const { admin, accessToken } = useAdminUser();
+  const defaultPropertyType = categories[0]?.value ?? "";
+  const [filters, setFilters] = useState<Filters>(() => ({
     status: "active",
     minPrice: "",
     maxPrice: "",
     beds: "",
     q: "",
-    propertyType: "",
-  });
+    propertyType: defaultPropertyType,
+  }));
   const [searchInput, setSearchInput] = useState("");
   const [listings, setListings] = useState<Listing[]>([]);
+  const [orderedListings, setOrderedListings] = useState<Listing[]>([]);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [orderMessage, setOrderMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -145,6 +173,61 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
     void loadListings();
   }, [filters.status, queryString]);
 
+  useEffect(() => {
+    setOrderedListings(listings);
+  }, [listings]);
+
+  const canReorder = Boolean(admin && !loading && canReorderListings(filters));
+  const visibleListings = canReorder ? orderedListings : listings;
+
+  async function persistListingOrder(nextOrder: Listing[]) {
+    if (!accessToken) {
+      setOrderMessage("Sign in as admin to save listing order.");
+      setOrderedListings(listings);
+      return;
+    }
+
+    setSavingOrder(true);
+    setOrderMessage("");
+    try {
+      const res = await fetch("/api/admin/listings/reorder", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          status: filters.status,
+          ids: nextOrder.map((listing) => listing.id),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? "Failed to save listing order.");
+      }
+      setListings(nextOrder);
+    } catch (e) {
+      setOrderMessage(e instanceof Error ? e.message : "Failed to save listing order.");
+      setOrderedListings(listings);
+    } finally {
+      setSavingOrder(false);
+    }
+  }
+
+  function handleDrop(targetId: string) {
+    if (!draggingId || draggingId === targetId) {
+      setDraggingId(null);
+      setDropTargetId(null);
+      return;
+    }
+
+    const nextOrder = moveListing(orderedListings, draggingId, targetId);
+    setOrderedListings(nextOrder);
+    setDraggingId(null);
+    setDropTargetId(null);
+    void persistListingOrder(nextOrder);
+  }
+
   if (error) {
     return <p className="text-sm text-red-600">{error}</p>;
   }
@@ -154,7 +237,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
   return (
     <div className="space-y-8">
       {categories.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-start sm:justify-center sm:gap-5">
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-stretch sm:justify-center sm:gap-5">
           {categories.map((cat) => {
             const selected = activeCategory === cat.value;
             const icon = selected ? cat.iconBlue : cat.iconGrey;
@@ -168,24 +251,30 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
                     propertyType: prev.propertyType === cat.value ? "" : cat.value,
                   }))
                 }
-                className={`flex w-full flex-col items-center gap-3 rounded-md bg-white px-3 py-4 transition sm:w-[108px] ${
+                className={`flex h-[6.25rem] w-full flex-col items-center justify-center gap-1.5 rounded-md bg-white px-2 py-2.5 transition sm:w-[7rem] ${
                   selected
                     ? "border border-[#3A6696] shadow-none"
                     : "border border-transparent shadow-[0_4px_14px_rgba(15,23,42,0.08)]"
                 }`}
                 aria-pressed={selected}
               >
-                {icon ? (
-                  <Image
-                    src={icon}
-                    alt=""
-                    width={24}
-                    height={24}
-                    unoptimized
-                    className="h-6 w-6 shrink-0 object-contain"
-                  />
-                ) : null}
-                <span className={`text-xs font-medium ${selected ? "text-[#3A6696]" : "text-slate-500"}`}>
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+                  {icon ? (
+                    <Image
+                      src={icon}
+                      alt=""
+                      width={24}
+                      height={24}
+                      unoptimized
+                      className="h-6 w-6 object-contain"
+                    />
+                  ) : null}
+                </div>
+                <span
+                  className={`flex min-h-[1.75rem] items-center text-center text-xs font-medium leading-tight ${
+                    selected ? "text-[#3A6696]" : "text-slate-500"
+                  }`}
+                >
                   {cat.label}
                 </span>
               </button>
@@ -283,7 +372,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
                 maxPrice: "",
                 beds: "",
                 q: "",
-                propertyType: "",
+                propertyType: defaultPropertyType,
               }));
             }}
             className="shrink-0 rounded-sm bg-[#e6e8ec] px-3 py-2 text-sm font-medium text-slate-900 hover:bg-[#d8dadf]"
@@ -292,6 +381,17 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
           </button>
         </div>
       </div>
+
+      {admin && !loading ? (
+        <p className="text-xs text-slate-500">
+          {canReorder
+            ? savingOrder
+              ? "Saving listing order..."
+              : "Drag a listing card by the handle to reorder how it appears on the site."
+            : "Clear filters to reorder listings."}
+          {orderMessage ? ` ${orderMessage}` : null}
+        </p>
+      ) : null}
 
       {loading ? (
         <div
@@ -311,12 +411,57 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
 
       {!loading && listings.length > 0 ? (
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {listings.map((listing) => (
-          <Link
-            href={`/listings/${listing.id}`}
+        {visibleListings.map((listing) => (
+          <div
             key={listing.id}
-            className="group overflow-hidden rounded-sm border border-slate-200 bg-white shadow-[0_4px_14px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(15,23,42,0.1)]"
+            onDragOver={(event) => {
+              if (!canReorder || !draggingId || draggingId === listing.id) {
+                return;
+              }
+              event.preventDefault();
+              setDropTargetId(listing.id);
+            }}
+            onDragLeave={() => {
+              if (dropTargetId === listing.id) {
+                setDropTargetId(null);
+              }
+            }}
+            onDrop={(event) => {
+              if (!canReorder) {
+                return;
+              }
+              event.preventDefault();
+              handleDrop(listing.id);
+            }}
+            className={`relative ${
+              dropTargetId === listing.id ? "rounded-sm ring-2 ring-[#3A6696]/40" : ""
+            }`}
           >
+            {canReorder ? (
+              <button
+                type="button"
+                draggable
+                aria-label={`Drag to reorder ${cardTitle(listing)}`}
+                onDragStart={(event) => {
+                  event.dataTransfer.setData("text/plain", listing.id);
+                  event.dataTransfer.effectAllowed = "move";
+                  setDraggingId(listing.id);
+                }}
+                onDragEnd={() => {
+                  setDraggingId(null);
+                  setDropTargetId(null);
+                }}
+                className="absolute left-2 top-2 z-20 flex h-8 w-8 cursor-grab items-center justify-center rounded-sm bg-white/95 text-sm text-slate-600 shadow-sm active:cursor-grabbing"
+              >
+                ⋮⋮
+              </button>
+            ) : null}
+            <Link
+              href={`/listings/${listing.id}`}
+              className={`group block overflow-hidden rounded-sm border border-slate-200 bg-white shadow-[0_4px_14px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(15,23,42,0.1)] ${
+                draggingId === listing.id ? "opacity-60" : ""
+              }`}
+            >
             <div className="relative aspect-[16/10] w-full overflow-hidden">
               <Image
                 src={
@@ -344,7 +489,8 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
                 </p>
               </div>
             </div>
-          </Link>
+            </Link>
+          </div>
         ))}
       </div>
       ) : null}
