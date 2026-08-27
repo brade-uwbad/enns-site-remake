@@ -13,6 +13,7 @@ export type Listing = {
   description: string | null;
   images: string[];
   featured_image_url: string | null;
+  external_url: string | null;
   status: "active" | "sold" | "draft";
   beds: number | null;
   baths: number | null;
@@ -27,6 +28,7 @@ export type EditorState = {
   addressLine: string;
   priceDollars: string;
   description: string;
+  externalUrl: string;
   imagesText: string;
   status: "active" | "sold" | "draft";
   beds: string;
@@ -42,6 +44,7 @@ export const BLANK_EDITOR_STATE: EditorState = {
   addressLine: "",
   priceDollars: "",
   description: "",
+  externalUrl: "",
   imagesText: "",
   status: "active",
   beds: "",

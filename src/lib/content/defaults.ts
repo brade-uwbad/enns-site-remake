@@ -21,6 +21,7 @@ const DEFAULTS: SiteContentPayloadMap = {
     footerNote: "Placeholder copy. Replace with Brad's voice, neighbourhoods, and credentials.",
   },
   about: {
+    photoUrl: "/images/brad-enns.jpg",
     eyebrow: "Kitchener, Waterloo Real Estate Agent",
     headline: "Meet Brad Enns",
     bio: "Description descriptions Description descriptions descriptions descriptions descriptions descriptions descriptions descriptions descriptions descriptionsdescriptionsdescriptionsdescriptions.",

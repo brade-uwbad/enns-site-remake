@@ -32,8 +32,10 @@ const seedListings: ListingRow[] = [
     sqft: 1800,
     property_type: "detached",
     status: "active",
+    display_order: 1,
     sold_at: null,
     featured_image_url: "https://placehold.co/1200x800/png?text=Listing",
+    external_url: null,
     images: [],
     created_at: nowIso(),
     updated_at: nowIso(),
@@ -57,8 +59,10 @@ const seedListings: ListingRow[] = [
     sqft: 1400,
     property_type: "townhouse",
     status: "sold",
+    display_order: 1,
     sold_at: nowIso(),
     featured_image_url: null,
+    external_url: null,
     images: [],
     created_at: nowIso(),
     updated_at: nowIso(),
@@ -217,7 +221,12 @@ export function queryListings(status: "active" | "sold", query: ListQuery) {
     rows = rows.filter((l) => matchesSearch(l, search));
   }
 
-  rows.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
+  rows.sort((a, b) => {
+    if (a.display_order !== b.display_order) {
+      return a.display_order - b.display_order;
+    }
+    return a.created_at < b.created_at ? -1 : 1;
+  });
 
   const total = rows.length;
   const from = (query.page - 1) * query.limit;
@@ -239,13 +248,45 @@ export function getListingById(id: string): ListingRow | null {
  * @param row - Listing fields without server-generated `id`, `created_at`, or `updated_at`.
  * @returns The persisted listing including id and timestamps.
  */
+export function nextDisplayOrderForStatus(status: ListingRow["status"]): number {
+  const max = listings
+    .filter((l) => l.status === status)
+    .reduce((acc, l) => Math.max(acc, l.display_order), 0);
+  return max + 1;
+}
+
+/**
+ * Applies a manual sort order for all listings in a status group.
+ */
+export function reorderListingsByStatus(status: "active" | "sold", ids: string[]): void {
+  const statusRows = listings.filter((l) => l.status === status);
+  if (ids.length !== statusRows.length) {
+    throw new Error("Reorder payload must include every listing in this status group.");
+  }
+  const statusIds = new Set(statusRows.map((l) => l.id));
+  if (!ids.every((id) => statusIds.has(id))) {
+    throw new Error("Reorder payload includes invalid listing ids.");
+  }
+
+  const orderById = new Map(ids.map((id, index) => [id, index + 1]));
+  listings = listings.map((listing) => {
+    const nextOrder = orderById.get(listing.id);
+    if (nextOrder === undefined) {
+      return listing;
+    }
+    return { ...listing, display_order: nextOrder };
+  });
+}
+
 export function insertListing(
-  row: Omit<ListingRow, "id" | "created_at" | "updated_at">,
+  row: Omit<ListingRow, "id" | "created_at" | "updated_at" | "display_order"> &
+    Partial<Pick<ListingRow, "display_order">>,
 ): ListingRow {
   const id = randomUUID();
   const ts = nowIso();
   const full: ListingRow = {
     ...row,
+    display_order: row.display_order ?? nextDisplayOrderForStatus(row.status),
     id,
     created_at: ts,
     updated_at: ts,

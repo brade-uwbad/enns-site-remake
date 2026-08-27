@@ -32,7 +32,7 @@ function normalizePostalCode(value: string | null | undefined): string | null {
 export function toListingInsert(
   userId: string,
   input: ListingCreateInput,
-): Omit<ListingRow, "id" | "created_at" | "updated_at"> {
+): Omit<ListingRow, "id" | "created_at" | "updated_at" | "display_order"> {
   return {
     title: input.title,
     subtitle: input.subtitle ?? null,
@@ -52,6 +52,7 @@ export function toListingInsert(
     status: input.status,
     sold_at: null,
     featured_image_url: input.featuredImageUrl ?? null,
+    external_url: input.externalUrl ?? null,
     images: input.images ?? [],
     created_by: userId,
   };
@@ -115,6 +116,9 @@ export function toListingUpdate(input: ListingUpdateInput): Partial<ListingRow> 
   }
   if (input.featuredImageUrl !== undefined) {
     row.featured_image_url = input.featuredImageUrl;
+  }
+  if (input.externalUrl !== undefined) {
+    row.external_url = input.externalUrl;
   }
   if (input.images !== undefined) {
     row.images = input.images;

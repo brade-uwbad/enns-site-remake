@@ -30,5 +30,12 @@ export function normalizeListingRow(row: Record<string, unknown>): ListingRow {
     const lng = typeof rawLongitude === "string" ? Number(rawLongitude) : (rawLongitude as number);
     next.longitude = Number.isFinite(lng) ? lng : null;
   }
+  const rawDisplayOrder = row.display_order;
+  if (rawDisplayOrder !== null && rawDisplayOrder !== undefined) {
+    const order = typeof rawDisplayOrder === "string" ? Number(rawDisplayOrder) : (rawDisplayOrder as number);
+    next.display_order = Number.isFinite(order) ? Math.trunc(order) : 0;
+  } else {
+    next.display_order = 0;
+  }
   return next;
 }

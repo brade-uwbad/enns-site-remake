@@ -23,6 +23,7 @@ export const homepageContentSchema = z.object({
 });
 
 export const aboutContentSchema = z.object({
+  photoUrl: optionalText,
   eyebrow: optionalText,
   headline: optionalText,
   bio: optionalText,

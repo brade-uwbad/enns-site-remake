@@ -46,6 +46,7 @@ export type ListingWritePayload = {
   baths: number | null;
   sqft: number | null;
   propertyType: PropertyType | null;
+  externalUrl: string | null;
 };
 
 export function buildListingWritePayload(
@@ -75,6 +76,7 @@ export function buildListingWritePayload(
     baths,
     sqft,
     propertyType,
+    externalUrl: form.externalUrl.trim() || null,
   };
 }
 
@@ -112,6 +114,7 @@ export function toEditorState(listing: Listing): EditorState {
       listing.baths === null || listing.baths === undefined ? "" : String(listing.baths),
     sqft: listing.sqft === null || listing.sqft === undefined ? "" : String(listing.sqft),
     propertyType: listing.property_type ?? "",
+    externalUrl: listing.external_url ?? "",
   };
 }
 

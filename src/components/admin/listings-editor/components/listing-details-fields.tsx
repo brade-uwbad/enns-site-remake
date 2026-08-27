@@ -84,6 +84,19 @@ export function ListingDetailsFields({ form, onSetField }: ListingDetailsFieldsP
           onChange={(e) => onSetField("description", e.target.value)}
         />
       </label>
+      <label className="text-sm">
+        <span className="mb-1 block">Listing URL</span>
+        <input
+          type="url"
+          placeholder="https://"
+          className="w-full rounded-sm border border-zinc-300 p-2"
+          value={form.externalUrl}
+          onChange={(e) => onSetField("externalUrl", e.target.value)}
+        />
+        <span className="mt-1 block text-xs text-slate-500">
+          Optional link to the full listing (e.g. MLS or Realtor.ca).
+        </span>
+      </label>
     </div>
   );
 }

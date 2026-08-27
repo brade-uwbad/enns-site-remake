@@ -23,10 +23,10 @@ export function SiteHeader() {
             <Image
               src="/logo.svg"
               alt="Brad Enns Real Estate logo"
-              width={106}
-              height={24}
+              width={127}
+              height={29}
               priority
-              className="h-5 w-auto sm:h-6"
+              className="h-6 w-auto sm:h-[1.8rem]"
             />
           </Link>
           <SiteHeaderNav
