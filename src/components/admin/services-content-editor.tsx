@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { ADMIN_IMAGE_UPLOAD_FORMAT_HINT } from "@/components/admin/image-upload-hint";
 import { EditorToast } from "@/components/admin/listings-editor/editor-toast";
 import {
   adminCardClass,
@@ -257,9 +258,9 @@ export function ServicesContentEditor({ initialPayload, updatedAt }: ServicesCon
                       }}
                       className="w-40 text-xs file:mr-2 file:rounded-md file:border-0 file:bg-[#3A6696] file:px-2 file:py-1 file:text-white hover:file:bg-[#32587f]"
                     />
-                    {uploadingIndex === index ? (
-                      <span className="text-xs text-slate-500">Uploading…</span>
-                    ) : null}
+                    <p className="text-xs text-slate-500">
+                      {uploadingIndex === index ? "Uploading…" : ADMIN_IMAGE_UPLOAD_FORMAT_HINT}
+                    </p>
                   </div>
 
                   <div className="flex-1 space-y-3">
