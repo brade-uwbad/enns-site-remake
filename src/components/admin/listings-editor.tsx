@@ -26,6 +26,7 @@ import {
   splitList,
   toEditorState,
 } from "@/components/admin/listings-editor/utils";
+import { parseUploadApiResponse, validateAdminImageFile } from "@/lib/admin/image-upload";
 import { useAdminUser } from "@/hooks/use-admin-user";
 import type { ListingCategory } from "@/lib/listings/listing-categories";
 import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
@@ -128,7 +129,22 @@ export function ListingsEditor({
       return;
     }
     const incoming = Array.from(files);
-    setUploadFiles((prev) => [...prev, ...incoming]);
+    const rejected: string[] = [];
+    const accepted: File[] = [];
+    for (const file of incoming) {
+      const validationError = validateAdminImageFile(file);
+      if (validationError) {
+        rejected.push(validationError);
+      } else {
+        accepted.push(file);
+      }
+    }
+    if (rejected.length > 0) {
+      setMessage(rejected[0]!);
+    }
+    if (accepted.length > 0) {
+      setUploadFiles((prev) => [...prev, ...accepted]);
+    }
   }
 
   function removeQueuedUploadFile(index: number) {
@@ -198,13 +214,8 @@ export function ListingsEditor({
         headers: uploadHeadersForMultipart(),
         body: fd,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error?.message ?? `Failed to upload ${file.name}`);
-      }
-      if (data?.data?.url) {
-        uploadedUrls.push(data.data.url as string);
-      }
+      const { url } = await parseUploadApiResponse(res, `Failed to upload ${file.name}`);
+      uploadedUrls.push(url);
     }
     const merged = [...splitList(existingImagesText), ...uploadedUrls];
     if (uploadedUrls.length > 0) {

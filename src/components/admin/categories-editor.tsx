@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ADMIN_IMAGE_UPLOAD_FORMAT_HINT } from "@/components/admin/image-upload-hint";
+import { parseUploadApiResponse, validateAdminImageFile } from "@/lib/admin/image-upload";
 import { EditorToast } from "@/components/admin/listings-editor/editor-toast";
 import {
   adminCardClass,
@@ -76,6 +77,12 @@ export function CategoriesEditor({ initialCategories }: CategoriesEditorProps) {
       return;
     }
 
+    const validationError = validateAdminImageFile(file);
+    if (validationError) {
+      setMessage(validationError);
+      return;
+    }
+
     const key = `${index}-${field}`;
     setUploadingKey(key);
     setMessage("");
@@ -89,11 +96,8 @@ export function CategoriesEditor({ initialCategories }: CategoriesEditorProps) {
       body.append("file", file);
 
       const res = await fetch("/api/admin/content/upload", { method: "POST", headers, body });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error?.message ?? "Could not upload icon.");
-      }
-      updateCategory(index, { [field]: data.data.url as string });
+      const { url } = await parseUploadApiResponse(res, "Could not upload icon.");
+      updateCategory(index, { [field]: url });
       setMessage("Icon uploaded. Click Save changes to publish it.");
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Could not upload icon.");

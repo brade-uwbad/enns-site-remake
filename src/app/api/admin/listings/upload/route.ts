@@ -1,9 +1,11 @@
 import { randomUUID } from "crypto";
+import {
+  ADMIN_IMAGE_UPLOAD_LIMIT_MESSAGE,
+  MAX_ADMIN_IMAGE_BYTES,
+} from "@/lib/admin/image-upload";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { requireAdmin } from "@/lib/auth/admin";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
-
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 function normalizeFilename(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -29,8 +31,8 @@ export async function POST(request: Request) {
   if (!file.type.startsWith("image/")) {
     return jsonError("Only image uploads are supported", 400, "VALIDATION_ERROR");
   }
-  if (file.size > MAX_IMAGE_BYTES) {
-    return jsonError("Image exceeds 10MB limit", 400, "VALIDATION_ERROR");
+  if (file.size > MAX_ADMIN_IMAGE_BYTES) {
+    return jsonError(ADMIN_IMAGE_UPLOAD_LIMIT_MESSAGE, 400, "VALIDATION_ERROR");
   }
 
   try {
