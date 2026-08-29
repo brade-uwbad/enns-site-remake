@@ -50,7 +50,7 @@ function LoginForm() {
     setMessage("");
     try {
       const supabase = createSupabaseBrowserClient();
-      const { error: signError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signError } = await supabase.auth.signInWithPassword({
         email: emailValue,
         password,
       });
@@ -58,9 +58,7 @@ function LoginForm() {
         setMessage(signError.message);
         return;
       }
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = signInData.user;
       if (!user || !isAdminJwtUser(user)) {
         await supabase.auth.signOut();
         setMessage("This account does not have admin access.");

@@ -28,7 +28,7 @@ export async function createSupabaseServerAuthClient() {
             cookieStore.set(name, value, options);
           });
         } catch {
-          // Called from a Server Component without mutable cookies; middleware refreshes sessions.
+          // Called from a Server Component without mutable cookies; session refresh may be skipped.
         }
       },
     },

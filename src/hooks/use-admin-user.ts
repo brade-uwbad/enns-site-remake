@@ -12,8 +12,24 @@ type AdminUserProfile = {
   lastName: string;
 };
 
+function profileFromUser(user: {
+  email?: string | null;
+  user_metadata?: Record<string, unknown>;
+}): AdminUserProfile {
+  const meta = user.user_metadata;
+  const firstName = typeof meta?.first_name === "string" ? meta.first_name : "";
+  const lastName = typeof meta?.last_name === "string" ? meta.last_name : "";
+  return {
+    email: user.email ?? "",
+    firstName,
+    lastName,
+  };
+}
+
 /**
  * Admin session profile and access token for client-side admin API calls.
+ * Uses `getSession()` only — avoid `getUser()` here because it races server auth
+ * and can invalidate the refresh token ("Session not found" in Supabase logs).
  */
 export function useAdminUser(): {
   loading: boolean;
@@ -36,37 +52,25 @@ export function useAdminUser(): {
 
     const supabase = createSupabaseBrowserClient();
 
-    async function load() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    function applySession(session: { access_token?: string; user?: { email?: string | null; user_metadata?: Record<string, unknown> } } | null) {
       setAccessToken(session?.access_token ?? null);
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = session?.user;
       if (user && isAdminJwtUser(user)) {
-        const meta = user.user_metadata as Record<string, unknown> | undefined;
-        const firstName = typeof meta?.first_name === "string" ? meta.first_name : "";
-        const lastName = typeof meta?.last_name === "string" ? meta.last_name : "";
-        setAdmin({
-          email: user.email ?? "",
-          firstName,
-          lastName,
-        });
+        setAdmin(profileFromUser(user));
       } else {
         setAdmin(null);
       }
       setLoading(false);
     }
 
-    void load();
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      applySession(session);
+    });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAccessToken(session?.access_token ?? null);
-      void load();
+      applySession(session);
     });
 
     return () => {
