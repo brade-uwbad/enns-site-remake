@@ -10,16 +10,14 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createSupabaseServerAuthClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       const url = new URL("/admin/login", origin);
       url.searchParams.set("error", "otp_expired");
       return NextResponse.redirect(url);
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = data.session?.user;
 
     if (user && isAdminJwtUser(user)) {
       const destination =

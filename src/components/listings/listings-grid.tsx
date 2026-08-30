@@ -99,16 +99,6 @@ function buildQuery(filters: Filters) {
   return params.toString();
 }
 
-function canReorderListings(filters: Filters) {
-  return (
-    !filters.q.trim() &&
-    !filters.minPrice.trim() &&
-    !filters.maxPrice.trim() &&
-    !filters.beds.trim() &&
-    !filters.propertyType
-  );
-}
-
 function moveListing(listings: Listing[], fromId: string, toId: string) {
   const fromIndex = listings.findIndex((listing) => listing.id === fromId);
   const toIndex = listings.findIndex((listing) => listing.id === toId);
@@ -119,6 +109,23 @@ function moveListing(listings: Listing[], fromId: string, toId: string) {
   const [moved] = next.splice(fromIndex, 1);
   next.splice(toIndex, 0, moved);
   return next;
+}
+
+/** Reorder visible listings within the full status-group order, keeping hidden listings in place. */
+function mergeVisibleOrderIntoFull(
+  fullOrder: Listing[],
+  visibleIds: Set<string>,
+  newVisibleOrder: Listing[],
+): Listing[] {
+  const visibleQueue = [...newVisibleOrder];
+  let visibleIndex = 0;
+  return fullOrder.map((listing) => {
+    if (!visibleIds.has(listing.id)) {
+      return listing;
+    }
+    const next = visibleQueue[visibleIndex++];
+    return next ?? listing;
+  });
 }
 
 export function ListingsGrid({ categories }: { categories: ListingCategory[] }) {
@@ -134,6 +141,8 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
   }));
   const [searchInput, setSearchInput] = useState("");
   const [listings, setListings] = useState<Listing[]>([]);
+  const [fullListings, setFullListings] = useState<Listing[]>([]);
+  const [loadingFullListings, setLoadingFullListings] = useState(false);
   const [orderedListings, setOrderedListings] = useState<Listing[]>([]);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
@@ -177,10 +186,35 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
     setOrderedListings(listings);
   }, [listings]);
 
-  const canReorder = Boolean(admin && !loading && canReorderListings(filters));
+  useEffect(() => {
+    if (!admin) {
+      setFullListings([]);
+      return;
+    }
+
+    const endpoint = filters.status === "sold" ? "/api/listings/sold" : "/api/listings";
+    const loadFullListings = async () => {
+      setLoadingFullListings(true);
+      try {
+        const r = await fetch(`${endpoint}?limit=100`);
+        const data = await r.json();
+        if (data?.error?.message) {
+          throw new Error(data.error.message as string);
+        }
+        setFullListings(data?.data?.listings ?? []);
+      } catch {
+        setFullListings([]);
+      } finally {
+        setLoadingFullListings(false);
+      }
+    };
+    void loadFullListings();
+  }, [admin, filters.status]);
+
+  const canReorder = Boolean(admin && !loading && listings.length > 0 && fullListings.length > 0);
   const visibleListings = canReorder ? orderedListings : listings;
 
-  async function persistListingOrder(nextOrder: Listing[]) {
+  async function persistListingOrder(nextFullOrder: Listing[]) {
     if (!accessToken) {
       setOrderMessage("Sign in as admin to save listing order.");
       setOrderedListings(listings);
@@ -198,14 +232,26 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
         },
         body: JSON.stringify({
           status: filters.status,
-          ids: nextOrder.map((listing) => listing.id),
+          ids: nextFullOrder.map((listing) => listing.id),
         }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data?.error?.message ?? "Failed to save listing order.");
       }
-      setListings(nextOrder);
+      setFullListings(nextFullOrder);
+      setListings((current) => {
+        const orderIndex = new Map(nextFullOrder.map((listing, index) => [listing.id, index]));
+        return [...current].sort(
+          (a, b) => (orderIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+        );
+      });
+      setOrderedListings((current) => {
+        const orderIndex = new Map(nextFullOrder.map((listing, index) => [listing.id, index]));
+        return [...current].sort(
+          (a, b) => (orderIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+        );
+      });
     } catch (e) {
       setOrderMessage(e instanceof Error ? e.message : "Failed to save listing order.");
       setOrderedListings(listings);
@@ -221,11 +267,14 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
       return;
     }
 
-    const nextOrder = moveListing(orderedListings, draggingId, targetId);
-    setOrderedListings(nextOrder);
+    const nextVisibleOrder = moveListing(orderedListings, draggingId, targetId);
+    setOrderedListings(nextVisibleOrder);
     setDraggingId(null);
     setDropTargetId(null);
-    void persistListingOrder(nextOrder);
+
+    const visibleIds = new Set(listings.map((listing) => listing.id));
+    const nextFullOrder = mergeVisibleOrderIntoFull(fullListings, visibleIds, nextVisibleOrder);
+    void persistListingOrder(nextFullOrder);
   }
 
   if (error) {
@@ -387,8 +436,12 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
           {canReorder
             ? savingOrder
               ? "Saving listing order..."
-              : "Drag a listing card by the handle to reorder how it appears on the site."
-            : "Clear filters to reorder listings."}
+              : "Drag a listing card by the handle to reorder how it appears on the site. With filters on, only the visible listings move relative to each other."
+            : admin && listings.length > 0 && loadingFullListings
+              ? "Loading listing order..."
+              : admin && listings.length > 0 && !loadingFullListings && fullListings.length === 0
+                ? "Could not load listing order."
+                : null}
           {orderMessage ? ` ${orderMessage}` : null}
         </p>
       ) : null}

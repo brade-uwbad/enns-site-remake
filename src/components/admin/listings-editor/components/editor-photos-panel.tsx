@@ -4,6 +4,8 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, Eye, FolderOpen, ImageIcon, Star, Trash2 } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
+import { ADMIN_IMAGE_UPLOAD_FORMAT_HINT } from "@/components/admin/image-upload-hint";
+
 const THUMB_COUNT = 4;
 const VISIBLE_PREVIEW_COUNT = 1 + THUMB_COUNT;
 
@@ -385,6 +387,7 @@ export function EditorPhotosPanel({
         <FolderOpen className="h-6 w-6 text-slate-500" strokeWidth={1.75} aria-hidden />
         Click to upload photos
       </button>
+      <p className="mt-2 text-center text-xs text-slate-500">{ADMIN_IMAGE_UPLOAD_FORMAT_HINT}</p>
 
       {showAllPhotos ? (
         <div

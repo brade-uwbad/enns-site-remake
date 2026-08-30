@@ -21,9 +21,10 @@ export async function requireAdminSession(loginRedirectPath?: string) {
   const supabase = await createSupabaseServerAuthClient();
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
 
-  if (!user || !isAdminJwtUser(user)) {
+  if (error || !user || !isAdminJwtUser(user)) {
     const target = loginRedirectPath ?? "/admin/login";
     if (target.startsWith("/admin/login")) {
       redirect(target);
