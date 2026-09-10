@@ -16,6 +16,14 @@ export async function SiteFooter() {
             Contact
           </Link>
           <a
+            href={payload.instagramUrl}
+            className="text-zinc-600 hover:text-zinc-900"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Instagram
+          </a>
+          <a
             href={payload.facebookUrl}
             className="text-zinc-600 hover:text-zinc-900"
             target="_blank"
