@@ -1,63 +1,10 @@
-import { randomUUID } from "crypto";
-import {
-  ADMIN_IMAGE_UPLOAD_LIMIT_MESSAGE,
-  MAX_ADMIN_IMAGE_BYTES,
-} from "@/lib/admin/image-upload";
-import { jsonError, jsonOk } from "@/lib/api/http";
-import { requireAdmin } from "@/lib/auth/admin";
-import { getSupabaseAdminClient } from "@/lib/supabase/server";
-
-function normalizeFilename(name: string) {
-  return name.replace(/[^a-zA-Z0-9._-]/g, "_");
-}
+import { getSiteImagesBucket, prepareAdminSignedUpload } from "@/lib/admin/storage-upload";
 
 /**
- * `POST /api/admin/content/upload` — Upload an image used in editable site
- * content (e.g. the homepage hero background). Stores it in the public
- * `site-images` bucket and returns the public URL.
+ * `POST /api/admin/content/upload` — Mint a signed upload URL for editable site
+ * content images (e.g. the homepage hero background). The browser uploads directly
+ * to the public `site-images` bucket and uses the returned public URL.
  */
 export async function POST(request: Request) {
-  const auth = await requireAdmin(request);
-  if (!auth.ok) {
-    return jsonError(auth.message, auth.status, "UNAUTHORIZED");
-  }
-
-  let formData: FormData;
-  try {
-    formData = await request.formData();
-  } catch {
-    return jsonError("Invalid form-data body", 400, "BAD_REQUEST");
-  }
-
-  const file = formData.get("file");
-  if (!(file instanceof File)) {
-    return jsonError("Expected a file field named 'file'", 400, "BAD_REQUEST");
-  }
-  if (!file.type.startsWith("image/")) {
-    return jsonError("Only image uploads are supported", 400, "VALIDATION_ERROR");
-  }
-  if (file.size > MAX_ADMIN_IMAGE_BYTES) {
-    return jsonError(ADMIN_IMAGE_UPLOAD_LIMIT_MESSAGE, 400, "VALIDATION_ERROR");
-  }
-
-  try {
-    const supabase = getSupabaseAdminClient();
-    const bucket = process.env.STORAGE_SUPABASE_SITE_IMAGES_BUCKET ?? "site-images";
-    const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-    const filePath = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${normalizeFilename(file.name || `image.${ext}`)}`;
-
-    const bytes = await file.arrayBuffer();
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, bytes, { contentType: file.type, upsert: false });
-    if (uploadError) {
-      return jsonError(uploadError.message, 500, "UPLOAD_ERROR");
-    }
-
-    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-    return jsonOk({ url: data.publicUrl, path: filePath, bucket });
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to upload image";
-    return jsonError(message, 500, "UPLOAD_ERROR");
-  }
+  return prepareAdminSignedUpload({ request, bucket: getSiteImagesBucket() });
 }
