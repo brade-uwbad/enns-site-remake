@@ -73,6 +73,7 @@ const DEFAULTS: SiteContentPayloadMap = {
   },
   footer: {
     copyright: "Brad Enns. Kitchener–Waterloo & area.",
+    instagramUrl: "https://www.instagram.com/brad.enns/",
     facebookUrl: "https://www.facebook.com/ennsrealestate",
     linkedinUrl: "https://ca.linkedin.com/pub/brad-enns/44/75b/5b9",
   },

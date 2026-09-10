@@ -62,6 +62,7 @@ export const SITE_CONTENT_EDITOR_FIELDS: Record<SiteContentKey, ContentEditorFie
   ],
   footer: [
     { name: "copyright", label: "Copyright line" },
+    { name: "instagramUrl", label: "Instagram URL" },
     { name: "facebookUrl", label: "Facebook URL" },
     { name: "linkedinUrl", label: "LinkedIn URL" },
   ],

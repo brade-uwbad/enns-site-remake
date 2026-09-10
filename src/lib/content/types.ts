@@ -64,6 +64,7 @@ export type ContactContent = {
 
 export type FooterContent = {
   copyright: string;
+  instagramUrl: string;
   facebookUrl: string;
   linkedinUrl: string;
 };

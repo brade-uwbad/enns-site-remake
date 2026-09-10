@@ -66,6 +66,7 @@ export const contactContentSchema = z.object({
 
 export const footerContentSchema = z.object({
   copyright: optionalText,
+  instagramUrl: optionalText,
   facebookUrl: optionalText,
   linkedinUrl: optionalText,
 });
