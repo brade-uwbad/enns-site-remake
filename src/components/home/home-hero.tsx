@@ -33,7 +33,7 @@ export function HomeHero({
         sizes="100vw"
         className="object-cover object-center"
       />
-      <div className="absolute inset-0 bg-black/45" aria-hidden />
+      <div className="absolute inset-0 bg-black/75" aria-hidden />
 
       <div
         className={`absolute bottom-0 left-0 right-0 z-10 px-4 pb-10 sm:bottom-0 sm:left-0 sm:right-auto sm:px-0 sm:pb-16 sm:pl-8 md:pb-20 md:pl-10 lg:pl-14 ${poppins.className}`}
