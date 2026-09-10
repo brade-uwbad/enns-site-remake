@@ -26,7 +26,7 @@ import {
   splitList,
   toEditorState,
 } from "@/components/admin/listings-editor/utils";
-import { parseUploadApiResponse, validateAdminImageFile } from "@/lib/admin/image-upload";
+import { uploadAdminImageFile, validateAdminImageFile } from "@/lib/admin/image-upload";
 import { useAdminUser } from "@/hooks/use-admin-user";
 import type { ListingCategory } from "@/lib/listings/listing-categories";
 import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
@@ -188,13 +188,6 @@ export function ListingsEditor({
     return headers;
   }
 
-  function uploadHeadersForMultipart(): HeadersInit | undefined {
-    if (!accessToken) {
-      return undefined;
-    }
-    return { Authorization: `Bearer ${accessToken}` };
-  }
-
   /**
    * Uploads selected files from the file input into Storage and appends URLs to imagesText.
    * No-op if no files chosen. Returns the merged image URL list for the save payload (state may lag otherwise).
@@ -207,14 +200,7 @@ export function ListingsEditor({
     }
     const uploadedUrls: string[] = [];
     for (const file of uploadFiles) {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/admin/listings/upload", {
-        method: "POST",
-        headers: uploadHeadersForMultipart(),
-        body: fd,
-      });
-      const { url } = await parseUploadApiResponse(res, `Failed to upload ${file.name}`);
+      const { url } = await uploadAdminImageFile(file, "listings", accessToken);
       uploadedUrls.push(url);
     }
     const merged = [...splitList(existingImagesText), ...uploadedUrls];

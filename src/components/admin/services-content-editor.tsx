@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ADMIN_IMAGE_UPLOAD_FORMAT_HINT } from "@/components/admin/image-upload-hint";
-import { parseUploadApiResponse, validateAdminImageFile } from "@/lib/admin/image-upload";
+import { uploadAdminImageFile, validateAdminImageFile } from "@/lib/admin/image-upload";
 import { EditorToast } from "@/components/admin/listings-editor/editor-toast";
 import {
   adminCardClass,
@@ -89,16 +89,7 @@ export function ServicesContentEditor({ initialPayload, updatedAt }: ServicesCon
     setUploadingIndex(index);
     setMessage("");
     try {
-      const headers: Record<string, string> = {};
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`;
-      }
-
-      const body = new FormData();
-      body.append("file", file);
-
-      const res = await fetch("/api/admin/content/upload", { method: "POST", headers, body });
-      const { url } = await parseUploadApiResponse(res, "Could not upload icon.");
+      const { url } = await uploadAdminImageFile(file, "content", accessToken);
       updateCard(index, { iconUrl: url });
       setMessage("Icon uploaded. Click Save changes to publish it.");
     } catch (err) {
