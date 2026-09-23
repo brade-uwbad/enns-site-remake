@@ -71,7 +71,7 @@ export async function sendContactEmail(
   try {
     const data = await resend.emails.send({
       from: "Contact Form <onboarding@resend.dev>",
-      to: "bradenns.uwbad@gmail.com",
+      to: "brad@mres.ca",
       subject: `New Inquiry: ${subject}`,
       replyTo: email,
       text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone || "Not provided"}\nSubject: ${subject}\n\nMessage:\n${message}`.trim(),

@@ -473,6 +473,7 @@ export function ListingsEditor({
             busy={busy}
             editorPanel={editorPanel}
             form={form}
+            categories={categories}
             existingPhotos={existingPhotos}
             selectedPhotos={selectedPhotos}
             backHref={backHref}

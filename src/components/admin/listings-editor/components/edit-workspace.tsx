@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CircleDollarSign, ImageIcon } from "lucide-react";
+import { CircleDollarSign, ImageIcon, Tags } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 import {
   buildEditorPhotoList,
@@ -7,12 +7,15 @@ import {
   type EditorPhotoItem,
 } from "@/components/admin/listings-editor/components/editor-photos-panel";
 import { ListingDetailsFields } from "@/components/admin/listings-editor/components/listing-details-fields";
+import { PropertyTypePickerGrid } from "@/components/admin/listings-editor/components/property-type-picker-grid";
 import { type EditorPanel, type EditorState } from "@/components/admin/listings-editor/types";
+import type { ListingCategory } from "@/lib/listings/listing-categories";
 
 type Props = {
   busy: boolean;
   editorPanel: EditorPanel;
   form: EditorState;
+  categories: ListingCategory[];
   existingPhotos: string[];
   selectedPhotos: Array<{ file: File; previewUrl: string }>;
   backHref?: string;
@@ -43,6 +46,12 @@ const MENU_SECTIONS: {
     label: "Details",
     description: "Edit the listing name, address, description, and price",
     Icon: CircleDollarSign,
+  },
+  {
+    panel: "category",
+    label: "Category",
+    description: "Change the property type / category for this listing",
+    Icon: Tags,
   },
 ];
 
@@ -80,6 +89,7 @@ export function EditWorkspace(props: Props) {
     busy,
     editorPanel,
     form,
+    categories,
     existingPhotos,
     selectedPhotos,
     backHref,
@@ -150,7 +160,9 @@ export function EditWorkspace(props: Props) {
       ? "Editing listing photos"
       : editorPanel === "details"
         ? "Edit listing details"
-        : "Listing Editor";
+        : editorPanel === "category"
+          ? "Edit listing category"
+          : "Listing Editor";
 
   const panelBody =
     editorPanel === "menu" ? (
@@ -179,6 +191,12 @@ export function EditWorkspace(props: Props) {
         onRemoveExistingPhoto={onRemoveExistingPhoto}
         onSetMainPhoto={onSetMainPhoto}
         onMovePhoto={onMovePhoto}
+      />
+    ) : editorPanel === "category" ? (
+      <PropertyTypePickerGrid
+        value={form.propertyType}
+        categories={categories}
+        onChange={(type) => onSetField("propertyType", type)}
       />
     ) : (
       <ListingDetailsFields form={form} onSetField={onSetField} />
