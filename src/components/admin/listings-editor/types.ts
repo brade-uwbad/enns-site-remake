@@ -59,4 +59,4 @@ export const WIZARD_STEP_TITLES = [
   "Photos",
 ] as const;
 
-export type EditorPanel = "menu" | "photos" | "details";
+export type EditorPanel = "menu" | "photos" | "details" | "category";
