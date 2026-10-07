@@ -6,7 +6,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useAdminUser } from "@/hooks/use-admin-user";
 import { SoldRibbon } from "@/components/listings/sold-ribbon";
-import { labelForCategory, type ListingCategory } from "@/lib/listings/listing-categories";
+import {
+  isLeaseCategory,
+  isSoldCategory,
+  labelForCategory,
+  type ListingCategory,
+} from "@/lib/listings/listing-categories";
 
 type Listing = {
   id: string;
@@ -26,7 +31,6 @@ type Listing = {
 };
 
 type Filters = {
-  status: "active" | "sold";
   minPrice: string;
   maxPrice: string;
   beds: string;
@@ -79,13 +83,13 @@ function ListingCardSkeleton() {
   );
 }
 
-function buildQuery(filters: Filters) {
+function buildQuery(filters: Filters, propertyType: string) {
   const params = new URLSearchParams({ limit: "100" });
   if (filters.q.trim()) {
     params.set("q", filters.q.trim());
   }
-  if (filters.propertyType) {
-    params.set("propertyType", filters.propertyType);
+  if (propertyType) {
+    params.set("propertyType", propertyType);
   }
   if (filters.minPrice.trim()) {
     params.set("minPrice", filters.minPrice.trim());
@@ -132,7 +136,6 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
   const { admin, accessToken } = useAdminUser();
   const defaultPropertyType = categories[0]?.value ?? "";
   const [filters, setFilters] = useState<Filters>(() => ({
-    status: "active",
     minPrice: "",
     maxPrice: "",
     beds: "",
@@ -158,10 +161,16 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const queryString = useMemo(() => buildQuery(filters), [filters]);
+  const soldView = isSoldCategory(categories, filters.propertyType);
+  const effectiveStatus: "active" | "sold" = soldView ? "sold" : "active";
+  const effectivePropertyType = soldView ? "" : filters.propertyType;
+  const queryString = useMemo(
+    () => buildQuery(filters, effectivePropertyType),
+    [filters, effectivePropertyType],
+  );
 
   useEffect(() => {
-    const endpoint = filters.status === "sold" ? "/api/listings/sold" : "/api/listings";
+    const endpoint = effectiveStatus === "sold" ? "/api/listings/sold" : "/api/listings";
     const loadListings = async () => {
       setLoading(true);
       setListings([]);
@@ -180,7 +189,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
       }
     };
     void loadListings();
-  }, [filters.status, queryString]);
+  }, [effectiveStatus, queryString]);
 
   useEffect(() => {
     setOrderedListings(listings);
@@ -192,7 +201,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
       return;
     }
 
-    const endpoint = filters.status === "sold" ? "/api/listings/sold" : "/api/listings";
+    const endpoint = effectiveStatus === "sold" ? "/api/listings/sold" : "/api/listings";
     const loadFullListings = async () => {
       setLoadingFullListings(true);
       try {
@@ -209,7 +218,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
       }
     };
     void loadFullListings();
-  }, [admin, filters.status]);
+  }, [admin, effectiveStatus]);
 
   const canReorder = Boolean(admin && !loading && listings.length > 0 && fullListings.length > 0);
   const visibleListings = canReorder ? orderedListings : listings;
@@ -231,7 +240,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          status: filters.status,
+          status: effectiveStatus,
           ids: nextFullOrder.map((listing) => listing.id),
         }),
       });
@@ -297,7 +306,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
                 onClick={() =>
                   setFilters((prev) => ({
                     ...prev,
-                    propertyType: prev.propertyType === cat.value ? "" : cat.value,
+                    propertyType: cat.value,
                   }))
                 }
                 className={`flex h-[6.25rem] w-full flex-col items-center justify-center gap-1.5 rounded-md bg-white px-2 py-2.5 transition sm:w-[7rem] ${
@@ -347,31 +356,6 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
         </div>
 
         <div className="flex flex-wrap items-center gap-2 lg:contents">
-          <div className="inline-flex shrink-0 overflow-hidden rounded-sm border border-slate-300 bg-white">
-            <button
-              type="button"
-              onClick={() => setFilters((prev) => ({ ...prev, status: "active" }))}
-              className={`border-r px-4 py-2 text-xs font-semibold uppercase tracking-wide sm:px-5 ${
-                filters.status === "active"
-                  ? "border-sky-600 bg-white text-sky-600"
-                  : "border-slate-300 bg-white text-slate-400"
-              }`}
-            >
-              Active
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilters((prev) => ({ ...prev, status: "sold" }))}
-              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide sm:px-5 ${
-                filters.status === "sold"
-                  ? "bg-white text-sky-600 ring-1 ring-inset ring-sky-600"
-                  : "bg-white text-slate-400"
-              }`}
-            >
-              Sold
-            </button>
-          </div>
-
           {admin ? (
             <Link
               href="/admin/listings?create=1"
@@ -527,7 +511,11 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
                 height={750}
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
               />
-              {listing.status === "sold" ? <SoldRibbon /> : null}
+              {listing.status === "sold" ? (
+                <SoldRibbon
+                  label={isLeaseCategory(categories, listing.property_type) ? "Leased" : "Sold"}
+                />
+              ) : null}
             </div>
             <div className="space-y-2 px-4 py-3">
               <p className="line-clamp-1 text-base font-semibold text-slate-900">
