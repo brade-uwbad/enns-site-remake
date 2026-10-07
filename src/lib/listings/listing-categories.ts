@@ -66,6 +66,36 @@ export function labelForCategory(
   return match ? match.label : titleCaseSlug(value);
 }
 
+/**
+ * Whether a listing's category represents a lease (vs. a sale). Matched on the
+ * category label (admin-editable, e.g. "For Lease" or "Leases") so it keeps
+ * working regardless of the underlying slug.
+ */
+export function isLeaseCategory(
+  categories: ListingCategory[],
+  value: string | null | undefined,
+): boolean {
+  if (!value) {
+    return false;
+  }
+  return /lease/i.test(labelForCategory(categories, value));
+}
+
+/**
+ * Whether a category represents the "sold/leased" view rather than a property
+ * type. Matched on the category label (admin-editable, e.g. "Recently Sold") so
+ * selecting it shows listings by status instead of by property type.
+ */
+export function isSoldCategory(
+  categories: ListingCategory[],
+  value: string | null | undefined,
+): boolean {
+  if (!value) {
+    return false;
+  }
+  return /sold/i.test(labelForCategory(categories, value));
+}
+
 /** Converts a label into a URL-safe slug for use as a category value. */
 export function slugifyCategory(label: string): string {
   return label

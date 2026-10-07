@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ListingDetailGallery } from "@/components/listings/listing-detail-gallery";
 import { ListingAdminActions } from "@/components/listings/listing-admin-actions";
 import { ListingContactDialog } from "@/components/listings/listing-contact-dialog";
-import { labelForCategory, type ListingCategory } from "@/lib/listings/listing-categories";
+import { isLeaseCategory, labelForCategory, type ListingCategory } from "@/lib/listings/listing-categories";
 
 type Listing = {
   id: string;
@@ -63,6 +63,7 @@ type Props = {
 
 export function ListingDetailView({ listing, nearby, categories }: Props) {
   const mapQuery = encodeURIComponent(fullAddress(listing) || listing.title);
+  const lease = isLeaseCategory(categories, listing.property_type);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
@@ -71,6 +72,7 @@ export function ListingDetailView({ listing, nearby, categories }: Props) {
         featuredImageUrl={listing.featured_image_url}
         images={listing.images}
         sold={listing.status === "sold"}
+        soldLabel={lease ? "Leased" : "Sold"}
       />
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
@@ -104,7 +106,11 @@ export function ListingDetailView({ listing, nearby, categories }: Props) {
         </div>
 
         <aside className="space-y-4">
-          <ListingAdminActions listingId={listing.id} status={listing.status} />
+          <ListingAdminActions
+            listingId={listing.id}
+            status={listing.status}
+            isLease={lease}
+          />
           <h2 className="text-base font-semibold text-slate-900">Where you&apos;ll be</h2>
           <iframe
             title={`Map for ${listing.title}`}

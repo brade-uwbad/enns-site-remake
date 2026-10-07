@@ -9,6 +9,7 @@ type Props = {
   featuredImageUrl: string | null;
   images: string[];
   sold?: boolean;
+  soldLabel?: string;
 };
 
 const FALLBACK_IMAGE = "https://placehold.co/1200x700/png?text=Listing";
@@ -61,7 +62,7 @@ function buildGalleryImageList(featuredImageUrl: string | null, images: string[]
   return dedupeImageUrls([featuredImageUrl, ...fromArray]);
 }
 
-export function ListingDetailGallery({ title, featuredImageUrl, images, sold = false }: Props) {
+export function ListingDetailGallery({ title, featuredImageUrl, images, sold = false, soldLabel = "Sold" }: Props) {
   const allImages = useMemo(() => {
     const unique = buildGalleryImageList(featuredImageUrl, images);
     return unique.length ? unique : [FALLBACK_IMAGE];
@@ -79,7 +80,7 @@ export function ListingDetailGallery({ title, featuredImageUrl, images, sold = f
     setShowAllPhotos(false);
   }
 
-  const soldRibbon = sold ? <SoldRibbon /> : null;
+  const soldRibbon = sold ? <SoldRibbon label={soldLabel} /> : null;
 
   const searchBadge = (
     <span className="absolute left-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-sm">

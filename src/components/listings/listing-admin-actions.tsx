@@ -10,6 +10,7 @@ import { isSupabaseBrowserConfigured } from "@/lib/supabase/public-config";
 type ListingAdminActionsProps = {
   listingId: string;
   status: "active" | "sold" | "draft";
+  isLease?: boolean;
 };
 
 function PencilIcon({ className }: { className?: string }) {
@@ -31,11 +32,12 @@ function PencilIcon({ className }: { className?: string }) {
   );
 }
 
-export function ListingAdminActions({ listingId, status }: ListingAdminActionsProps) {
+export function ListingAdminActions({ listingId, status, isLease = false }: ListingAdminActionsProps) {
   const router = useRouter();
   const { loading, admin, accessToken } = useAdminUser();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const markLabel = isLease ? "Mark as leased" : "Mark as sold";
 
   if (loading || !admin) {
     return null;
@@ -97,7 +99,7 @@ export function ListingAdminActions({ listingId, status }: ListingAdminActionsPr
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-[#e6e8ec] px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-[#d8dadf] disabled:opacity-50"
           >
             <PencilIcon className="h-4 w-4 shrink-0" />
-            Mark as sold
+            {markLabel}
           </button>
         )}
         <Link
