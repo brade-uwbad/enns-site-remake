@@ -98,6 +98,112 @@ export function movePhoto(
   return toExistingAndFiles(reordered, selectedPhotos);
 }
 
+function PhotoHoverActions({
+  photo,
+  isMain,
+  photos,
+  onMovePhoto,
+  onSetMainPhoto,
+  onRemove,
+  onPreview,
+}: {
+  photo: EditorPhotoItem;
+  isMain: boolean;
+  photos: EditorPhotoItem[];
+  onMovePhoto: (photo: EditorPhotoItem, delta: number) => void;
+  onSetMainPhoto: (photo: EditorPhotoItem) => void;
+  onRemove: (photo: EditorPhotoItem) => void;
+  onPreview: (src: string) => void;
+}) {
+  const position = photos.findIndex((p) => photoKey(p) === photoKey(photo));
+  const canMoveEarlier = position > 0;
+  const canMoveLater = position >= 0 && position < photos.length - 1;
+  return (
+    <div className="absolute inset-0 z-10 flex flex-wrap items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+      {canMoveEarlier ? (
+        <button
+          type="button"
+          onClick={() => onMovePhoto(photo, -1)}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
+          aria-label="Move photo earlier"
+        >
+          <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+        </button>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => onPreview(photo.src)}
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
+        aria-label="View photo"
+      >
+        <Eye className="h-4 w-4" strokeWidth={2} />
+      </button>
+      {!isMain ? (
+        <button
+          type="button"
+          onClick={() => onSetMainPhoto(photo)}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
+          aria-label="Set as main photo"
+        >
+          <Star className="h-4 w-4" strokeWidth={2} />
+        </button>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => onRemove(photo)}
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
+        aria-label="Delete photo"
+      >
+        <Trash2 className="h-4 w-4" strokeWidth={2} />
+      </button>
+      {canMoveLater ? (
+        <button
+          type="button"
+          onClick={() => onMovePhoto(photo, 1)}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
+          aria-label="Move photo later"
+        >
+          <ChevronRight className="h-4 w-4" strokeWidth={2} />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function MainStarButton({
+  photo,
+  photoIndex,
+  onSetMainPhoto,
+  className = "",
+}: {
+  photo: EditorPhotoItem;
+  photoIndex: number;
+  onSetMainPhoto: (photo: EditorPhotoItem) => void;
+  className?: string;
+}) {
+  const isMain = photoIndex === 0;
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!isMain) {
+          onSetMainPhoto(photo);
+        }
+      }}
+      className={`absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition ${className} ${
+        isMain
+          ? "bg-[#3A6696] text-white"
+          : "bg-white/95 text-slate-700 hover:bg-white"
+      }`}
+      aria-label={isMain ? "Main photo" : "Set as main photo"}
+      aria-pressed={isMain}
+    >
+      <Star className={`h-4 w-4 ${isMain ? "fill-current" : ""}`} strokeWidth={2} />
+    </button>
+  );
+}
+
 export function EditorPhotosPanel({
   busy,
   photos,
@@ -113,6 +219,13 @@ export function EditorPhotosPanel({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadInputId = useId();
 
+  const photoOrderKey = photos.map((p) => photoKey(p)).join("|");
+  const [trackedOrderKey, setTrackedOrderKey] = useState(photoOrderKey);
+  if (photoOrderKey !== trackedOrderKey) {
+    setTrackedOrderKey(photoOrderKey);
+    setPreviewIndex(0);
+  }
+
   const safePreviewIndex =
     photos.length === 0 ? 0 : Math.min(previewIndex, photos.length - 1);
   const previewPhoto = photos[safePreviewIndex];
@@ -123,12 +236,6 @@ export function EditorPhotosPanel({
     () => Array.from({ length: THUMB_COUNT }, (_, i) => photos[i + 1] ?? null),
     [photos],
   );
-
-  const photoOrderKey = photos.map((p) => photoKey(p)).join("|");
-
-  useEffect(() => {
-    setPreviewIndex(0);
-  }, [photoOrderKey]);
 
   useEffect(() => {
     if (!previewSrc && !showAllPhotos) {
@@ -169,94 +276,6 @@ export function EditorPhotosPanel({
     }
   }
 
-  function PhotoHoverActions({ photo, isMain }: { photo: EditorPhotoItem; isMain: boolean }) {
-    const position = photos.findIndex((p) => photoKey(p) === photoKey(photo));
-    const canMoveEarlier = position > 0;
-    const canMoveLater = position >= 0 && position < photos.length - 1;
-    return (
-      <div className="absolute inset-0 z-10 flex flex-wrap items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-        {canMoveEarlier ? (
-          <button
-            type="button"
-            onClick={() => onMovePhoto(photo, -1)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
-            aria-label="Move photo earlier"
-          >
-            <ChevronLeft className="h-4 w-4" strokeWidth={2} />
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => setPreviewSrc(photo.src)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
-          aria-label="View photo"
-        >
-          <Eye className="h-4 w-4" strokeWidth={2} />
-        </button>
-        {!isMain ? (
-          <button
-            type="button"
-            onClick={() => onSetMainPhoto(photo)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
-            aria-label="Set as main photo"
-          >
-            <Star className="h-4 w-4" strokeWidth={2} />
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => removePhoto(photo)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
-          aria-label="Delete photo"
-        >
-          <Trash2 className="h-4 w-4" strokeWidth={2} />
-        </button>
-        {canMoveLater ? (
-          <button
-            type="button"
-            onClick={() => onMovePhoto(photo, 1)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-800 shadow-sm"
-            aria-label="Move photo later"
-          >
-            <ChevronRight className="h-4 w-4" strokeWidth={2} />
-          </button>
-        ) : null}
-      </div>
-    );
-  }
-
-  function MainStarButton({
-    photo,
-    photoIndex,
-    className = "",
-  }: {
-    photo: EditorPhotoItem;
-    photoIndex: number;
-    className?: string;
-  }) {
-    const isMain = photoIndex === 0;
-    return (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!isMain) {
-            onSetMainPhoto(photo);
-          }
-        }}
-        className={`absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition ${className} ${
-          isMain
-            ? "bg-[#3A6696] text-white"
-            : "bg-white/95 text-slate-700 hover:bg-white"
-        }`}
-        aria-label={isMain ? "Main photo" : "Set as main photo"}
-        aria-pressed={isMain}
-      >
-        <Star className={`h-4 w-4 ${isMain ? "fill-current" : ""}`} strokeWidth={2} />
-      </button>
-    );
-  }
-
   return (
     <>
       <div className="grid gap-3 md:grid-cols-[1.5fr_1fr] md:items-start">
@@ -286,7 +305,15 @@ export function EditorPhotosPanel({
             </span>
           ) : null}
           {previewPhoto ? (
-            <PhotoHoverActions photo={previewPhoto} isMain={safePreviewIndex === 0} />
+            <PhotoHoverActions
+              photo={previewPhoto}
+              isMain={safePreviewIndex === 0}
+              photos={photos}
+              onMovePhoto={onMovePhoto}
+              onSetMainPhoto={onSetMainPhoto}
+              onRemove={removePhoto}
+              onPreview={setPreviewSrc}
+            />
           ) : null}
         </div>
 
@@ -350,7 +377,15 @@ export function EditorPhotosPanel({
                   className="object-cover"
                   unoptimized={photo!.kind === "existing"}
                 />
-                <PhotoHoverActions photo={photo!} isMain={thumbIndex === 0} />
+                <PhotoHoverActions
+                  photo={photo!}
+                  isMain={thumbIndex === 0}
+                  photos={photos}
+                  onMovePhoto={onMovePhoto}
+                  onSetMainPhoto={onSetMainPhoto}
+                  onRemove={removePhoto}
+                  onPreview={setPreviewSrc}
+                />
               </div>
             );
           })}
@@ -427,7 +462,11 @@ export function EditorPhotosPanel({
                     className="object-cover"
                     unoptimized={photo.kind === "existing"}
                   />
-                  <MainStarButton photo={photo} photoIndex={photoIndex} />
+                  <MainStarButton
+                    photo={photo}
+                    photoIndex={photoIndex}
+                    onSetMainPhoto={onSetMainPhoto}
+                  />
                   <div className="absolute inset-0 z-[5] flex flex-wrap items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                     {photoIndex > 0 ? (
                       <button
