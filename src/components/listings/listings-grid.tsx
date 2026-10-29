@@ -174,6 +174,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
     const loadListings = async () => {
       setLoading(true);
       setListings([]);
+      setOrderedListings([]);
       setError("");
       try {
         const r = await fetch(`${endpoint}?${queryString}`);
@@ -181,7 +182,9 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
         if (data?.error?.message) {
           throw new Error(data.error.message as string);
         }
-        setListings(data?.data?.listings ?? []);
+        const next = (data?.data?.listings ?? []) as Listing[];
+        setListings(next);
+        setOrderedListings(next);
       } catch {
         setError("Could not load listings.");
       } finally {
@@ -192,12 +195,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
   }, [effectiveStatus, queryString]);
 
   useEffect(() => {
-    setOrderedListings(listings);
-  }, [listings]);
-
-  useEffect(() => {
     if (!admin) {
-      setFullListings([]);
       return;
     }
 
@@ -220,7 +218,8 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
     void loadFullListings();
   }, [admin, effectiveStatus]);
 
-  const canReorder = Boolean(admin && !loading && listings.length > 0 && fullListings.length > 0);
+  const reorderFullListings = admin ? fullListings : [];
+  const canReorder = Boolean(admin && !loading && listings.length > 0 && reorderFullListings.length > 0);
   const visibleListings = canReorder ? orderedListings : listings;
 
   async function persistListingOrder(nextFullOrder: Listing[]) {
@@ -282,7 +281,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
     setDropTargetId(null);
 
     const visibleIds = new Set(listings.map((listing) => listing.id));
-    const nextFullOrder = mergeVisibleOrderIntoFull(fullListings, visibleIds, nextVisibleOrder);
+    const nextFullOrder = mergeVisibleOrderIntoFull(reorderFullListings, visibleIds, nextVisibleOrder);
     void persistListingOrder(nextFullOrder);
   }
 
@@ -423,7 +422,7 @@ export function ListingsGrid({ categories }: { categories: ListingCategory[] }) 
               : "Drag a listing card by the handle to reorder how it appears on the site. With filters on, only the visible listings move relative to each other."
             : admin && listings.length > 0 && loadingFullListings
               ? "Loading listing order..."
-              : admin && listings.length > 0 && !loadingFullListings && fullListings.length === 0
+              : admin && listings.length > 0 && !loadingFullListings && reorderFullListings.length === 0
                 ? "Could not load listing order."
                 : null}
           {orderMessage ? ` ${orderMessage}` : null}

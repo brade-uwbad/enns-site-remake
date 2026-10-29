@@ -1,7 +1,6 @@
 import { revalidatePath } from "next/cache";
 
-import type { SiteContentKey } from "@/lib/content/keys";
-import { SITE_CONTENT_PAGES } from "@/lib/content/keys";
+import { SITE_CONTENT_PAGES, type SiteContentKey } from "@/lib/content/keys";
 
 const MARKETING_PATHS = ["/", "/about", "/services", "/contact"] as const;
 
